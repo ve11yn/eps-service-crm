@@ -1,0 +1,7 @@
+repo:
+- database access layers
+- run queries against one table
+- perform CRUD on db rows
+- one layer above db, does not decide business workflow
+
+basically fetch, insert, update, deletes stuffs from db

@@ -1,0 +1,434 @@
+Inbound WhatsApp webhook
+  -> verify request
+  -> normalize payload
+  -> save message
+  -> update thread
+  -> update/create lead
+  -> run AI extraction
+  -> upsert review draft
+
+  Outbound website send
+  -> admin clicks send
+  -> your API route
+  -> send to WhatsApp API
+  -> if success, save outbound message
+  -> update thread
+
+
+Supabase schema and migrationsyour CRM tables already exist in supabase/migrations/
+
+Supabase typed access[`types/database.ts`](/Users/lyn/Desktop/me/codingo/11. Custom System/crm/types/database.ts)
+
+env setup[`lib/env/server.ts`](/Users/lyn/Desktop/me/codingo/11. Custom System/crm/lib/env/server.ts)
+[`lib/env/client.ts`](/Users/lyn/Desktop/me/codingo/11. Custom System/crm/lib/env/client.ts)
+
+Supabase clients[`lib/supabase/client.ts`](/Users/lyn/Desktop/me/codingo/11. Custom System/crm/lib/supabase/client.ts)
+[`lib/supabase/server.ts`](/Users/lyn/Desktop/me/codingo/11. Custom System/crm/lib/supabase/server.ts)
+[`lib/supabase/admin.ts`](/Users/lyn/Desktop/me/codingo/11. Custom System/crm/lib/supabase/admin.ts)
+
+basic utilsphone/date/id helpers in [`lib/utils/`](/Users/lyn/Desktop/me/codingo/11. Custom System/crm/lib/utils)
+
+repositoriescontacts, threads, messages, leads, projects, project items in [`backend/repositories/`](/Users/lyn/Desktop/me/codingo/11. Custom System/crm/backend/repositories)
+
+WhatsApp integration basewebhook verification: [`backend/integrations/whatsapp/verify-webhook.ts`](/Users/lyn/Desktop/me/codingo/11. Custom System/crm/backend/integrations/whatsapp/verify-webhook.ts)
+payload normalization: [`backend/integrations/whatsapp/normalizers.ts`](/Users/lyn/Desktop/me/codingo/11. Custom System/crm/backend/integrations/whatsapp/normalizers.ts)
+outbound API client: [`backend/integrations/whatsapp/client.ts`](/Users/lyn/Desktop/me/codingo/11. Custom System/crm/backend/integrations/whatsapp/client.ts)
+
+inbound WhatsApp ingestion service[`backend/services/leads/ingest-whatsapp-event.ts`](/Users/lyn/Desktop/me/codingo/11. Custom System/crm/backend/services/leads/ingest-whatsapp-event.ts)
+
+real webhook route[`app/api/webhooks/whatsapp/route.ts`](/Users/lyn/Desktop/me/codingo/11. Custom System/crm/app/api/webhooks/whatsapp/route.ts)
+
+Claude extraction mock pipelineprompt builder: [`backend/integrations/ai/prompts.ts`](/Users/lyn/Desktop/me/codingo/11. Custom System/crm/backend/integrations/ai/prompts.ts)
+Claude client: [`backend/integrations/ai/claude-client.ts`](/Users/lyn/Desktop/me/codingo/11. Custom System/crm/backend/integrations/ai/claude-client.ts)
+extraction service: [`backend/services/ai/extract-lead-from-conversation.ts`](/Users/lyn/Desktop/me/codingo/11. Custom System/crm/backend/services/ai/extract-lead-from-conversation.ts)
+test routes:[`app/api/ai/extract-lead/route.ts`](/Users/lyn/Desktop/me/codingo/11. Custom System/crm/app/api/ai/extract-lead/route.ts)
+[`app/api/dev/mock-whatsapp/route.ts`](/Users/lyn/Desktop/me/codingo/11. Custom System/crm/app/api/dev/mock-whatsapp/route.ts)
+
+mock input file:[`backend/integrations/ai/mock-whatsapp-conversation.json`](/Users/lyn/Desktop/me/codingo/11. Custom System/crm/backend/integrations/ai/mock-whatsapp-conversation.json)
+
+
+DB layer
+repository layer
+inbound WhatsApp ingestion skeleton
+AI extraction skeleton
+test routes
+
+
+
+
+- `app/api/...`
+  - route handlers only
+  - receive request
+  - validate input
+  - call service
+  - return response
+
+- `backend/services/...`
+  - business logic
+  - combine repositories + integrations
+  - decide workflow
+
+- `backend/repositories/...`
+  - DB access only
+  - select/insert/update/delete against Supabase tables
+
+- `backend/integrations/...`
+  - external APIs only
+  - WhatsApp, Claude, later QuickBooks
+
+- `types/...`
+  - request/response/domain/external payload types
+
+- `lib/...`
+  - shared helpers
+  - env, supabase client, phone/date utils
+
+So when you build a feature, ask:
+- is this DB access only? -> repository
+- is this workflow/business logic? -> service
+- is this HTTP endpoint? -> route
+- is this third-party API? -> integration
+- is this just utility? -> lib
+
+---
+
+## 1. Review Queue
+Already mostly done.
+
+Use:
+- route:
+  - `app/api/review-drafts/route.ts`
+  - `app/api/review-drafts/[id]/route.ts`
+  - `app/api/review-drafts/process/route.ts`
+  - `app/api/review-drafts/[id]/approve/route.ts`
+  - `app/api/review-drafts/[id]/reject/route.ts`
+- services:
+  - `backend/services/review/process-conversation-to-draft.ts`
+  - `backend/services/review/upsert-review-draft.ts`
+  - `backend/services/review/approve-review-draft.ts`
+  - `backend/services/review/reject-review-draft.ts`
+- repository:
+  - `backend/repositories/review-drafts-repository.ts`
+
+If later you add “archive draft” or “restore draft”:
+- service:
+  - `backend/services/review/archive-review-draft.ts`
+- route:
+  - `app/api/review-drafts/[id]/archive/route.ts`
+
+---
+
+## 2. Leads
+For lead pages and updates:
+
+Repository:
+- `backend/repositories/leads-repository.ts`
+
+Service examples:
+- `backend/services/leads/get-lead-detail.ts`
+- `backend/services/leads/update-lead-details.ts`
+- `backend/services/leads/convert-lead-to-project.ts`
+
+Routes:
+- `app/api/leads/route.ts`
+- `app/api/leads/[id]/route.ts`
+- `app/api/leads/[id]/convert/route.ts`
+
+Use service if:
+- lead update also touches thread/project/review draft
+- conversion creates project or appointments
+
+Use repository directly only inside service.
+
+---
+
+## 3. Projects
+Repository:
+- `backend/repositories/projects-repository.ts`
+
+Service examples:
+- `backend/services/projects/get-project-detail.ts`
+- `backend/services/projects/update-project-details.ts`
+- `backend/services/projects/update-project-status.ts`
+
+Routes:
+- `app/api/projects/route.ts`
+- `app/api/projects/[id]/route.ts`
+- `app/api/projects/[id]/status/route.ts`
+
+If project page also needs related items/messages/purchases, make a service:
+- `get-project-detail.ts`
+This combines multiple repositories.
+
+---
+
+## 4. Project Items
+Repository:
+- `backend/repositories/project-items-repository.ts`
+
+Service examples:
+- `backend/services/project-items/create-project-item.ts`
+- `backend/services/project-items/update-project-item.ts`
+- `backend/services/project-items/reorder-project-items.ts`
+
+Routes:
+- `app/api/projects/[id]/items/route.ts`
+- `app/api/project-items/[id]/route.ts`
+- `app/api/project-items/reorder/route.ts`
+
+If adding PI / checklist / add-on logic:
+- keep that in service
+- repository just writes DB rows
+
+---
+
+## 5. Messages / Chat
+Repository:
+- `backend/repositories/messages-repository.ts`
+- `backend/repositories/threads-repository.ts`
+
+Services:
+- `backend/services/messages/send-whatsapp-message.ts`
+- `backend/services/leads/ingest-whatsapp-event.ts`
+
+Routes:
+- `app/api/messages/send/route.ts`
+- `app/api/threads/[id]/messages/route.ts`
+- real webhook:
+  - `app/api/webhooks/whatsapp/route.ts`
+
+If later you add thread summary refresh:
+- service:
+  - `backend/services/messages/refresh-thread-summary.ts`
+- route:
+  - `app/api/threads/[id]/refresh-summary/route.ts`
+
+---
+
+## 6. Contacts
+Repository:
+- `backend/repositories/contacts-repository.ts`
+
+Service examples:
+- `backend/services/contacts/get-contact-detail.ts`
+- `backend/services/contacts/update-contact.ts`
+- `backend/services/contacts/merge-contacts.ts`
+
+Routes:
+- `app/api/contacts/route.ts`
+- `app/api/contacts/[id]/route.ts`
+- `app/api/contacts/merge/route.ts`
+
+Merge logic should be service, not repository.
+
+---
+
+## 7. Properties
+Repository:
+- `backend/repositories/properties-repository.ts`
+
+Service examples:
+- `backend/services/properties/update-property.ts`
+- `backend/services/properties/get-property-projects.ts`
+
+Routes:
+- `app/api/properties/[id]/route.ts`
+- `app/api/properties/[id]/projects/route.ts`
+
+---
+
+## 8. Pricing
+You said pricing suggestion is important. This should be structured cleanly.
+
+Repository examples you should add:
+- `backend/repositories/pricing-catalogs-repository.ts`
+- `backend/repositories/pricing-items-repository.ts`
+
+Service examples:
+- `backend/services/pricing/search-pricing-items.ts`
+- `backend/services/pricing/suggest-pricing-for-work-items.ts`
+
+Routes:
+- `app/api/pricing/search/route.ts`
+- `app/api/pricing/suggest/route.ts`
+
+Rule:
+- repository = fetch pricing rows
+- service = matching logic between extracted work item and pricing items
+
+---
+
+## 9. Quotes
+Repository examples:
+- `backend/repositories/quotes-repository.ts`
+- `backend/repositories/quote-items-repository.ts`
+
+Services:
+- `backend/services/quotes/create-quote-from-project.ts`
+- `backend/services/quotes/update-quote.ts`
+- `backend/services/quotes/send-quote.ts`
+
+Routes:
+- `app/api/quotes/route.ts`
+- `app/api/quotes/[id]/route.ts`
+- `app/api/quotes/[id]/send/route.ts`
+
+Send quote probably also uses:
+- PDF generation integration later
+- WhatsApp document send integration
+
+So sending quote should be service.
+
+---
+
+## 10. Invoices / Payments
+Repository examples:
+- `backend/repositories/invoices-repository.ts`
+- `backend/repositories/payments-repository.ts`
+
+Services:
+- `backend/services/invoices/create-invoice.ts`
+- `backend/services/invoices/send-invoice.ts`
+- `backend/services/payments/record-payment.ts`
+
+Routes:
+- `app/api/invoices/route.ts`
+- `app/api/invoices/[id]/route.ts`
+- `app/api/invoices/[id]/send/route.ts`
+- `app/api/payments/route.ts`
+
+---
+
+## 11. Purchases
+Repository example:
+- `backend/repositories/purchases-repository.ts`
+
+Services:
+- `backend/services/purchases/create-purchase.ts`
+- `backend/services/purchases/update-purchase.ts`
+
+Routes:
+- `app/api/purchases/route.ts`
+- `app/api/purchases/[id]/route.ts`
+
+---
+
+## 12. Appointments
+Repository example:
+- `backend/repositories/appointments-repository.ts`
+
+Services:
+- `backend/services/appointments/create-appointment.ts`
+- `backend/services/appointments/reschedule-appointment.ts`
+
+Routes:
+- `app/api/appointments/route.ts`
+- `app/api/appointments/[id]/route.ts`
+
+---
+
+## 13. AI
+Already partly done.
+
+Integration:
+- `backend/integrations/ai/claude-client.ts`
+- `backend/integrations/ai/prompts.ts`
+
+Service:
+- `backend/services/ai/extract-lead-from-conversation.ts`
+
+If later you add quote drafting AI:
+- service:
+  - `backend/services/ai/suggest-quote-items.ts`
+- prompt:
+  - `backend/integrations/ai/quote-prompts.ts`
+
+---
+
+# Practical naming rule
+
+When you need a new feature, name files like this:
+
+## DB-only
+- `something-repository.ts`
+
+Examples:
+- `quotes-repository.ts`
+- `pricing-items-repository.ts`
+
+## Workflow/business
+- verb-first or task-first service file
+
+Examples:
+- `create-quote-from-project.ts`
+- `process-conversation-to-draft.ts`
+- `send-whatsapp-message.ts`
+
+## Route
+- always under `app/api/.../route.ts`
+
+Examples:
+- `app/api/projects/[id]/route.ts`
+- `app/api/review-drafts/process/route.ts`
+
+---
+
+# Do you need `db.ts`?
+
+For your current structure: **no**.
+
+You already have the correct replacement:
+- `lib/supabase/admin.ts`
+- `lib/supabase/server.ts`
+- `lib/supabase/client.ts`
+
+So do not make a random `db.ts` now.
+That would blur responsibilities.
+
+Use:
+- `createAdminSupabaseClient()` inside repositories
+- repositories inside services
+- services inside routes
+
+That is cleaner than one giant `db.ts`.
+
+---
+
+# Recommended next files to build
+
+Best next backend files:
+
+1. `backend/repositories/pricing-items-repository.ts`
+2. `backend/services/pricing/search-pricing-items.ts`
+3. `app/api/pricing/search/route.ts`
+
+Then:
+
+4. `app/api/threads/[id]/messages/route.ts`
+5. `app/api/leads/route.ts`
+6. `app/api/leads/[id]/route.ts`
+7. `app/api/projects/route.ts`
+8. `app/api/projects/[id]/route.ts`
+
+That gives your frontend enough data sources.
+
+---
+
+# Simple build rule
+
+For every feature, build in this order:
+
+1. repository
+2. service
+3. route
+4. frontend page/component
+
+That should be your default pattern.
+
+If you want, I can next scaffold the exact next set:
+- pricing repository
+- pricing search service
+- pricing search route
+- threads messages route
+- leads list/detail routes
+- projects list/detail routes

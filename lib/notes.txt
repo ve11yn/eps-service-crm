@@ -1,0 +1,21 @@
+-- client
+app user is interacting directly from browser
+used by frontent/browser
+have limited safe access
+should never contain secret credentials
+
+-- server
+app is doing work on server side
+used by backend/server
+normal/safe access rules
+
+-- admin
+used by system
+built for internal, privileged operations
+bypass normal restrictions
+for backend/internal usage
+
+-- sum
+client = visitor entrance pass
+server = staff access card
+admin = master key

@@ -1,0 +1,18 @@
+layer between 
+- WhatsApp
+- AI
+- QuickBooks
+
+
+for whatsapp:
+verify webhook: proving that webhook request is real
+normalizer: converting provider-specific payloads our own internal message shape
+client: outbound WhatsApp API calls
+    sending replies
+    sending quote PDFs
+    sending invoice PDFs
+
+
+for AI:
+
+for QuickBooks:

@@ -81,7 +81,11 @@ create table if not exists public.project_items (
   is_deferred boolean not null default false,
   deferred_reason text,
   created_at timestamptz not null default timezone('utc', now()),
-  updated_at timestamptz not null default timezone('utc', now())
+  updated_at timestamptz not null default timezone('utc', now()),
+  is_pi boolean not null default false,
+  is_checklist_item boolean not null default false,
+  item_group text,
+  item_type text
 );
 
 create index if not exists projects_status_code_idx

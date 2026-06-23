@@ -1,0 +1,36 @@
+{
+  "contactName": "Mrs Tan",
+  "contactPhone": "6582980815",
+  "messages": [
+    {
+      "direction": "inbound",
+      "senderName": "Mrs Tan",
+      "sentAt": "2026-06-22T09:00:00+08:00",
+      "text": "Hi, I have water seepage on my basement wall and my master bathroom WC is leaking."
+    },
+    {
+      "direction": "outbound",
+      "senderName": "EPS Admin",
+      "sentAt": "2026-06-22T09:03:00+08:00",
+      "text": "Can you share your address and whether you need a site check first?"
+    },
+    {
+      "direction": "inbound",
+      "senderName": "Mrs Tan",
+      "sentAt": "2026-06-22T09:06:00+08:00",
+      "text": "Address is 11E Mount Sinai Lane #01-21 Singapore 277054. I think site visit needed because not sure where seepage comes from."
+    },
+    {
+      "direction": "outbound",
+      "senderName": "EPS Admin",
+      "sentAt": "2026-06-22T09:09:00+08:00",
+      "text": "Understood. Do you want us to prepare a quote after inspection?"
+    },
+    {
+      "direction": "inbound",
+      "senderName": "Mrs Tan",
+      "sentAt": "2026-06-22T09:12:00+08:00",
+      "text": "Yes please. If possible arrange this week. It is a bit urgent."
+    }
+  ]
+}
