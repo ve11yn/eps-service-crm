@@ -1,4 +1,5 @@
 export * from "./contacts-repository";
+export * from "./profiles-repository";
 export * from "./properties-repository";
 export * from "./threads-repository";
 export * from "./messages-repository";

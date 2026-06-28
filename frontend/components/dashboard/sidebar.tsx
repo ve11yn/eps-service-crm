@@ -2,9 +2,11 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { LogoutButton } from "@/frontend/components/auth/logout-button";
 
 const items = [
   { href: "/", label: "Home" },
+  { href: "/reviews", label: "Reviews" },
   { href: "/inbox", label: "Inbox" },
   { href: "/projects", label: "Projects" },
   { href: "/schedule", label: "Schedule" },
@@ -18,7 +20,13 @@ function isActive(pathname: string, href: string): boolean {
   return pathname === href || pathname.startsWith(`${href}/`);
 }
 
-export function Sidebar() {
+export function Sidebar({
+  displayName,
+  roleLabel,
+}: {
+  displayName?: string;
+  roleLabel?: string;
+}) {
   const pathname = usePathname();
 
   return (
@@ -27,7 +35,9 @@ export function Sidebar() {
         <div className="dashboard-brand-mark">EP</div>
         <div>
           <p className="dashboard-brand-title">EPS Services</p>
-          <p className="dashboard-brand-subtitle">Business Dashboard</p>
+          <p className="dashboard-brand-subtitle">
+            {displayName ? `${displayName} · ${roleLabel ?? "Staff"}` : "Business Dashboard"}
+          </p>
         </div>
       </div>
 
@@ -51,6 +61,7 @@ export function Sidebar() {
         <Link href="/settings" className="dashboard-nav-link">
           Settings
         </Link>
+        <LogoutButton />
       </div>
     </aside>
   );

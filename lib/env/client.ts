@@ -1,23 +1,23 @@
-type RequiredPublicEnvKey =
-  | "NEXT_PUBLIC_SUPABASE_URL"
-  | "NEXT_PUBLIC_SUPABASE_ANON_KEY";
-
-const requiredPublicKeys: RequiredPublicEnvKey[] = [
-  "NEXT_PUBLIC_SUPABASE_URL",
-  "NEXT_PUBLIC_SUPABASE_ANON_KEY",
-];
-
-function getPublicEnv(key: RequiredPublicEnvKey): string {
-  const value = process.env[key];
+function getPublicEnv(
+  value: string | undefined,
+  keyName: "NEXT_PUBLIC_SUPABASE_URL" | "NEXT_PUBLIC_SUPABASE_ANON_KEY",
+): string {
   if (!value) {
-    throw new Error(`Missing required public environment variable: ${key}`);
+    throw new Error(
+      `Missing required public environment variable: ${keyName}`,
+    );
   }
+
   return value;
 }
 
-void requiredPublicKeys;
-
 export const clientEnv = {
-  supabaseUrl: getPublicEnv("NEXT_PUBLIC_SUPABASE_URL"),
-  supabaseAnonKey: getPublicEnv("NEXT_PUBLIC_SUPABASE_ANON_KEY"),
+  supabaseUrl: getPublicEnv(
+    process.env.NEXT_PUBLIC_SUPABASE_URL,
+    "NEXT_PUBLIC_SUPABASE_URL",
+  ),
+  supabaseAnonKey: getPublicEnv(
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+    "NEXT_PUBLIC_SUPABASE_ANON_KEY",
+  ),
 };

@@ -1,8 +1,16 @@
 import { NextResponse } from "next/server";
+import { routeErrorResponse } from "@/backend/observability/errors";
 import { extractLeadFromConversation } from "@/backend/services/ai/extract-lead-from-conversation";
+import { requireApiSession } from "@/lib/auth/api";
 import type { AiLeadExtractionRequest } from "@/types/integration";
 
 export async function POST(request: Request) {
+  const auth = await requireApiSession(["owner", "admin"]);
+
+  if (!auth.ok) {
+    return auth.response;
+  }
+
   try {
     const payload = (await request.json()) as AiLeadExtractionRequest;
 
@@ -23,13 +31,10 @@ export async function POST(request: Request) {
       rawText: result.rawText,
     });
   } catch (error) {
-    return NextResponse.json(
-      {
-        success: false,
-        error:
-          error instanceof Error ? error.message : "Failed to extract lead",
-      },
-      { status: 500 },
-    );
+    return routeErrorResponse({
+      scope: "api.ai.extract-lead",
+      error,
+      details: { performedByProfileId: auth.session.profile.id },
+    });
   }
 }

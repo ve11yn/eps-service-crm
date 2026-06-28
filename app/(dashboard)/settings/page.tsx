@@ -1,6 +1,9 @@
-import { EmptyState } from "@/frontend/components/dashboard/empty-state";
+import { listStaffAccounts } from "@/backend/services/auth/user-management";
+import { StaffManagement } from "@/frontend/components/settings/staff-management";
 
-export default function SettingsPage() {
+export default async function SettingsPage() {
+  const staff = await listStaffAccounts();
+
   return (
     <div className="page-stack">
       <section className="page-header">
@@ -9,16 +12,11 @@ export default function SettingsPage() {
           <h1>Settings</h1>
         </div>
         <p className="page-header-copy">
-          This page can later hold business profile, integrations, templates, and user access settings.
+          Manage internal staff access for owner, admin, coordinator, and field worker accounts.
         </p>
       </section>
 
-      <section className="panel">
-        <EmptyState
-          title="Settings are not built yet"
-          description="The dashboard shell is ready; this page is reserved for future configuration work."
-        />
-      </section>
+      <StaffManagement initialStaff={staff} />
     </div>
   );
 }

@@ -1,18 +1,18 @@
 @import "tailwindcss";
 
 :root {
-  --background: #f3f0e8;
-  --foreground: #191919;
-  --surface: #fffdfa;
-  --surface-strong: #f6f1e6;
-  --surface-muted: #ece5d7;
-  --line: #d5ccbc;
-  --accent: #2448d8;
-  --accent-soft: #dbe5ff;
-  --success-soft: #dff3e7;
-  --warning-soft: #f8ebbc;
-  --danger-soft: #f7d7d7;
-  --text-muted: #70695c;
+  --background: #fbfcfd;
+  --foreground: #1c2730;
+  --surface: #ffffff;
+  --surface-strong: #f4f7f8;
+  --surface-muted: #edf4f7;
+  --line: #dbe4e8;
+  --accent: #1f7ed6;
+  --accent-soft: #e8f3ff;
+  --success-soft: #eef8ea;
+  --warning-soft: #f7efd9;
+  --danger-soft: #f7e3e3;
+  --text-muted: #667684;
 }
 
 @theme inline {
@@ -24,8 +24,8 @@
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #f3f0e8;
-    --foreground: #191919;
+    --background: #fbfcfd;
+    --foreground: #1c2730;
   }
 }
 
@@ -42,6 +42,22 @@ body {
   color: var(--foreground);
   font-family: var(--font-geist-sans), sans-serif;
   margin: 0;
+}
+
+.auth-shell {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+}
+
+.auth-card {
+  width: min(520px, 100%);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 28px;
+  box-shadow: 0 18px 40px rgba(41, 34, 22, 0.06);
 }
 
 a {
@@ -69,8 +85,8 @@ textarea {
   padding: 28px 22px;
   border-right: 1px solid var(--line);
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.82), rgba(244, 238, 226, 0.92)),
-    radial-gradient(circle at top left, rgba(36, 72, 216, 0.12), transparent 36%);
+    linear-gradient(180deg, rgba(255, 255, 255, 0.99), rgba(246, 250, 252, 0.99)),
+    radial-gradient(circle at top left, rgba(31, 126, 214, 0.08), transparent 32%);
   display: flex;
   flex-direction: column;
   gap: 24px;
@@ -85,7 +101,7 @@ textarea {
 .dashboard-brand-mark {
   width: 48px;
   height: 48px;
-  border-radius: 14px;
+  border-radius: 10px;
   display: grid;
   place-items: center;
   background: var(--foreground);
@@ -114,7 +130,7 @@ textarea {
 
 .dashboard-nav-link {
   padding: 12px 14px;
-  border-radius: 14px;
+  border-radius: 10px;
   color: var(--text-muted);
   transition: 150ms ease;
 }
@@ -126,11 +142,14 @@ textarea {
 }
 
 .dashboard-nav-link.is-active {
-  box-shadow: inset 0 0 0 1px rgba(36, 72, 216, 0.14);
+  box-shadow: inset 0 0 0 1px rgba(31, 126, 214, 0.16);
 }
 
 .dashboard-sidebar-footer {
   margin-top: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 
 .dashboard-main {
@@ -179,7 +198,7 @@ textarea {
 .panel {
   background: var(--surface);
   border: 1px solid var(--line);
-  border-radius: 24px;
+  border-radius: 14px;
   padding: 24px;
   box-shadow: 0 18px 40px rgba(41, 34, 22, 0.06);
 }
@@ -268,7 +287,7 @@ textarea {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  border-radius: 14px;
+  border-radius: 10px;
   border: 1px solid var(--line);
   padding: 11px 16px;
   min-height: 44px;
@@ -299,7 +318,7 @@ textarea {
 .input {
   min-height: 46px;
   padding: 0 14px;
-  border-radius: 14px;
+  border-radius: 10px;
   border: 1px solid var(--line);
   background: white;
 }
@@ -314,19 +333,28 @@ textarea {
   gap: 12px;
 }
 
+.inline-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 18px;
+}
+
 .status-badge {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   min-height: 34px;
   padding: 6px 12px;
-  border-radius: 999px;
+  border-radius: 10px;
   font-size: 0.88rem;
   font-weight: 600;
   background: var(--surface-muted);
 }
 
 .status-needs-review,
+.status-new,
+.status-ai-processed,
 .status-awaiting-approval,
 .status-qa-review,
 .status-pending {
@@ -386,7 +414,7 @@ textarea {
   grid-template-columns: 52px minmax(0, 1fr) auto;
   gap: 12px;
   padding: 14px;
-  border-radius: 18px;
+  border-radius: 12px;
   border: 1px solid transparent;
   background: rgba(255, 255, 255, 0.56);
 }
@@ -394,13 +422,13 @@ textarea {
 .thread-card:hover,
 .thread-card.is-active {
   background: white;
-  border-color: rgba(36, 72, 216, 0.15);
+  border-color: rgba(31, 126, 214, 0.16);
 }
 
 .thread-card-avatar {
   width: 52px;
   height: 52px;
-  border-radius: 16px;
+  border-radius: 10px;
   background: var(--surface-strong);
   display: grid;
   place-items: center;
@@ -447,6 +475,47 @@ textarea {
   font-size: 0.88rem;
 }
 
+.field-block {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.field-block-wide {
+  grid-column: 1 / -1;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px 18px;
+}
+
+.review-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 360px;
+  gap: 20px;
+  align-items: start;
+}
+
+.toggle-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-top: 18px;
+}
+
+.checkbox-row {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--foreground);
+}
+
+.checkbox-row input {
+  margin: 0;
+}
+
 .message-list {
   display: flex;
   flex-direction: column;
@@ -456,15 +525,15 @@ textarea {
 .message-bubble {
   max-width: 78%;
   padding: 14px 16px;
-  border-radius: 18px;
-  background: #fff8e9;
-  border: 1px solid rgba(226, 208, 156, 0.45);
+  border-radius: 10px;
+  background: #fbfaf6;
+  border: 1px solid rgba(227, 220, 202, 0.7);
 }
 
 .message-bubble.is-outbound {
   margin-left: auto;
-  background: #eef2ff;
-  border-color: rgba(36, 72, 216, 0.16);
+  background: #edf6ff;
+  border-color: rgba(31, 126, 214, 0.15);
 }
 
 .message-meta {
@@ -485,7 +554,7 @@ textarea {
   resize: vertical;
   padding: 16px;
   border: 1px solid var(--line);
-  border-radius: 18px;
+  border-radius: 10px;
   background: white;
 }
 
@@ -510,8 +579,8 @@ textarea {
 .media-hero {
   min-height: 220px;
   background:
-    linear-gradient(135deg, rgba(36, 72, 216, 0.12), transparent 40%),
-    linear-gradient(180deg, #f3ecde, #e6dcc9);
+    linear-gradient(135deg, rgba(31, 126, 214, 0.14), rgba(73, 199, 217, 0.08) 42%, transparent 58%),
+    linear-gradient(180deg, #f7fbfd, #edf4f7);
 }
 
 .project-card-body {
@@ -609,9 +678,9 @@ textarea {
 
 .todo-card {
   padding: 18px;
-  border-radius: 18px;
+  border-radius: 10px;
   border: 1px solid var(--line);
-  background: rgba(255, 255, 255, 0.66);
+  background: rgba(255, 255, 255, 0.82);
 }
 
 .todo-card-header {
@@ -654,9 +723,9 @@ textarea {
 
 .calendar-cell {
   min-height: 150px;
-  border-radius: 18px;
+  border-radius: 10px;
   border: 1px solid var(--line);
-  background: rgba(255, 255, 255, 0.72);
+  background: rgba(255, 255, 255, 0.88);
   padding: 12px;
   display: flex;
   flex-direction: column;
@@ -678,15 +747,16 @@ textarea {
   flex-direction: column;
   gap: 6px;
   padding: 10px;
-  border-radius: 14px;
+  border-radius: 10px;
   background: white;
-  border: 1px solid rgba(213, 204, 188, 0.7);
+  border: 1px solid rgba(227, 220, 202, 0.85);
 }
 
 @media (max-width: 1100px) {
   .dashboard-shell,
   .inbox-layout,
-  .project-detail-layout {
+  .project-detail-layout,
+  .review-layout {
     grid-template-columns: 1fr;
   }
 
@@ -698,7 +768,8 @@ textarea {
   .stats-grid,
   .project-grid,
   .details-grid,
-  .summary-grid {
+  .summary-grid,
+  .form-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
@@ -726,7 +797,8 @@ textarea {
   .project-grid,
   .details-grid,
   .summary-grid,
-  .calendar-grid {
+  .calendar-grid,
+  .form-grid {
     grid-template-columns: 1fr;
   }
 

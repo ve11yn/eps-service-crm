@@ -23,6 +23,17 @@ function getOptionalEnv(key: string): string | null {
   return process.env[key] ?? null;
 }
 
+function getOptionalEnvFromKeys(keys: string[]): string | null {
+  for (const key of keys) {
+    const value = process.env[key];
+    if (value) {
+      return value;
+    }
+  }
+
+  return null;
+}
+
 void requiredKeys;
 
 export const serverEnv = {
@@ -35,6 +46,7 @@ export const serverEnv = {
   whatsappWebhookSignatureSecret: getOptionalEnv(
     "WHATSAPP_WEBHOOK_SIGNATURE_SECRET",
   ),
-  claudeApiKey: getOptionalEnv("ANTHROPIC_API_KEY"),
-  claudeModel: getOptionalEnv("CLAUDE_MODEL"),
+  claudeApiKey: getOptionalEnvFromKeys(["ANTHROPIC_API_KEY", "AI_API_KEY"]),
+  claudeModel: getOptionalEnvFromKeys(["CLAUDE_MODEL", "AI_MODEL"]),
+  alertWebhookUrl: getOptionalEnv("ALERT_WEBHOOK_URL"),
 };

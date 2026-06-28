@@ -1,7 +1,15 @@
 import { NextResponse } from "next/server";
+import { routeErrorResponse } from "@/backend/observability/errors";
 import { searchPricingItems } from "@/backend/services/pricing/search-pricing-items";
+import { requireApiSession } from "@/lib/auth/api";
 
 export async function GET(request: Request) {
+  const auth = await requireApiSession(["owner", "admin"]);
+
+  if (!auth.ok) {
+    return auth.response;
+  }
+
   try {
     const { searchParams } = new URL(request.url);
     const query = searchParams.get("q")?.trim() ?? "";
@@ -29,13 +37,10 @@ export async function GET(request: Request) {
       items,
     });
   } catch (error) {
-    return NextResponse.json(
-      {
-        success: false,
-        error:
-          error instanceof Error ? error.message : "Failed to search pricing items",
-      },
-      { status: 500 },
-    );
+    return routeErrorResponse({
+      scope: "api.pricing.search",
+      error,
+      details: { performedByProfileId: auth.session.profile.id },
+    });
   }
 }

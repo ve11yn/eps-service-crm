@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { normalizeWhatsAppInboundPayload } from "@/backend/integrations/whatsapp/normalizers";
+import { normalizeWhatsAppInboundPayloads } from "@/backend/integrations/whatsapp/normalizers";
 import {
   verifyWhatsAppWebhookChallenge,
   verifyWhatsAppWebhookSignature,
@@ -37,26 +37,44 @@ export async function POST(request: NextRequest) {
   }
 
   const payload = JSON.parse(rawBody) as WhatsAppRawInboundPayload;
-  const normalizedMessage = normalizeWhatsAppInboundPayload(payload);
-  const result = await ingestWhatsAppEvent(normalizedMessage);
-  const reviewDraftResult = await processConversationToDraft({
-    threadId: result.thread.id,
-    leadId: result.lead.id,
-    contactId: result.contact.id,
-    contactName: result.contact.full_name,
-    contactPhone:
-      result.contact.whatsapp_number ??
-      result.contact.primary_phone ??
-      undefined,
-  });
+  const normalizedMessages = normalizeWhatsAppInboundPayloads(payload);
+
+  if (normalizedMessages.length === 0) {
+    return NextResponse.json({
+      success: true,
+      processed: 0,
+      skipped: "No inbound messages in payload",
+    });
+  }
+
+  const processed = [];
+
+  for (const normalizedMessage of normalizedMessages) {
+    const result = await ingestWhatsAppEvent(normalizedMessage);
+    const reviewDraftResult = await processConversationToDraft({
+      threadId: result.thread.id,
+      leadId: result.lead.id,
+      contactId: result.contact.id,
+      contactName: result.contact.full_name,
+      contactPhone:
+        result.contact.whatsapp_number ??
+        result.contact.primary_phone ??
+        undefined,
+    });
+
+    processed.push({
+      wasDuplicate: result.wasDuplicate,
+      contactId: result.contact.id,
+      threadId: result.thread.id,
+      leadId: result.lead.id,
+      messageId: result.message.id,
+      reviewDraftId: reviewDraftResult.reviewDraft.id,
+    });
+  }
 
   return NextResponse.json({
     success: true,
-    wasDuplicate: result.wasDuplicate,
-    contactId: result.contact.id,
-    threadId: result.thread.id,
-    leadId: result.lead.id,
-    messageId: result.message.id,
-    reviewDraftId: reviewDraftResult.reviewDraft.id,
+    processed: processed.length,
+    results: processed,
   });
 }

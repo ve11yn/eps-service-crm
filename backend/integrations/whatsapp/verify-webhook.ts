@@ -46,6 +46,10 @@ export function verifyWhatsAppWebhookSignature(
     .update(rawBody)
     .digest("hex");
 
+  if (normalizedSignature.length !== expectedSignature.length) {
+    return false;
+  }
+
   return crypto.timingSafeEqual(
     Buffer.from(normalizedSignature),
     Buffer.from(expectedSignature),

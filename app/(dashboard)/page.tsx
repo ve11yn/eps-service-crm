@@ -4,8 +4,10 @@ import { StatCard } from "@/frontend/components/dashboard/stat-card";
 import { StatusBadge } from "@/frontend/components/dashboard/status-badge";
 import { EmptyState } from "@/frontend/components/dashboard/empty-state";
 import { formatDateTime } from "@/frontend/lib/format";
+import { requireAppSession } from "@/lib/auth/session";
 
 export default async function HomePage() {
+  const session = await requireAppSession(["owner", "admin"]);
   const dashboard = await getDashboardOverview();
 
   return (
@@ -13,7 +15,7 @@ export default async function HomePage() {
       <section className="page-header">
         <div>
           <p className="eyebrow">EPS Services</p>
-          <h1>Good Morning, Admin</h1>
+          <h1>Good Morning, {session.profile.displayName}</h1>
         </div>
         <p className="page-header-copy">
           Your dashboard prioritizes incoming chat reviews, active projects, and today&apos;s schedule.
@@ -61,7 +63,7 @@ export default async function HomePage() {
                       <Link
                         href={
                           item.type === "review"
-                            ? `/inbox`
+                            ? `/reviews/${item.id}`
                             : `/projects/${item.id}`
                         }
                         className="table-link"

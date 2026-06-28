@@ -10,7 +10,7 @@ export type WhatsAppMessageType =
   | "document"
   | "unknown";
 
-export type WhatsAppRawInboundPayload = {
+export type WhatsAppLegacyInboundPayload = {
   messageId?: string | null;
   conversationId?: string | null;
   from?: {
@@ -25,6 +25,94 @@ export type WhatsAppRawInboundPayload = {
   timestamp?: string | null;
   raw?: Json;
 };
+
+export type WhatsAppMetaWebhookPayload = {
+  object?: string;
+  entry?: Array<{
+    id?: string;
+    changes?: Array<{
+      field?: string;
+      value?: {
+        messaging_product?: string;
+        metadata?: {
+          display_phone_number?: string;
+          phone_number_id?: string;
+        };
+        contacts?: Array<{
+          profile?: {
+            name?: string;
+          };
+          wa_id?: string;
+        }>;
+        messages?: Array<{
+          id?: string;
+          from?: string;
+          timestamp?: string;
+          type?: string;
+          text?: {
+            body?: string;
+          };
+          image?: {
+            id?: string;
+            mime_type?: string;
+            caption?: string;
+            sha256?: string;
+          };
+          video?: {
+            id?: string;
+            mime_type?: string;
+            caption?: string;
+            sha256?: string;
+          };
+          audio?: {
+            id?: string;
+            mime_type?: string;
+            sha256?: string;
+          };
+          document?: {
+            id?: string;
+            mime_type?: string;
+            caption?: string;
+            filename?: string;
+            sha256?: string;
+          };
+          button?: {
+            text?: string;
+            payload?: string;
+          };
+          interactive?: {
+            button_reply?: {
+              id?: string;
+              title?: string;
+            };
+            list_reply?: {
+              id?: string;
+              title?: string;
+              description?: string;
+            };
+          };
+        }>;
+        statuses?: Array<{
+          id?: string;
+          status?: string;
+          timestamp?: string;
+          recipient_id?: string;
+          conversation?: {
+            id?: string;
+            expiration_timestamp?: string;
+            origin?: {
+              type?: string;
+            };
+          };
+        }>;
+      };
+    }>;
+  }>;
+};
+
+export type WhatsAppRawInboundPayload =
+  | WhatsAppLegacyInboundPayload
+  | WhatsAppMetaWebhookPayload;
 
 export type WhatsAppInboundMessage = {
   externalMessageId: string;

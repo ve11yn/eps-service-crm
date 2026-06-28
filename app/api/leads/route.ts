@@ -1,7 +1,15 @@
 import { NextResponse } from "next/server";
+import { routeErrorResponse } from "@/backend/observability/errors";
 import { listLeads } from "@/backend/repositories";
+import { requireApiSession } from "@/lib/auth/api";
 
 export async function GET() {
+  const auth = await requireApiSession(["owner", "admin"]);
+
+  if (!auth.ok) {
+    return auth.response;
+  }
+
   try {
     const leads = await listLeads();
 
@@ -10,12 +18,10 @@ export async function GET() {
       leads,
     });
   } catch (error) {
-    return NextResponse.json(
-      {
-        success: false,
-        error: error instanceof Error ? error.message : "Failed to list leads",
-      },
-      { status: 500 },
-    );
+    return routeErrorResponse({
+      scope: "api.leads.list",
+      error,
+      details: { performedByProfileId: auth.session.profile.id },
+    });
   }
 }

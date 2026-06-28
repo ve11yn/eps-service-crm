@@ -1,5 +1,6 @@
 import "server-only";
 
+import { randomUUID } from "node:crypto";
 import {
   createContact,
   createLead,
@@ -31,7 +32,7 @@ export type IngestWhatsAppEventResult = {
 };
 
 function buildLeadCode(): string {
-  return `LEAD-${Date.now()}`;
+  return `LEAD-${Date.now()}-${randomUUID().slice(0, 8).toUpperCase()}`;
 }
 
 async function findOrCreateContact(

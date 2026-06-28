@@ -1,5 +1,6 @@
 import "server-only";
 
+import { randomUUID } from "node:crypto";
 import {
   createContact,
   createLead,
@@ -13,6 +14,7 @@ import {
   updateProperty,
   updateReviewDraft,
 } from "@/backend/repositories";
+import { logAuditEvent } from "@/backend/observability/audit";
 import { normalizePhone } from "@/lib/utils/phone";
 import type { Database, Json } from "@/types/database";
 import type {
@@ -27,11 +29,11 @@ type LeadRow = Database["public"]["Tables"]["leads"]["Row"];
 type ProjectRow = Database["public"]["Tables"]["projects"]["Row"];
 
 function buildProjectCode(): string {
-  return `PROJ-${Date.now()}`;
+  return `PROJ-${Date.now()}-${randomUUID().slice(0, 8).toUpperCase()}`;
 }
 
 function buildLeadCode(): string {
-  return `LEAD-${Date.now()}`;
+  return `LEAD-${Date.now()}-${randomUUID().slice(0, 8).toUpperCase()}`;
 }
 
 function parseExtraction(payload: Json): AiLeadExtraction {
@@ -268,6 +270,23 @@ export async function approveReviewDraft(input: {
     reviewed_by_profile_id: input.reviewedByProfileId ?? null,
     reviewed_at: new Date().toISOString(),
     approved_at: new Date().toISOString(),
+  });
+
+  await logAuditEvent({
+    action: "review_drafts.approve",
+    entityType: "review_draft",
+    entityId: draft.id,
+    performedByProfileId: input.reviewedByProfileId ?? null,
+    oldValue: {
+      status: draft.status,
+      lead_id: draft.lead_id,
+      approved_project_id: draft.approved_project_id,
+    },
+    newValue: {
+      status: approvedDraft.status,
+      lead_id: approvedDraft.lead_id,
+      approved_project_id: approvedDraft.approved_project_id,
+    },
   });
 
   return {

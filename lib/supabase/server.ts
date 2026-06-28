@@ -1,17 +1,30 @@
 import "server-only";
 
-import { createClient } from "@supabase/supabase-js";
+import { cookies } from "next/headers";
+import { createServerClient } from "@supabase/ssr";
 import { serverEnv } from "@/lib/env/server";
 import type { Database } from "@/types/database";
 
-export function createServerSupabaseClient() {
-  return createClient<Database>(
+export async function createServerSupabaseClient() {
+  const cookieStore = await cookies();
+
+  return createServerClient<Database>(
     serverEnv.supabaseUrl,
     serverEnv.supabaseAnonKey,
     {
-      auth: {
-        autoRefreshToken: false,
-        persistSession: false,
+      cookies: {
+        getAll() {
+          return cookieStore.getAll();
+        },
+        setAll(cookiesToSet) {
+          try {
+            cookiesToSet.forEach(({ name, value, options }) => {
+              cookieStore.set(name, value, options);
+            });
+          } catch {
+            // Server components can read cookies but may not always be able to mutate them.
+          }
+        },
       },
     },
   );

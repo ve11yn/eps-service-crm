@@ -8,6 +8,7 @@ import {
   touchThreadActivity,
   updateLead,
 } from "@/backend/repositories";
+import { logAuditEvent } from "@/backend/observability/audit";
 import { sendWhatsAppTextMessage } from "@/backend/integrations/whatsapp/client";
 import { normalizePhone } from "@/lib/utils/phone";
 import type { Database } from "@/types/database";
@@ -74,6 +75,17 @@ export async function sendWhatsAppMessage(input: {
       last_activity_at: sentAt,
     });
   }
+
+  await logAuditEvent({
+    action: "messages.send_whatsapp",
+    entityType: "message",
+    entityId: savedMessage.id,
+    metadata: {
+      thread_id: thread.id,
+      destination,
+      external_message_id: sendResult.externalMessageId,
+    },
+  });
 
   return {
     message: savedMessage,

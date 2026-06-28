@@ -1,8 +1,16 @@
 import { NextResponse } from "next/server";
+import { routeErrorResponse } from "@/backend/observability/errors";
 import { processConversationToDraft } from "@/backend/services/review/process-conversation-to-draft";
+import { requireApiSession } from "@/lib/auth/api";
 import type { ProcessConversationToDraftRequest } from "@/types/api";
 
 export async function POST(request: Request) {
+  const auth = await requireApiSession(["owner", "admin"]);
+
+  if (!auth.ok) {
+    return auth.response;
+  }
+
   try {
     const payload = (await request.json()) as ProcessConversationToDraftRequest;
 
@@ -40,15 +48,10 @@ export async function POST(request: Request) {
       extraction: result.aiResult.extraction,
     });
   } catch (error) {
-    return NextResponse.json(
-      {
-        success: false,
-        error:
-          error instanceof Error
-            ? error.message
-            : "Failed to process conversation to draft",
-      },
-      { status: 500 },
-    );
+    return routeErrorResponse({
+      scope: "api.review-drafts.process",
+      error,
+      details: { performedByProfileId: auth.session.profile.id },
+    });
   }
 }

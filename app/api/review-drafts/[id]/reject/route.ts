@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
+import { routeErrorResponse } from "@/backend/observability/errors";
 import { rejectReviewDraft } from "@/backend/services/review/reject-review-draft";
+import { requireApiSession } from "@/lib/auth/api";
 import type { RejectReviewDraftRequest } from "@/types/api";
 
 type RouteContext = {
@@ -9,13 +11,19 @@ type RouteContext = {
 };
 
 export async function POST(request: Request, context: RouteContext) {
+  const auth = await requireApiSession(["owner", "admin"]);
+
+  if (!auth.ok) {
+    return auth.response;
+  }
+
   try {
     const { id } = await context.params;
     const payload = (await request.json()) as RejectReviewDraftRequest;
 
     const draft = await rejectReviewDraft({
       reviewDraftId: id,
-      reviewedByProfileId: payload.reviewedByProfileId,
+      reviewedByProfileId: auth.session.profile.id,
       reviewNotes: payload.reviewNotes,
       reason: payload.reason,
       markNeedsMoreInfo: payload.markNeedsMoreInfo,
@@ -28,13 +36,10 @@ export async function POST(request: Request, context: RouteContext) {
       status: draft.status,
     });
   } catch (error) {
-    return NextResponse.json(
-      {
-        success: false,
-        error:
-          error instanceof Error ? error.message : "Failed to reject review draft",
-      },
-      { status: 500 },
-    );
+    return routeErrorResponse({
+      scope: "api.review-drafts.reject",
+      error,
+      details: { performedByProfileId: auth.session.profile.id },
+    });
   }
 }

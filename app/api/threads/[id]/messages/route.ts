@@ -1,8 +1,10 @@
 import { NextResponse } from "next/server";
+import { routeErrorResponse } from "@/backend/observability/errors";
 import {
   getThreadById,
   listMessagesByThreadId,
 } from "@/backend/repositories";
+import { requireApiSession } from "@/lib/auth/api";
 
 type RouteContext = {
   params: Promise<{
@@ -11,6 +13,12 @@ type RouteContext = {
 };
 
 export async function GET(_request: Request, context: RouteContext) {
+  const auth = await requireApiSession(["owner", "admin"]);
+
+  if (!auth.ok) {
+    return auth.response;
+  }
+
   try {
     const { id } = await context.params;
     const thread = await getThreadById(id);
@@ -30,13 +38,10 @@ export async function GET(_request: Request, context: RouteContext) {
       messages,
     });
   } catch (error) {
-    return NextResponse.json(
-      {
-        success: false,
-        error:
-          error instanceof Error ? error.message : "Failed to load thread messages",
-      },
-      { status: 500 },
-    );
+    return routeErrorResponse({
+      scope: "api.threads.messages",
+      error,
+      details: { performedByProfileId: auth.session.profile.id },
+    });
   }
 }

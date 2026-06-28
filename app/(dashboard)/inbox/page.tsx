@@ -2,6 +2,7 @@ import Link from "next/link";
 import { getInboxOverview } from "@/backend/services/inbox/get-inbox-overview";
 import { EmptyState } from "@/frontend/components/dashboard/empty-state";
 import { InboxComposer } from "@/frontend/components/dashboard/inbox-composer";
+import { ProcessThreadDraftButton } from "@/frontend/components/dashboard/process-thread-draft-button";
 import { StatusBadge } from "@/frontend/components/dashboard/status-badge";
 import { formatDateTime, getInitials } from "@/frontend/lib/format";
 
@@ -94,31 +95,45 @@ export default async function InboxPage({ searchParams }: InboxPageProps) {
                 </div>
 
                 {inbox.reviewDraft ? (
-                  <div className="summary-grid">
-                    <div>
-                      <span className="summary-label">Summary</span>
-                      <p>{typeof (inbox.reviewDraft.extraction_payload as { summary?: unknown }).summary === "string"
-                        ? (inbox.reviewDraft.extraction_payload as { summary: string }).summary
-                        : "No summary yet"}</p>
+                  <>
+                    <div className="summary-grid">
+                      <div>
+                        <span className="summary-label">Summary</span>
+                        <p>{typeof (inbox.reviewDraft.extraction_payload as { summary?: unknown }).summary === "string"
+                          ? (inbox.reviewDraft.extraction_payload as { summary: string }).summary
+                          : "No summary yet"}</p>
+                      </div>
+                      <div>
+                        <span className="summary-label">Missing / Notes</span>
+                        <p>{inbox.reviewDraft.review_notes ?? "No review notes yet."}</p>
+                      </div>
+                      <div>
+                        <span className="summary-label">Draft</span>
+                        <p>{inbox.reviewDraft.id}</p>
+                      </div>
+                      <div>
+                        <span className="summary-label">Updated</span>
+                        <p>{formatDateTime(inbox.reviewDraft.updated_at)}</p>
+                      </div>
                     </div>
-                    <div>
-                      <span className="summary-label">Missing / Notes</span>
-                      <p>{inbox.reviewDraft.review_notes ?? "No review notes yet."}</p>
+                    <div className="inline-actions">
+                      <Link className="button button-primary" href={`/reviews/${inbox.reviewDraft.id}`}>
+                        Open Review Draft
+                      </Link>
+                      <ProcessThreadDraftButton
+                        threadId={inbox.activeThread.id}
+                        label="Re-run AI Extraction"
+                      />
                     </div>
-                    <div>
-                      <span className="summary-label">Draft</span>
-                      <p>{inbox.reviewDraft.id}</p>
-                    </div>
-                    <div>
-                      <span className="summary-label">Updated</span>
-                      <p>{formatDateTime(inbox.reviewDraft.updated_at)}</p>
-                    </div>
-                  </div>
+                  </>
                 ) : (
-                  <EmptyState
-                    title="No AI review draft yet"
-                    description="Run the process route on this conversation to generate a structured draft."
-                  />
+                  <div className="page-stack">
+                    <EmptyState
+                      title="No AI review draft yet"
+                      description="Generate a structured draft from this conversation, then review and approve it."
+                    />
+                    <ProcessThreadDraftButton threadId={inbox.activeThread.id} />
+                  </div>
                 )}
               </section>
 

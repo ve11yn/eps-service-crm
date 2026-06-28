@@ -12,31 +12,6 @@ export type Database = {
   __InternalSupabase: {
     PostgrestVersion: "14.5"
   }
-  graphql_public: {
-    Tables: {
-      [_ in never]: never
-    }
-    Views: {
-      [_ in never]: never
-    }
-    Functions: {
-      graphql: {
-        Args: {
-          extensions?: Json
-          operationName?: string
-          query?: string
-          variables?: Json
-        }
-        Returns: Json
-      }
-    }
-    Enums: {
-      [_ in never]: never
-    }
-    CompositeTypes: {
-      [_ in never]: never
-    }
-  }
   public: {
     Tables: {
       ai_run_statuses: {
@@ -292,6 +267,50 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "appointment_statuses"
             referencedColumns: ["code"]
+          },
+        ]
+      }
+      audit_logs: {
+        Row: {
+          action: string
+          created_at: string
+          entity_id: string | null
+          entity_type: string
+          id: string
+          metadata: Json | null
+          new_value: Json | null
+          old_value: Json | null
+          performed_by_profile_id: string | null
+        }
+        Insert: {
+          action: string
+          created_at?: string
+          entity_id?: string | null
+          entity_type: string
+          id?: string
+          metadata?: Json | null
+          new_value?: Json | null
+          old_value?: Json | null
+          performed_by_profile_id?: string | null
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          entity_id?: string | null
+          entity_type?: string
+          id?: string
+          metadata?: Json | null
+          new_value?: Json | null
+          old_value?: Json | null
+          performed_by_profile_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "audit_logs_performed_by_profile_id_fkey"
+            columns: ["performed_by_profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -1356,6 +1375,7 @@ export type Database = {
           phone: string | null
           role_code: string
           updated_at: string
+          username: string | null
         }
         Insert: {
           avatar_url?: string | null
@@ -1366,6 +1386,7 @@ export type Database = {
           phone?: string | null
           role_code: string
           updated_at?: string
+          username?: string | null
         }
         Update: {
           avatar_url?: string | null
@@ -1376,6 +1397,7 @@ export type Database = {
           phone?: string | null
           role_code?: string
           updated_at?: string
+          username?: string | null
         }
         Relationships: [
           {
@@ -2229,6 +2251,42 @@ export type Database = {
         }
         Relationships: []
       }
+      system_error_logs: {
+        Row: {
+          created_at: string
+          details: Json | null
+          error_name: string | null
+          id: string
+          message: string
+          resolved_at: string | null
+          scope: string
+          severity: string
+          stack: string | null
+        }
+        Insert: {
+          created_at?: string
+          details?: Json | null
+          error_name?: string | null
+          id?: string
+          message: string
+          resolved_at?: string | null
+          scope: string
+          severity?: string
+          stack?: string | null
+        }
+        Update: {
+          created_at?: string
+          details?: Json | null
+          error_name?: string | null
+          id?: string
+          message?: string
+          resolved_at?: string | null
+          scope?: string
+          severity?: string
+          stack?: string | null
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           code: string
@@ -2345,7 +2403,8 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      current_user_role: { Args: never; Returns: string }
+      is_owner_or_admin: { Args: never; Returns: boolean }
     }
     Enums: {
       [_ in never]: never
@@ -2474,9 +2533,6 @@ export type CompositeTypes<
     : never
 
 export const Constants = {
-  graphql_public: {
-    Enums: {},
-  },
   public: {
     Enums: {},
   },

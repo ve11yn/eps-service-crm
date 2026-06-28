@@ -1,8 +1,11 @@
 import { NextResponse } from "next/server";
+import { logAuditEvent } from "@/backend/observability/audit";
+import { routeErrorResponse } from "@/backend/observability/errors";
 import {
   getReviewDraftById,
   updateReviewDraft,
 } from "@/backend/repositories";
+import { requireApiSession } from "@/lib/auth/api";
 import type { UpdateReviewDraftRequest } from "@/types/api";
 import type { Json } from "@/types/database";
 
@@ -13,6 +16,12 @@ type RouteContext = {
 };
 
 export async function GET(_request: Request, context: RouteContext) {
+  const auth = await requireApiSession(["owner", "admin"]);
+
+  if (!auth.ok) {
+    return auth.response;
+  }
+
   try {
     const { id } = await context.params;
     const draft = await getReviewDraftById(id);
@@ -29,18 +38,21 @@ export async function GET(_request: Request, context: RouteContext) {
       draft,
     });
   } catch (error) {
-    return NextResponse.json(
-      {
-        success: false,
-        error:
-          error instanceof Error ? error.message : "Failed to get review draft",
-      },
-      { status: 500 },
-    );
+    return routeErrorResponse({
+      scope: "api.review-drafts.detail",
+      error,
+      details: { performedByProfileId: auth.session.profile.id },
+    });
   }
 }
 
 export async function PATCH(request: Request, context: RouteContext) {
+  const auth = await requireApiSession(["owner", "admin"]);
+
+  if (!auth.ok) {
+    return auth.response;
+  }
+
   try {
     const { id } = await context.params;
     const payload = (await request.json()) as UpdateReviewDraftRequest;
@@ -57,11 +69,8 @@ export async function PATCH(request: Request, context: RouteContext) {
     const updatedDraft = await updateReviewDraft(id, {
       status: payload.status ?? draft.status,
       review_notes: payload.reviewNotes ?? draft.review_notes,
-      reviewed_by_profile_id:
-        payload.reviewedByProfileId ?? draft.reviewed_by_profile_id,
-      reviewed_at: payload.reviewedByProfileId
-        ? new Date().toISOString()
-        : draft.reviewed_at,
+      reviewed_by_profile_id: auth.session.profile.id,
+      reviewed_at: new Date().toISOString(),
       extraction_payload:
         (payload.extraction as unknown as Json | undefined) ??
         draft.extraction_payload,
@@ -69,18 +78,30 @@ export async function PATCH(request: Request, context: RouteContext) {
         payload.pricingSuggestions ?? draft.pricing_suggestions_payload,
     });
 
+    await logAuditEvent({
+      action: "review_drafts.update",
+      entityType: "review_draft",
+      entityId: draft.id,
+      performedByProfileId: auth.session.profile.id,
+      oldValue: {
+        status: draft.status,
+        review_notes: draft.review_notes,
+      },
+      newValue: {
+        status: updatedDraft.status,
+        review_notes: updatedDraft.review_notes,
+      },
+    });
+
     return NextResponse.json({
       success: true,
       draft: updatedDraft,
     });
   } catch (error) {
-    return NextResponse.json(
-      {
-        success: false,
-        error:
-          error instanceof Error ? error.message : "Failed to update review draft",
-      },
-      { status: 500 },
-    );
+    return routeErrorResponse({
+      scope: "api.review-drafts.update",
+      error,
+      details: { performedByProfileId: auth.session.profile.id },
+    });
   }
 }

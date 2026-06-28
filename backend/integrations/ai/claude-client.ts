@@ -28,6 +28,9 @@ export async function sendClaudeTextPrompt(input: {
     throw new Error("Claude API is not configured.");
   }
 
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 25000);
+
   const response = await fetch("https://api.anthropic.com/v1/messages", {
     method: "POST",
     headers: {
@@ -46,7 +49,8 @@ export async function sendClaudeTextPrompt(input: {
         },
       ],
     }),
-  });
+    signal: controller.signal,
+  }).finally(() => clearTimeout(timeout));
 
   if (!response.ok) {
     const errorText = await response.text();
