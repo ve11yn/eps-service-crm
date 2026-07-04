@@ -12,12 +12,9 @@ export default async function ReviewDraftsPage() {
     <div className="page-stack">
       <section className="page-header">
         <div>
-          <p className="eyebrow">AI Intake</p>
           <h1>Review Queue</h1>
         </div>
-        <p className="page-header-copy">
-          Every extracted WhatsApp conversation lands here before it becomes a lead or project.
-        </p>
+     
       </section>
 
       <section className="panel table-panel">

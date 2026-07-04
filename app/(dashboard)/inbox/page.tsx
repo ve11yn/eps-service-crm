@@ -20,12 +20,9 @@ export default async function InboxPage({ searchParams }: InboxPageProps) {
     <div className="page-stack">
       <section className="page-header">
         <div>
-          <p className="eyebrow">WhatsApp</p>
           <h1>Inbox</h1>
         </div>
-        <p className="page-header-copy">
-          Review AI intake summaries, reply to customers, and decide whether each thread becomes a lead or project.
-        </p>
+      
       </section>
 
       <section className="inbox-layout">

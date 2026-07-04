@@ -14,12 +14,9 @@ export default async function HomePage() {
     <div className="page-stack">
       <section className="page-header">
         <div>
-          <p className="eyebrow">EPS Services</p>
           <h1>Good Morning, {session.profile.displayName}</h1>
         </div>
-        <p className="page-header-copy">
-          Your dashboard prioritizes incoming chat reviews, active projects, and today&apos;s schedule.
-        </p>
+       
       </section>
 
       <section className="stats-grid">

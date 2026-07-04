@@ -14,7 +14,6 @@ export default async function SchedulePage() {
           <p className="eyebrow">Planning</p>
           <h1>Schedule</h1>
         </div>
-        <p className="page-header-copy">Project start dates are shown on the calendar. Click any event to open the project.</p>
       </section>
 
       <section className="panel">
