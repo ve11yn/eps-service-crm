@@ -26,7 +26,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
           <LoginForm nextPath={nextPath} />
 
           <p className="helper-text">
-            First-time setup? <Link href="/register">Create the owner account</Link>.
+            Need an account? <Link href="/register">Register here</Link>.
           </p>
         </div>
       </section>

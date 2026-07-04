@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 
 type StaffAccount = {
   id: string;
+  email: string | null;
   username: string | null;
   displayName: string;
   roleCode: string;
@@ -19,8 +20,8 @@ export function StaffManagement({
 }) {
   const [staff, setStaff] = useState(initialStaff);
   const [displayName, setDisplayName] = useState("");
+  const [email, setEmail] = useState("");
   const [username, setUsername] = useState("");
-  const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
   const [roleCode, setRoleCode] = useState("field_worker");
   const [status, setStatus] = useState<string | null>(null);
@@ -59,8 +60,8 @@ export function StaffManagement({
         },
         body: JSON.stringify({
           displayName,
+          email,
           username,
-          phone,
           password,
           roleCode,
         }),
@@ -76,8 +77,8 @@ export function StaffManagement({
       }
 
       setDisplayName("");
+      setEmail("");
       setUsername("");
-      setPhone("");
       setPassword("");
       setRoleCode("field_worker");
       setStatus("Staff account created.");
@@ -108,8 +109,8 @@ export function StaffManagement({
               <tr>
                 <th>Name</th>
                 <th>Username</th>
+                <th>Email</th>
                 <th>Role</th>
-                <th>Phone</th>
                 <th>Status</th>
               </tr>
             </thead>
@@ -118,8 +119,8 @@ export function StaffManagement({
                 <tr key={member.id}>
                   <td>{member.displayName}</td>
                   <td>{member.username ?? "Empty"}</td>
+                  <td>{member.email ?? "Empty"}</td>
                   <td>{member.roleCode}</td>
-                  <td>{member.phone ?? "Empty"}</td>
                   <td>{member.isActive ? "Active" : "Inactive"}</td>
                 </tr>
               ))}
@@ -172,11 +173,14 @@ export function StaffManagement({
           </label>
 
           <label className="field-block">
-            <span className="field-label">Phone</span>
+            <span className="field-label">Email Address</span>
             <input
               className="input"
-              value={phone}
-              onChange={(event) => setPhone(event.target.value)}
+              type="email"
+              autoComplete="email"
+              value={email}
+              onChange={(event) => setEmail(event.target.value)}
+              required
             />
           </label>
 

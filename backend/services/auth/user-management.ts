@@ -8,15 +8,19 @@ import {
 } from "@/backend/repositories";
 import { logAuditEvent } from "@/backend/observability/audit";
 import { createAdminSupabaseClient } from "@/lib/supabase/admin";
-import type { AppRole } from "@/lib/auth/roles";
+import {
+  canSelfRegisterRole,
+  type AppRole,
+  type SelfRegisterableRole,
+} from "@/lib/auth/roles";
 import {
   assertValidUsername,
-  buildInternalAuthEmail,
   normalizeUsername,
 } from "@/backend/services/auth/credentials";
 
 type StaffAccount = {
   id: string;
+  email: string | null;
   username: string | null;
   displayName: string;
   roleCode: AppRole;
@@ -30,20 +34,40 @@ export async function getSetupStatus() {
 
   return {
     hasUsers: profileCount > 0,
-    allowOwnerRegistration: profileCount === 0,
+    allowRegistration: true,
   };
 }
 
-export async function registerInitialOwner(input: {
+export async function listPublicRegistrationRoles(): Promise<
+  Array<{ code: SelfRegisterableRole; label: string; description: string | null }>
+> {
+  const supabase = createAdminSupabaseClient();
+
+  const { data, error } = await supabase
+    .from("user_roles")
+    .select("code, label, description")
+    .in("code", ["coordinator", "field_worker"])
+    .eq("is_active", true)
+    .order("sort_order", { ascending: true });
+
+  if (error) throw error;
+
+  return (data ?? []).filter((role) => canSelfRegisterRole(role.code)) as Array<{
+    code: SelfRegisterableRole;
+    label: string;
+    description: string | null;
+  }>;
+}
+
+export async function registerSelfServiceUser(input: {
+  email: string;
   username: string;
   password: string;
   displayName: string;
-  phone?: string;
+  roleCode: SelfRegisterableRole;
 }) {
-  const status = await getSetupStatus();
-
-  if (!status.allowOwnerRegistration) {
-    throw new Error("Initial owner registration is already completed.");
+  if (!canSelfRegisterRole(input.roleCode)) {
+    throw new Error("This role cannot be self-registered.");
   }
 
   const username = assertValidUsername(input.username);
@@ -53,17 +77,15 @@ export async function registerInitialOwner(input: {
     throw new Error("That username is already in use.");
   }
 
-  const email = buildInternalAuthEmail(username);
   const supabase = createAdminSupabaseClient();
   const { data, error } = await supabase.auth.admin.createUser({
-    email,
+    email: input.email.trim().toLowerCase(),
     password: input.password,
     email_confirm: true,
     user_metadata: {
       username,
       display_name: input.displayName,
-      phone: input.phone ?? null,
-      role_code: "owner",
+      role_code: input.roleCode,
     },
   });
 
@@ -74,18 +96,19 @@ export async function registerInitialOwner(input: {
 
   const profile = await updateProfile(data.user.id, {
     display_name: input.displayName,
-    role_code: "owner",
-    phone: input.phone ?? null,
+    role_code: input.roleCode,
+    phone: null,
     username,
     is_active: true,
   });
 
   await logAuditEvent({
-    action: "auth.register_initial_owner",
+    action: "auth.self_register",
     entityType: "profile",
     entityId: profile.id,
     performedByProfileId: profile.id,
     newValue: {
+      email: data.user.email,
       username: profile.username,
       role_code: profile.role_code,
       display_name: profile.display_name,
@@ -99,10 +122,23 @@ export async function registerInitialOwner(input: {
 }
 
 export async function listStaffAccounts(): Promise<StaffAccount[]> {
+  const supabase = createAdminSupabaseClient();
   const profiles = await listProfiles();
+
+  const { data, error } = await supabase.auth.admin.listUsers({
+    page: 1,
+    perPage: 200,
+  });
+
+  if (error) throw error;
+
+  const emailByUserId = new Map(
+    (data.users ?? []).map((user) => [user.id, user.email ?? null]),
+  );
 
   return profiles.map((profile) => ({
     id: profile.id,
+    email: emailByUserId.get(profile.id) ?? null,
     username: profile.username,
     displayName: profile.display_name,
     roleCode: profile.role_code as AppRole,
@@ -113,11 +149,11 @@ export async function listStaffAccounts(): Promise<StaffAccount[]> {
 }
 
 export async function createStaffUser(input: {
+  email: string;
   username: string;
   password: string;
   displayName: string;
   roleCode: Extract<AppRole, "admin" | "coordinator" | "field_worker">;
-  phone?: string;
   createdByProfileId: string;
 }) {
   const username = assertValidUsername(input.username);
@@ -127,16 +163,14 @@ export async function createStaffUser(input: {
     throw new Error("That username is already in use.");
   }
 
-  const email = buildInternalAuthEmail(username);
   const supabase = createAdminSupabaseClient();
   const { data, error } = await supabase.auth.admin.createUser({
-    email,
+    email: input.email.trim().toLowerCase(),
     password: input.password,
     email_confirm: true,
     user_metadata: {
       username,
       display_name: input.displayName,
-      phone: input.phone ?? null,
       role_code: input.roleCode,
     },
   });
@@ -149,7 +183,7 @@ export async function createStaffUser(input: {
   const profile = await updateProfile(data.user.id, {
     display_name: input.displayName,
     role_code: input.roleCode,
-    phone: input.phone ?? null,
+    phone: null,
     username,
     is_active: true,
   });

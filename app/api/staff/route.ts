@@ -8,11 +8,11 @@ import { requireApiSession } from "@/lib/auth/api";
 import type { AppRole } from "@/lib/auth/roles";
 
 type CreateStaffRequest = {
+  email?: string;
   username?: string;
   password?: string;
   displayName?: string;
   roleCode?: AppRole;
-  phone?: string;
 };
 
 export async function GET() {
@@ -49,6 +49,7 @@ export async function POST(request: Request) {
     const payload = (await request.json()) as CreateStaffRequest;
 
     if (
+      !payload.email ||
       !payload.username ||
       !payload.password ||
       !payload.displayName ||
@@ -74,11 +75,11 @@ export async function POST(request: Request) {
     }
 
     const result = await createStaffUser({
+      email: payload.email.trim(),
       username: payload.username.trim(),
       password: payload.password,
       displayName: payload.displayName.trim(),
       roleCode: payload.roleCode as "admin" | "coordinator" | "field_worker",
-      phone: payload.phone?.trim() || undefined,
       createdByProfileId: auth.session.profile.id,
     });
 

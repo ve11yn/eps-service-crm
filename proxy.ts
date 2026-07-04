@@ -6,8 +6,9 @@ const publicPaths = new Set([
   "/register",
   "/unauthorized",
   "/api/auth/login-lookup",
+  "/api/auth/register",
+  "/api/auth/register-roles",
   "/api/auth/setup-status",
-  "/api/auth/register-owner",
   "/api/webhooks/whatsapp",
 ]);
 
