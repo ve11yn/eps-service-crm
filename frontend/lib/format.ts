@@ -34,6 +34,25 @@ const dateTimeFormatter = new Intl.DateTimeFormat(APP_LOCALE, {
   minute: "2-digit",
 });
 
+const chatTimeFormatter = new Intl.DateTimeFormat(APP_LOCALE, {
+  timeZone: APP_TIME_ZONE,
+  hour: "numeric",
+  minute: "2-digit",
+});
+
+const chatDateFormatter = new Intl.DateTimeFormat(APP_LOCALE, {
+  timeZone: APP_TIME_ZONE,
+  day: "numeric",
+  month: "short",
+});
+
+const chatLongDateFormatter = new Intl.DateTimeFormat(APP_LOCALE, {
+  timeZone: APP_TIME_ZONE,
+  day: "numeric",
+  month: "short",
+  year: "numeric",
+});
+
 const monthTitleFormatter = new Intl.DateTimeFormat(APP_LOCALE, {
   timeZone: APP_TIME_ZONE,
   month: "long",
@@ -65,6 +84,22 @@ export function formatDateTime(value?: string | null): string {
   if (!date) return "Empty";
 
   return dateTimeFormatter.format(date);
+}
+
+export function formatChatListTime(value?: string | null): string {
+  const date = parseStoredDateTime(value);
+  if (!date) return "";
+
+  const today = new Date();
+  if (getCalendarDayKey(date) === getCalendarDayKey(today)) {
+    return chatTimeFormatter.format(date);
+  }
+
+  if (date.getFullYear() === today.getFullYear()) {
+    return chatDateFormatter.format(date);
+  }
+
+  return chatLongDateFormatter.format(date);
 }
 
 export function formatMonthTitle(date: Date): string {

@@ -4,7 +4,7 @@ import { EmptyState } from "@/frontend/components/dashboard/empty-state";
 import { InboxComposer } from "@/frontend/components/dashboard/inbox-composer";
 import { ProcessThreadDraftButton } from "@/frontend/components/dashboard/process-thread-draft-button";
 import { StatusBadge } from "@/frontend/components/dashboard/status-badge";
-import { formatDateTime, getInitials } from "@/frontend/lib/format";
+import { formatChatListTime, formatDateTime, getInitials } from "@/frontend/lib/format";
 
 type InboxPageProps = {
   searchParams: Promise<{
@@ -46,6 +46,15 @@ export default async function InboxPage({ searchParams }: InboxPageProps) {
                 const contact = Array.isArray(thread.contacts)
                   ? thread.contacts[0]
                   : thread.contacts;
+                const contactName =
+                  contact?.full_name ?? thread.thread_subject ?? "WhatsApp thread";
+                const profileLabel =
+                  contact?.whatsapp_number ??
+                  contact?.primary_phone ??
+                  contact?.email ??
+                  thread.thread_subject ??
+                  "WhatsApp contact";
+                const chatTime = formatChatListTime(thread.last_message_at);
 
                 return (
                   <Link
@@ -53,18 +62,16 @@ export default async function InboxPage({ searchParams }: InboxPageProps) {
                     href={`/inbox?thread=${thread.id}`}
                     className={`thread-card ${active ? "is-active" : ""}`}
                   >
-                    <div className="thread-card-avatar">{getInitials(contact?.full_name ?? thread.thread_subject)}</div>
+                    <div className="thread-card-avatar">{getInitials(contactName)}</div>
                     <div className="thread-card-body">
-                      <p className="thread-card-title">
-                        {contact?.full_name ?? thread.thread_subject ?? "WhatsApp thread"}
-                      </p>
-                      <p className="thread-card-subtitle">
-                        {thread.latest_ai_summary ?? "No AI summary yet"}
-                      </p>
+                      <div className="thread-card-contact-row">
+                        <p className="thread-card-title">{contactName}</p>
+                        <p className="thread-card-subtitle">{profileLabel}</p>
+                      </div>
+                      <div className="thread-card-meta-column">
+                        {chatTime ? <span className="thread-card-time">{chatTime}</span> : null}
+                      </div>
                     </div>
-                    <span className="thread-card-time">
-                      {formatDateTime(thread.last_message_at)}
-                    </span>
                   </Link>
                 );
               })}
