@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { listProjects } from "@/backend/repositories";
 import { EmptyState } from "@/frontend/components/dashboard/empty-state";
+import { ProjectFilters } from "@/frontend/components/dashboard/project-filters";
 import { StatusBadge } from "@/frontend/components/dashboard/status-badge";
 import { formatDate } from "@/frontend/lib/format";
 
@@ -35,26 +36,11 @@ export default async function ProjectsPage({ searchParams }: ProjectsPageProps) 
           <p className="eyebrow">Operations</p>
           <h1>Projects</h1>
         </div>
-        <form className="toolbar-form" action="/projects">
-          <input
-            className="input"
-            type="search"
-            name="q"
-            defaultValue={params.q ?? ""}
-            placeholder="Search project"
-          />
-          <select className="input input-select" name="status" defaultValue={params.status ?? ""}>
-            <option value="">All statuses</option>
-            <option value="scheduled">Scheduled</option>
-            <option value="in_progress">In Progress</option>
-            <option value="qa_review">QA Review</option>
-            <option value="invoiced">Invoiced</option>
-            <option value="completed">Completed</option>
-          </select>
-          <button className="button button-secondary" type="submit">
-            Filter
-          </button>
-        </form>
+        <ProjectFilters
+          key={`${params.q ?? ""}:${params.status ?? ""}`}
+          initialQuery={params.q ?? ""}
+          initialStatus={params.status ?? ""}
+        />
       </section>
 
       {filteredProjects.length === 0 ? (

@@ -31,52 +31,51 @@ export default async function ReviewDraftsPage() {
             description="Run AI extraction from the inbox or mock WhatsApp route and the drafts will show here."
           />
         ) : (
-          <div className="table-wrap">
-            <table className="data-table">
-              <thead>
-                <tr>
-                  <th>Customer / Job</th>
-                  <th>Thread</th>
-                  <th>Status</th>
-                  <th>Updated</th>
-                  <th>Decision</th>
-                </tr>
-              </thead>
-              <tbody>
-                {drafts.map((draft) => {
-                  const extraction = parseLeadExtraction(draft.extraction_payload);
-                  const title =
-                    extraction.projectTitle ||
-                    extraction.leadTitle ||
-                    extraction.issue ||
-                    "WhatsApp conversation";
-                  const customer = extraction.customerName || "Unknown customer";
+          <div className="review-draft-list">
+            <div className="review-draft-list-head" aria-hidden="true">
+              <span>Customer / Job</span>
+              <span>Thread</span>
+              <span>Status</span>
+              <span>Updated</span>
+              <span>Decision</span>
+            </div>
 
-                  return (
-                    <tr key={draft.id}>
-                      <td>
-                        <Link href={`/reviews/${draft.id}`} className="table-link">
-                          {title}
-                        </Link>
-                        <div className="helper-text">{customer}</div>
-                      </td>
-                      <td>{draft.thread_id}</td>
-                      <td>
-                        <StatusBadge status={draft.status} />
-                      </td>
-                      <td>{formatDateTime(draft.updated_at)}</td>
-                      <td>
-                        {draft.status === "converted_to_project"
-                          ? "Project already created"
-                          : draft.status === "converted_to_lead"
-                            ? "Lead already created"
-                            : "Awaiting review"}
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+            {drafts.map((draft) => {
+              const extraction = parseLeadExtraction(draft.extraction_payload);
+              const title =
+                extraction.projectTitle ||
+                extraction.leadTitle ||
+                extraction.issue ||
+                "WhatsApp conversation";
+              const customer = extraction.customerName || "Unknown customer";
+              const decision =
+                draft.status === "converted_to_project"
+                  ? "Project already created"
+                  : draft.status === "converted_to_lead"
+                    ? "Lead already created"
+                    : "Awaiting review";
+
+              return (
+                <Link
+                  key={draft.id}
+                  href={`/reviews/${draft.id}`}
+                  className="review-draft-row"
+                >
+                  <span className="review-draft-main">
+                    <span className="review-draft-title">{title}</span>
+                    <span className="helper-text">{customer}</span>
+                  </span>
+                  <span className="review-draft-meta">{draft.thread_id}</span>
+                  <span>
+                    <StatusBadge status={draft.status} />
+                  </span>
+                  <span className="review-draft-meta">
+                    {formatDateTime(draft.updated_at)}
+                  </span>
+                  <span className="review-draft-meta">{decision}</span>
+                </Link>
+              );
+            })}
           </div>
         )}
       </section>

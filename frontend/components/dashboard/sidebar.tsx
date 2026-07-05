@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { LogoutButton } from "@/frontend/components/auth/logout-button";
@@ -32,7 +33,14 @@ export function Sidebar({
   return (
     <aside className="dashboard-sidebar">
       <div className="dashboard-brand">
-        <div className="dashboard-brand-mark">EP</div>
+        <Image
+          src="/eps-logo.png"
+          alt="EPS Services"
+          width={58}
+          height={58}
+          className="dashboard-brand-logo"
+          priority
+        />
         <div>
           <p className="dashboard-brand-title">EPS Services</p>
           <p className="dashboard-brand-subtitle">

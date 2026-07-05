@@ -1,36 +1,82 @@
+import {
+  APP_LOCALE,
+  APP_TIME_ZONE,
+  createCalendarMonthDate,
+  getCalendarDate,
+  getCalendarDayKey,
+  getCalendarMonthKey,
+  parseStoredDateTime,
+} from "@/lib/utils/dates";
+
+export {
+  APP_LOCALE,
+  APP_TIME_ZONE,
+  createCalendarMonthDate,
+  getCalendarDate,
+  getCalendarDayKey,
+  getCalendarMonthKey,
+  parseStoredDateTime,
+};
+
+const dateFormatter = new Intl.DateTimeFormat(APP_LOCALE, {
+  timeZone: APP_TIME_ZONE,
+  day: "numeric",
+  month: "short",
+  year: "numeric",
+});
+
+const dateTimeFormatter = new Intl.DateTimeFormat(APP_LOCALE, {
+  timeZone: APP_TIME_ZONE,
+  day: "numeric",
+  month: "short",
+  year: "numeric",
+  hour: "numeric",
+  minute: "2-digit",
+});
+
+const monthTitleFormatter = new Intl.DateTimeFormat(APP_LOCALE, {
+  timeZone: APP_TIME_ZONE,
+  month: "long",
+  year: "numeric",
+});
+
+const longDateFormatter = new Intl.DateTimeFormat(APP_LOCALE, {
+  timeZone: APP_TIME_ZONE,
+  weekday: "long",
+  day: "numeric",
+  month: "long",
+  year: "numeric",
+});
+
+const calendarMonthLabelFormatter = new Intl.DateTimeFormat(APP_LOCALE, {
+  timeZone: APP_TIME_ZONE,
+  month: "short",
+});
+
 export function formatDate(value?: string | null): string {
-  if (!value) return "Empty";
+  const date = parseStoredDateTime(value);
+  if (!date) return "Empty";
 
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return "Empty";
-
-  return new Intl.DateTimeFormat("en-SG", {
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-  }).format(date);
+  return dateFormatter.format(date);
 }
 
 export function formatDateTime(value?: string | null): string {
-  if (!value) return "Empty";
+  const date = parseStoredDateTime(value);
+  if (!date) return "Empty";
 
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return "Empty";
-
-  return new Intl.DateTimeFormat("en-SG", {
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-    hour: "numeric",
-    minute: "2-digit",
-  }).format(date);
+  return dateTimeFormatter.format(date);
 }
 
 export function formatMonthTitle(date: Date): string {
-  return new Intl.DateTimeFormat("en-SG", {
-    month: "long",
-    year: "numeric",
-  }).format(date);
+  return monthTitleFormatter.format(date);
+}
+
+export function formatLongDate(date: Date): string {
+  return longDateFormatter.format(date);
+}
+
+export function formatMonthLabel(date: Date): string {
+  return calendarMonthLabelFormatter.format(date);
 }
 
 export function formatMoney(amount?: number | null): string {
@@ -55,11 +101,15 @@ export function getInitials(value?: string | null): string {
 }
 
 export function buildMonthGrid(baseDate: Date): Date[] {
-  const start = new Date(baseDate.getFullYear(), baseDate.getMonth(), 1);
+  const start = createCalendarMonthDate(
+    baseDate.getFullYear(),
+    baseDate.getMonth(),
+    1,
+  );
   const firstDayIndex = (start.getDay() + 6) % 7;
   start.setDate(start.getDate() - firstDayIndex);
 
-  return Array.from({ length: 35 }, (_, index) => {
+  return Array.from({ length: 42 }, (_, index) => {
     const date = new Date(start);
     date.setDate(start.getDate() + index);
     return date;
@@ -67,11 +117,11 @@ export function buildMonthGrid(baseDate: Date): Date[] {
 }
 
 export function isSameDay(left: Date, right: Date): boolean {
-  return (
-    left.getFullYear() === right.getFullYear() &&
-    left.getMonth() === right.getMonth() &&
-    left.getDate() === right.getDate()
-  );
+  return getCalendarDayKey(left) === getCalendarDayKey(right);
+}
+
+export function isSameMonth(left: Date, right: Date): boolean {
+  return getCalendarMonthKey(left) === getCalendarMonthKey(right);
 }
 
 export function slugifyStatus(value?: string | null): string {
