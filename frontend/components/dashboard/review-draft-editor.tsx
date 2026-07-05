@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { formatDateTime } from "@/frontend/lib/format";
@@ -38,6 +39,7 @@ export function ReviewDraftEditor({ draft }: ReviewDraftEditorProps) {
   const [isSaving, setIsSaving] = useState(false);
   const [isApproving, setIsApproving] = useState(false);
   const [isRejecting, setIsRejecting] = useState(false);
+  const [uploadingWorkItemIndex, setUploadingWorkItemIndex] = useState<number | null>(null);
 
   const conversation = useMemo(
     () => parseConversationMessages(draft.raw_conversation),
@@ -172,6 +174,51 @@ export function ReviewDraftEditor({ draft }: ReviewDraftEditorProps) {
     }
   }
 
+  async function uploadWorkItemImage(index: number, file: File) {
+    setUploadingWorkItemIndex(index);
+    setStatusMessage(null);
+
+    try {
+      const formData = new FormData();
+      formData.set("itemIndex", String(index));
+      formData.set("file", file);
+
+      const response = await fetch(`/api/review-drafts/${draft.id}/work-item-media`, {
+        method: "POST",
+        body: formData,
+      });
+
+      const payload = (await response.json()) as {
+        success?: boolean;
+        error?: string;
+        mediaAsset?: NonNullable<AiLeadExtraction["workItems"][number]["mediaAssets"]>[number];
+      };
+
+      if (!response.ok || !payload.success || !payload.mediaAsset) {
+        throw new Error(payload.error ?? "Failed to upload work item image.");
+      }
+
+      const next = [...extraction.workItems];
+      const workItem = next[index];
+
+      if (workItem) {
+        next[index] = {
+          ...workItem,
+          mediaAssets: [...(workItem.mediaAssets ?? []), payload.mediaAsset],
+        };
+        patchExtraction({ workItems: next });
+      }
+
+      setStatusMessage("Image uploaded and linked to this draft work item.");
+    } catch (error) {
+      setStatusMessage(
+        error instanceof Error ? error.message : "Failed to upload work item image.",
+      );
+    } finally {
+      setUploadingWorkItemIndex(null);
+    }
+  }
+
   return (
     <div className="page-stack">
       <section className="page-header">
@@ -180,7 +227,7 @@ export function ReviewDraftEditor({ draft }: ReviewDraftEditorProps) {
           <h1>Review Intake</h1>
         </div>
         <p className="page-header-copy">
-          Confirm the extracted details, correct anything unclear, then decide whether this conversation stays as a lead or becomes a project.
+          Confirm the extracted details, choose whether approval creates a lead only or a full project, then attach any work item images before approving.
         </p>
       </section>
 
@@ -493,38 +540,14 @@ export function ReviewDraftEditor({ draft }: ReviewDraftEditorProps) {
               </label>
             </div>
 
-            <div className="toggle-row">
-              <label className="checkbox-row">
-                <input
-                  type="checkbox"
-                  checked={extraction.siteVisitRequired}
-                  onChange={(event) =>
-                    patchExtraction({ siteVisitRequired: event.target.checked })
-                  }
-                />
-                <span>Site visit required</span>
-              </label>
-
-              <label className="checkbox-row">
-                <input
-                  type="checkbox"
-                  checked={extraction.shouldCreateProject}
-                  onChange={(event) =>
-                    patchExtraction({
-                      shouldCreateProject: event.target.checked,
-                    })
-                  }
-                />
-                <span>Create project on approval</span>
-              </label>
-            </div>
           </section>
 
-          <section className="panel">
+          <section className="panel work-item-panel">
             <div className="panel-header">
               <div>
-                <p className="eyebrow">Work Items</p>
-                <h2>Planned Scope</h2>
+                <p className="eyebrow">Project Work Items</p>
+                <h2>Create Work Items</h2>
+     
               </div>
               <button
                 type="button"
@@ -558,7 +581,8 @@ export function ReviewDraftEditor({ draft }: ReviewDraftEditorProps) {
                 <p className="helper-text">No work items extracted yet.</p>
               ) : (
                 extraction.workItems.map((item, index) => (
-                  <div key={`${draft.id}-work-item-${index}`} className="todo-card">
+                  <div key={`${draft.id}-work-item-${index}`} className="work-item-editor">
+                    <div className="work-item-editor-index">{index + 1}</div>
                     <div className="form-grid">
                       <label className="field-block">
                         <span className="field-label">Title</span>
@@ -715,6 +739,81 @@ export function ReviewDraftEditor({ draft }: ReviewDraftEditorProps) {
                         />
                         <span>Checklist Item</span>
                       </label>
+                    </div>
+
+                    <div className="work-item-media">
+                      <div>
+                        <span className="field-label">Images</span>
+                        <p className="helper-text">
+                          Images upload first, then stay linked to this task when the project is created.
+                        </p>
+                      </div>
+                      <label
+                        className={`button button-secondary work-item-upload-button ${uploadingWorkItemIndex === index ? "is-loading" : ""}`}
+                        aria-busy={uploadingWorkItemIndex === index}
+                      >
+                        {uploadingWorkItemIndex === index ? (
+                          <>
+                            <span aria-hidden="true" className="upload-spinner" />
+                            <span className="sr-only">Uploading image</span>
+                          </>
+                        ) : (
+                          <>
+                            <Image
+                              src="/upload-cloud.svg"
+                              alt=""
+                              width={26}
+                              height={26}
+                              className="upload-icon"
+                            />
+                            <span className="sr-only">Upload image</span>
+                          </>
+                        )}
+                        <input
+                          type="file"
+                          accept="image/*"
+                          disabled={uploadingWorkItemIndex !== null}
+                          onChange={(event) => {
+                            const file = event.target.files?.[0];
+                            event.target.value = "";
+                            if (!file) return;
+                            void uploadWorkItemImage(index, file);
+                          }}
+                        />
+                      </label>
+
+                      {uploadingWorkItemIndex === index ? (
+                        <div className="work-item-media-loading">
+                          <span className="upload-spinner" aria-hidden="true" />
+                          <span>Uploading image...</span>
+                        </div>
+                      ) : null}
+
+                      {(item.mediaAssets && item.mediaAssets.length > 0) ||
+                      uploadingWorkItemIndex === index ? (
+                        <div className="work-item-media-list">
+                          {uploadingWorkItemIndex === index ? (
+                            <div className="work-item-media-chip is-loading">
+                              <div className="work-item-media-skeleton" />
+                              <span>Uploading...</span>
+                            </div>
+                          ) : null}
+                          {(item.mediaAssets ?? []).map((mediaAsset) => (
+                            <div key={mediaAsset.id} className="work-item-media-chip">
+                              {mediaAsset.signedUrl ? (
+                                // eslint-disable-next-line @next/next/no-img-element
+                                <img src={mediaAsset.signedUrl} alt={mediaAsset.caption ?? "Work item image"} />
+                              ) : null}
+                              <span>{mediaAsset.fileName ?? mediaAsset.caption ?? "Uploaded image"}</span>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <p className="helper-text">No images uploaded for this work item yet.</p>
+                      )}
+                    </div>
+
+                    <div className="work-item-footer">
                       <button
                         type="button"
                         className="button button-secondary"
@@ -737,10 +836,55 @@ export function ReviewDraftEditor({ draft }: ReviewDraftEditorProps) {
         </div>
 
         <aside className="detail-sidebar">
-          <section className="panel">
+          <section className="panel approval-panel">
             <div className="detail-sidebar-group">
               <span className="field-label">Draft Status</span>
-              <strong>{draft.status}</strong>
+              <strong className="approval-status">{draft.status}</strong>
+            </div>
+
+            <div className="approval-decision">
+              <p className="field-label">Approval Outcome</p>
+              <label className={`approval-option ${extraction.shouldCreateProject ? "is-selected" : ""}`}>
+                <input
+                  type="checkbox"
+                  checked={extraction.shouldCreateProject}
+                  onChange={(event) =>
+                    patchExtraction({
+                      shouldCreateProject: event.target.checked,
+                    })
+                  }
+                />
+                <span>
+                  <strong>Create project on approval</strong>
+                  <small>
+                    Approval will create a lead, project, and the work items below.
+                  </small>
+                </span>
+              </label>
+              <label className={`approval-option ${extraction.siteVisitRequired ? "is-selected" : ""}`}>
+                <input
+                  type="checkbox"
+                  checked={extraction.siteVisitRequired}
+                  onChange={(event) =>
+                    patchExtraction({ siteVisitRequired: event.target.checked })
+                  }
+                />
+                <span>
+                  <strong>Site visit required</strong>
+                  <small>
+                    Mark this when EPS needs an inspection before or during project planning.
+                  </small>
+                </span>
+              </label>
+            </div>
+
+            <div className="approval-summary">
+              <span className="field-label">What happens next</span>
+              <p>
+                {extraction.shouldCreateProject
+                  ? "Clicking Approve will create a project and attach the listed work items."
+                  : "Clicking Approve will save this as a lead only. No project will be created."}
+              </p>
             </div>
             <div className="detail-sidebar-group">
               <span className="field-label">Thread</span>
@@ -781,6 +925,11 @@ export function ReviewDraftEditor({ draft }: ReviewDraftEditorProps) {
                     ? "Approve and Create Project"
                     : "Approve as Lead"}
               </button>
+              <p className="helper-text">
+                {extraction.shouldCreateProject
+                  ? "This will convert the draft into a lead and project."
+                  : "This will convert the draft into a lead only."}
+              </p>
               <button
                 type="button"
                 className="button button-secondary"

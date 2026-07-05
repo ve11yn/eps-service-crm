@@ -27,6 +27,7 @@ export default async function ProjectDetailPage({
     ? project.whatsapp_threads[0]
     : project.whatsapp_threads;
   const projectItems = Array.isArray(project.project_items) ? project.project_items : [];
+  const mediaAssets = Array.isArray(project.media_assets) ? project.media_assets : [];
 
   return (
     <div className="page-stack">
@@ -151,6 +152,29 @@ export default async function ProjectDetailPage({
                       <span>{item.area_name ?? "General area"}</span>
                       <span>{formatMoney(item.quoted_amount)}</span>
                     </div>
+                    {Array.isArray(item.media_assets) && item.media_assets.length > 0 ? (
+                      <div className="project-item-media-grid">
+                        {item.media_assets.map((asset) => (
+                          <a
+                            key={asset.id}
+                            href={asset.signed_url ?? "#"}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="project-item-media"
+                          >
+                            {asset.signed_url ? (
+                              // eslint-disable-next-line @next/next/no-img-element
+                              <img
+                                src={asset.signed_url}
+                                alt={asset.caption ?? item.title}
+                              />
+                            ) : (
+                              <span>Image unavailable</span>
+                            )}
+                          </a>
+                        ))}
+                      </div>
+                    ) : null}
                   </article>
                 ))}
               </div>
@@ -164,10 +188,30 @@ export default async function ProjectDetailPage({
                 <h2>Attachments</h2>
               </div>
             </div>
-            <EmptyState
-              title="Attachments view not connected yet"
-              description="This section will later read documents and media assets tied to the project."
-            />
+            {mediaAssets.length === 0 ? (
+              <EmptyState
+                title="No attachments yet"
+                description="Images uploaded from review work items will appear here after project creation."
+              />
+            ) : (
+              <div className="project-attachment-grid">
+                {mediaAssets.map((asset) => (
+                  <a
+                    key={asset.id}
+                    href={asset.signed_url ?? "#"}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="project-attachment"
+                  >
+                    {asset.signed_url ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={asset.signed_url} alt={asset.caption ?? "Project attachment"} />
+                    ) : null}
+                    <span>{asset.caption ?? asset.evidence_type ?? "Project image"}</span>
+                  </a>
+                ))}
+              </div>
+            )}
           </section>
         </div>
       </section>

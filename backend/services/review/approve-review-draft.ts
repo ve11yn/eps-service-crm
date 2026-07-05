@@ -10,6 +10,7 @@ import {
   getReviewDraftById,
   updateContact,
   updateLead,
+  updateMediaAsset,
   updateProject,
   updateProperty,
   updateReviewDraft,
@@ -195,7 +196,7 @@ async function createApprovedProjectItems(
   workItems: AiExtractedWorkItem[],
 ) {
   for (const [index, item] of workItems.entries()) {
-    await createProjectItem({
+    const projectItem = await createProjectItem({
       project_id: projectId,
       title: item.title,
       description: item.description ?? null,
@@ -215,7 +216,32 @@ async function createApprovedProjectItems(
       sort_order: index,
       status_code: "pending",
     });
+
+    for (const mediaAsset of item.mediaAssets ?? []) {
+      if (!mediaAsset.id) continue;
+
+      await updateMediaAsset(mediaAsset.id, {
+        project_id: projectId,
+        project_item_id: projectItem.id,
+        evidence_type: "project_work_item",
+      });
+    }
   }
+}
+
+function stripTemporaryMediaUrls(
+  extraction: AiLeadExtraction,
+): AiLeadExtraction {
+  return {
+    ...extraction,
+    workItems: extraction.workItems.map((item) => ({
+      ...item,
+      mediaAssets: item.mediaAssets?.map((asset) => ({
+        ...asset,
+        signedUrl: null,
+      })),
+    })),
+  };
 }
 
 export async function approveReviewDraft(input: {
@@ -265,7 +291,7 @@ export async function approveReviewDraft(input: {
     property_id: property?.id ?? null,
     lead_id: lead.id,
     approved_project_id: project?.id ?? null,
-    extraction_payload: extraction as unknown as Json,
+    extraction_payload: stripTemporaryMediaUrls(extraction) as unknown as Json,
     status: project ? "converted_to_project" : "converted_to_lead",
     reviewed_by_profile_id: input.reviewedByProfileId ?? null,
     reviewed_at: new Date().toISOString(),

@@ -164,6 +164,18 @@ export type AiExtractedWorkItem = {
   isAddOn?: boolean;
   isPi?: boolean;
   isChecklistItem?: boolean;
+  mediaAssets?: AiWorkItemMediaAsset[];
+};
+
+export type AiWorkItemMediaAsset = {
+  id: string;
+  storageBucket: string;
+  storagePath: string;
+  mimeType?: string | null;
+  mediaType?: string | null;
+  caption?: string | null;
+  fileName?: string | null;
+  signedUrl?: string | null;
 };
 
 export type AiLeadExtractionRequest = {

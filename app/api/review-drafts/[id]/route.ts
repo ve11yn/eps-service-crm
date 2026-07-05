@@ -8,12 +8,28 @@ import {
 import { requireApiSession } from "@/lib/auth/api";
 import type { UpdateReviewDraftRequest } from "@/types/api";
 import type { Json } from "@/types/database";
+import type { AiLeadExtraction } from "@/types/integration";
 
 type RouteContext = {
   params: Promise<{
     id: string;
   }>;
 };
+
+function stripTemporaryMediaUrls(
+  extraction: AiLeadExtraction,
+): AiLeadExtraction {
+  return {
+    ...extraction,
+    workItems: extraction.workItems.map((item) => ({
+      ...item,
+      mediaAssets: item.mediaAssets?.map((asset) => ({
+        ...asset,
+        signedUrl: null,
+      })),
+    })),
+  };
+}
 
 export async function GET(_request: Request, context: RouteContext) {
   const auth = await requireApiSession(["owner", "admin"]);
@@ -71,9 +87,9 @@ export async function PATCH(request: Request, context: RouteContext) {
       review_notes: payload.reviewNotes ?? draft.review_notes,
       reviewed_by_profile_id: auth.session.profile.id,
       reviewed_at: new Date().toISOString(),
-      extraction_payload:
-        (payload.extraction as unknown as Json | undefined) ??
-        draft.extraction_payload,
+      extraction_payload: payload.extraction
+        ? (stripTemporaryMediaUrls(payload.extraction) as unknown as Json)
+        : draft.extraction_payload,
       pricing_suggestions_payload:
         payload.pricingSuggestions ?? draft.pricing_suggestions_payload,
     });

@@ -1,5 +1,6 @@
 import "server-only";
 
+import { listMediaAssetsByProjectId } from "@/backend/repositories";
 import { createAdminSupabaseClient } from "@/lib/supabase/admin";
 
 export async function getProjectDetail(projectId: string) {
@@ -20,5 +21,34 @@ export async function getProjectDetail(projectId: string) {
     .maybeSingle();
 
   if (error) throw error;
-  return data;
+  if (!data) return null;
+
+  const mediaAssets = await listMediaAssetsByProjectId(projectId);
+  const mediaAssetsWithUrls = await Promise.all(
+    mediaAssets.map(async (asset) => {
+      const { data: signedUrlData } = await supabase.storage
+        .from(asset.storage_bucket)
+        .createSignedUrl(asset.storage_path, 60 * 60);
+
+      return {
+        ...asset,
+        signed_url: signedUrlData?.signedUrl ?? null,
+      };
+    }),
+  );
+
+  const projectItems = Array.isArray(data.project_items)
+    ? data.project_items.map((item) => ({
+        ...item,
+        media_assets: mediaAssetsWithUrls.filter(
+          (asset) => asset.project_item_id === item.id,
+        ),
+      }))
+    : data.project_items;
+
+  return {
+    ...data,
+    project_items: projectItems,
+    media_assets: mediaAssetsWithUrls,
+  };
 }

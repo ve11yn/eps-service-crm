@@ -3,6 +3,7 @@ import type {
   AiConversationMessage,
   AiExtractedWorkItem,
   AiLeadExtraction,
+  AiWorkItemMediaAsset,
 } from "@/types/integration";
 
 export const emptyLeadExtraction: AiLeadExtraction = {
@@ -78,6 +79,27 @@ function normalizeWorkItem(item: unknown): AiExtractedWorkItem {
     isAddOn: value.isAddOn ?? false,
     isPi: value.isPi ?? false,
     isChecklistItem: value.isChecklistItem ?? false,
+    mediaAssets: Array.isArray(value.mediaAssets)
+      ? value.mediaAssets.map(normalizeWorkItemMediaAsset)
+      : [],
+  };
+}
+
+function normalizeWorkItemMediaAsset(item: unknown): AiWorkItemMediaAsset {
+  const value =
+    item && typeof item === "object" && !Array.isArray(item)
+      ? (item as Partial<AiWorkItemMediaAsset>)
+      : {};
+
+  return {
+    id: value.id ?? "",
+    storageBucket: value.storageBucket ?? "crm-media",
+    storagePath: value.storagePath ?? "",
+    mimeType: value.mimeType ?? null,
+    mediaType: value.mediaType ?? "image",
+    caption: value.caption ?? null,
+    fileName: value.fileName ?? null,
+    signedUrl: value.signedUrl ?? null,
   };
 }
 

@@ -6,5 +6,6 @@ export * from "./messages-repository";
 export * from "./leads-repository";
 export * from "./projects-repository";
 export * from "./project-items-repository";
+export * from "./media-assets-repository";
 export * from "./review-drafts-repository";
 export * from "./pricing-items-repository";
