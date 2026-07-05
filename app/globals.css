@@ -1256,14 +1256,25 @@ textarea {
   white-space: nowrap;
 }
 
+.schedule-panel {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+}
+
 .calendar-grid {
+  flex: 1;
+  min-height: 0;
   display: grid;
   grid-template-columns: repeat(7, minmax(0, 1fr));
-  gap: 10px;
+  grid-template-rows: auto repeat(6, minmax(0, 1fr));
+  gap: 8px;
 }
 
 .calendar-toolbar {
   align-items: center;
+  flex: 0 0 auto;
 }
 
 .calendar-title-wrap {
@@ -1433,13 +1444,13 @@ textarea {
 .calendar-heading {
   color: var(--text-muted);
   font-size: 0.84rem;
-  padding: 0 2px 8px;
+  padding: 0 2px 4px;
   font-weight: 500;
   text-transform: uppercase;
 }
 
 .calendar-cell {
-  min-height: 158px;
+  min-height: 0;
   border-radius: 5px;
   border: 1px solid var(--line);
   background: rgba(255, 255, 255, 0.88);
@@ -1468,10 +1479,10 @@ textarea {
   height: 100%;
   border: 0;
   background: transparent;
-  padding: 11px;
+  padding: 8px;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 6px;
   align-items: stretch;
   text-align: left;
   cursor: pointer;
@@ -1489,12 +1500,13 @@ textarea {
 }
 
 .calendar-date {
-  width: 28px;
-  height: 28px;
+  width: 24px;
+  height: 24px;
   border-radius: 100%;
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  font-size: 0.86rem;
   font-weight: 500;
 }
 
@@ -1504,9 +1516,9 @@ textarea {
 }
 
 .calendar-count-badge {
-  min-width: 26px;
-  height: 26px;
-  padding: 0 8px;
+  min-width: 22px;
+  height: 22px;
+  padding: 0 6px;
   border-radius: 999px;
   display: inline-flex;
   align-items: center;
@@ -1520,21 +1532,22 @@ textarea {
 .calendar-events {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 4px;
   min-width: 0;
+  overflow: hidden;
 }
 
 .calendar-event {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
   min-width: 0;
-  padding: 10px;
+  padding: 5px 6px;
   border-radius: 5px;
   background: white;
   border: 1px solid rgba(227, 220, 202, 0.85);
-  font-size: 0.88rem;
-  line-height: 1.4;
+  font-size: 0.78rem;
+  line-height: 1.2;
 }
 
 .calendar-event-time {
@@ -1627,6 +1640,7 @@ textarea {
   .dashboard-main > .page-stack > .panel,
   .dashboard-main > .page-stack > .page-stack,
   .dashboard-main > .page-stack > .project-grid,
+  .schedule-panel,
   .inbox-layout,
   .inbox-detail,
   .review-layout > .page-stack,
@@ -1636,6 +1650,11 @@ textarea {
   .inbox-list {
     height: auto;
     overflow: visible;
+  }
+
+  .calendar-grid {
+    flex: initial;
+    grid-template-rows: auto repeat(6, minmax(132px, auto));
   }
 
   .inbox-detail {

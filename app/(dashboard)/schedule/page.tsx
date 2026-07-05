@@ -13,7 +13,7 @@ export default async function SchedulePage() {
         </div>
       </section>
 
-      <section className="panel">
+      <section className="panel schedule-panel">
         <ScheduleCalendar
           baseDate={schedule.baseDate.toISOString()}
           events={schedule.events}
