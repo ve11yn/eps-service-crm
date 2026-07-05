@@ -11,9 +11,7 @@ export default async function SettingsPage() {
           <p className="eyebrow">Configuration</p>
           <h1>Settings</h1>
         </div>
-        <p className="page-header-copy">
-          Manage internal staff access for owner, admin, coordinator, and field worker accounts.
-        </p>
+
       </section>
 
       <StaffManagement initialStaff={staff} />

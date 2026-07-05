@@ -2,6 +2,7 @@ import "server-only";
 
 import {
   countProfiles,
+  getProfileById,
   getProfileByUsername,
   listProfiles,
   updateProfile,
@@ -197,6 +198,95 @@ export async function createStaffUser(input: {
       username: profile.username,
       role_code: profile.role_code,
       display_name: profile.display_name,
+    },
+  });
+
+  return {
+    user: data.user,
+    profile,
+  };
+}
+
+export async function updateStaffAccount(input: {
+  profileId: string;
+  email: string;
+  username: string;
+  displayName: string;
+  roleCode: AppRole;
+  phone: string | null;
+  isActive: boolean;
+  performedByProfileId: string;
+}) {
+  if (!["owner", "admin", "coordinator", "field_worker"].includes(input.roleCode)) {
+    throw new Error("roleCode must be owner, admin, coordinator, or field_worker.");
+  }
+
+  if (input.profileId === input.performedByProfileId && !input.isActive) {
+    throw new Error("You cannot deactivate your own account.");
+  }
+
+  if (
+    input.profileId === input.performedByProfileId &&
+    !["owner", "admin"].includes(input.roleCode)
+  ) {
+    throw new Error("You cannot remove your own dashboard access.");
+  }
+
+  const username = assertValidUsername(input.username);
+  const existingProfile = await getProfileByUsername(username);
+
+  if (existingProfile && existingProfile.id !== input.profileId) {
+    throw new Error("That username is already in use.");
+  }
+
+  const existingTarget = await getProfileById(input.profileId);
+
+  if (!existingTarget) {
+    throw new Error("Staff account not found.");
+  }
+
+  const supabase = createAdminSupabaseClient();
+  const { data, error } = await supabase.auth.admin.updateUserById(input.profileId, {
+    email: input.email.trim().toLowerCase(),
+    user_metadata: {
+      username,
+      display_name: input.displayName,
+      role_code: input.roleCode,
+    },
+  });
+
+  if (error) throw error;
+  if (!data.user) {
+    throw new Error("Supabase did not return the updated staff user.");
+  }
+
+  const profile = await updateProfile(input.profileId, {
+    display_name: input.displayName,
+    role_code: input.roleCode,
+    phone: input.phone,
+    username,
+    is_active: input.isActive,
+  });
+
+  await logAuditEvent({
+    action: "auth.update_staff_user",
+    entityType: "profile",
+    entityId: profile.id,
+    performedByProfileId: input.performedByProfileId,
+    oldValue: {
+      username: existingTarget.username,
+      role_code: existingTarget.role_code,
+      display_name: existingTarget.display_name,
+      phone: existingTarget.phone,
+      is_active: existingTarget.is_active,
+    },
+    newValue: {
+      email: data.user.email,
+      username: profile.username,
+      role_code: profile.role_code,
+      display_name: profile.display_name,
+      phone: profile.phone,
+      is_active: profile.is_active,
     },
   });
 

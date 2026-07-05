@@ -40,6 +40,9 @@ export function ReviewDraftEditor({ draft }: ReviewDraftEditorProps) {
   const [isApproving, setIsApproving] = useState(false);
   const [isRejecting, setIsRejecting] = useState(false);
   const [uploadingWorkItemIndex, setUploadingWorkItemIndex] = useState<number | null>(null);
+  const [expandedWorkItemIndex, setExpandedWorkItemIndex] = useState<number | null>(() =>
+    extraction.workItems.length > 0 ? 0 : null,
+  );
 
   const conversation = useMemo(
     () => parseConversationMessages(draft.raw_conversation),
@@ -219,6 +222,43 @@ export function ReviewDraftEditor({ draft }: ReviewDraftEditorProps) {
     }
   }
 
+  function addWorkItem() {
+    const nextIndex = extraction.workItems.length;
+
+    patchExtraction({
+      workItems: [
+        ...extraction.workItems,
+        {
+          title: "",
+          description: "",
+          areaName: "",
+          actionSummary: "",
+          priority: "normal",
+          itemType: "",
+          itemGroup: "",
+          isAddOn: false,
+          isPi: false,
+          isChecklistItem: false,
+        },
+      ],
+    });
+    setExpandedWorkItemIndex(nextIndex);
+  }
+
+  function removeWorkItem(index: number) {
+    patchExtraction({
+      workItems: extraction.workItems.filter(
+        (_workItem, workItemIndex) => workItemIndex !== index,
+      ),
+    });
+    setExpandedWorkItemIndex((current) => {
+      if (current === null) return null;
+      if (current === index) return null;
+      if (current > index) return current - 1;
+      return current;
+    });
+  }
+
   return (
     <div className="page-stack">
       <section className="page-header">
@@ -226,9 +266,7 @@ export function ReviewDraftEditor({ draft }: ReviewDraftEditorProps) {
           <p className="eyebrow">Review Draft</p>
           <h1>Review Intake</h1>
         </div>
-        <p className="page-header-copy">
-          Confirm the extracted details, choose whether approval creates a lead only or a full project, then attach any work item images before approving.
-        </p>
+
       </section>
 
       <section className="review-layout">
@@ -552,25 +590,7 @@ export function ReviewDraftEditor({ draft }: ReviewDraftEditorProps) {
               <button
                 type="button"
                 className="button button-secondary"
-                onClick={() =>
-                  patchExtraction({
-                    workItems: [
-                      ...extraction.workItems,
-                      {
-                        title: "",
-                        description: "",
-                        areaName: "",
-                        actionSummary: "",
-                        priority: "normal",
-                        itemType: "",
-                        itemGroup: "",
-                        isAddOn: false,
-                        isPi: false,
-                        isChecklistItem: false,
-                      },
-                    ],
-                  })
-                }
+                onClick={addWorkItem}
               >
                 Add Work Item
               </button>
@@ -580,10 +600,31 @@ export function ReviewDraftEditor({ draft }: ReviewDraftEditorProps) {
               {extraction.workItems.length === 0 ? (
                 <p className="helper-text">No work items extracted yet.</p>
               ) : (
-                extraction.workItems.map((item, index) => (
-                  <div key={`${draft.id}-work-item-${index}`} className="work-item-editor">
+                extraction.workItems.map((item, index) => {
+                  const isExpanded = expandedWorkItemIndex === index;
+                  const summary = item.areaName || item.itemType || item.priority || "No details yet";
+
+                  return (
+                  <div
+                    key={`${draft.id}-work-item-${index}`}
+                    className={`work-item-editor ${isExpanded ? "is-expanded" : ""}`}
+                  >
                     <div className="work-item-editor-index">{index + 1}</div>
-                    <div className="form-grid">
+                    <button
+                      type="button"
+                      className="work-item-editor-header"
+                      aria-expanded={isExpanded}
+                      onClick={() => setExpandedWorkItemIndex(isExpanded ? null : index)}
+                    >
+                      <span className="work-item-editor-title">
+                        {item.title || `Work Item ${index + 1}`}
+                      </span>
+                      <span className="work-item-editor-summary">{summary}</span>
+                    </button>
+
+                    {isExpanded ? (
+                      <>
+                        <div className="form-grid">
                       <label className="field-block">
                         <span className="field-label">Title</span>
                         <input
@@ -691,9 +732,9 @@ export function ReviewDraftEditor({ draft }: ReviewDraftEditorProps) {
                           }}
                         />
                       </label>
-                    </div>
+                        </div>
 
-                    <div className="toggle-row">
+                        <div className="toggle-row">
                       <label className="checkbox-row">
                         <input
                           type="checkbox"
@@ -739,9 +780,9 @@ export function ReviewDraftEditor({ draft }: ReviewDraftEditorProps) {
                         />
                         <span>Checklist Item</span>
                       </label>
-                    </div>
+                        </div>
 
-                    <div className="work-item-media">
+                        <div className="work-item-media">
                       <div>
                         <span className="field-label">Images</span>
                         <p className="helper-text">
@@ -811,25 +852,22 @@ export function ReviewDraftEditor({ draft }: ReviewDraftEditorProps) {
                       ) : (
                         <p className="helper-text">No images uploaded for this work item yet.</p>
                       )}
-                    </div>
+                        </div>
 
-                    <div className="work-item-footer">
-                      <button
-                        type="button"
-                        className="button button-secondary"
-                        onClick={() =>
-                          patchExtraction({
-                            workItems: extraction.workItems.filter(
-                              (_workItem, workItemIndex) => workItemIndex !== index,
-                            ),
-                          })
-                        }
-                      >
-                        Remove
-                      </button>
-                    </div>
+                        <div className="work-item-footer">
+                          <button
+                            type="button"
+                            className="button button-secondary"
+                            onClick={() => removeWorkItem(index)}
+                          >
+                            Remove
+                          </button>
+                        </div>
+                      </>
+                    ) : null}
                   </div>
-                ))
+                  );
+                })
               )}
             </div>
           </section>
