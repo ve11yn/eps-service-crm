@@ -67,7 +67,7 @@ body {
   width: min(520px, 100%);
   background: var(--surface);
   border: 1px solid var(--line);
-  border-radius: 9px;
+  border-radius: 6px;
   padding: 28px;
   box-shadow: 0 18px 40px rgba(41, 34, 22, 0.06);
 }
@@ -136,9 +136,15 @@ textarea {
 }
 
 .dashboard-nav-link {
+  display: block;
+  width: 100%;
   padding: 12px 14px;
-  border-radius: 5px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
   color: var(--text-muted);
+  font: inherit;
+  text-align: left;
   transition: 150ms ease;
 }
 
@@ -160,6 +166,9 @@ textarea {
 }
 
 .dashboard-main {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
   padding: 24px;
 }
 
@@ -167,6 +176,27 @@ textarea {
   display: flex;
   flex-direction: column;
   gap: 9px;
+}
+
+.dashboard-main > .page-stack {
+  flex: 1;
+  height: calc(100vh - 48px);
+  min-height: 0;
+}
+
+.dashboard-main > .page-stack > :last-child {
+  flex: 1;
+  min-height: 0;
+}
+
+.dashboard-main > .page-stack > .panel,
+.dashboard-main > .page-stack > .page-stack {
+  overflow: auto;
+}
+
+.dashboard-main > .page-stack > .project-grid {
+  align-content: start;
+  overflow: auto;
 }
 
 .page-header {
@@ -205,7 +235,7 @@ textarea {
 .panel {
   background: var(--surface);
   border: 1px solid var(--line);
-  border-radius: 9px;
+  border-radius: 6px;
   padding: 24px;
   box-shadow: 0 18px 40px rgba(41, 34, 22, 0.06);
 }
@@ -352,7 +382,7 @@ textarea {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  border-radius: 5px;
+  border-radius: 6px;
   border: 1px solid var(--line);
   padding: 11px 16px;
   min-height: 44px;
@@ -383,7 +413,7 @@ textarea {
 .input {
   min-height: 46px;
   padding: 0 14px;
-  border-radius: 5px;
+  border-radius: 6px;
   border: 1px solid var(--line);
   background: white;
 }
@@ -409,7 +439,7 @@ textarea {
   min-height: 44px;
   padding: 8px 34px 8px 13px;
   border: 1px solid var(--line);
-  border-radius: 3px;
+  border-radius: 5px;
   background: white;
   color: var(--foreground);
   font: inherit;
@@ -449,7 +479,7 @@ textarea {
   width: 210px;
   padding: 6px;
   border: 1px solid var(--line);
-  border-radius: 3px;
+  border-radius: 5px;
   background: white;
   box-shadow: 0 16px 34px rgba(28, 39, 48, 0.12);
 }
@@ -459,7 +489,7 @@ textarea {
   min-height: 36px;
   padding: 8px 10px;
   border: 0;
-  border-radius: 2px;
+  border-radius: 4px;
   background: transparent;
   color: var(--foreground);
   font: inherit;
@@ -487,7 +517,7 @@ textarea {
   justify-content: center;
   min-height: 34px;
   padding: 6px 12px;
-  border-radius: 5px;
+  border-radius: 6px;
   font-size: 0.88rem;
   font-weight: 600;
   background: var(--surface-muted);
@@ -538,10 +568,58 @@ textarea {
   display: grid;
   grid-template-columns: 360px minmax(0, 1fr);
   gap: 5px;
+  align-items: stretch;
+  height: 100%;
+  min-height: 0;
 }
 
 .inbox-list {
-  min-height: 70vh;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.inbox-list .thread-list {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+}
+
+.inbox-detail {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  gap: 9px;
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.inbox-empty {
+  height: 100%;
+  overflow: auto;
+}
+
+.inbox-ai-panel {
+  min-height: 0;
+  overflow: auto;
+}
+
+.inbox-conversation-panel {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.inbox-conversation-panel .message-list {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+}
+
+.inbox-composer {
+  min-height: 0;
 }
 
 .thread-list {
@@ -570,14 +648,14 @@ textarea {
 }
 
 .thread-card:first-child {
-  border-top-left-radius: 7px;
-  border-top-right-radius: 7px;
+  border-top-left-radius: 6px;
+  border-top-right-radius: 6px;
 }
 
 .thread-card:last-child {
   border-bottom: 0;
-  border-bottom-left-radius: 7px;
-  border-bottom-right-radius: 7px;
+  border-bottom-left-radius: 6px;
+  border-bottom-right-radius: 6px;
 }
 
 .thread-card-avatar {
@@ -691,7 +769,14 @@ textarea {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 360px;
   gap: 5px;
-  align-items: start;
+  align-items: stretch;
+  min-height: 0;
+}
+
+.review-layout > .page-stack,
+.review-layout > .detail-sidebar {
+  min-height: 0;
+  overflow: auto;
 }
 
 .toggle-row {
@@ -806,15 +891,23 @@ textarea {
   display: grid;
   grid-template-columns: 300px minmax(0, 1fr);
   gap: 5px;
+  align-items: stretch;
+  min-height: 0;
 }
 
 .detail-sidebar {
   position: sticky;
   top: 24px;
-  height: fit-content;
+  max-height: 100%;
   display: flex;
   flex-direction: column;
   gap: 9px;
+  overflow: auto;
+}
+
+.project-detail-layout > .page-stack {
+  min-height: 0;
+  overflow: auto;
 }
 
 .detail-sidebar-group {
@@ -832,7 +925,7 @@ textarea {
   display: inline-flex;
   width: fit-content;
   padding: 8px 10px;
-  border-radius: 3px;
+  border-radius: 5px;
   background: var(--surface-muted);
   font-size: 0.92rem;
 }
@@ -850,7 +943,7 @@ textarea {
   gap: 12px;
   padding: 14px;
   border: 1px solid var(--line);
-  border-radius: 3px;
+  border-radius: 5px;
   background: white;
   cursor: pointer;
   transition: 150ms ease;
@@ -880,7 +973,7 @@ textarea {
 .approval-summary {
   margin-top: 18px;
   padding: 14px;
-  border-radius: 3px;
+  border-radius: 5px;
   background: var(--accent-soft);
 }
 
@@ -948,7 +1041,7 @@ textarea {
   gap: 14px;
   padding: 16px;
   border: 1px solid var(--line);
-  border-radius: 3px;
+  border-radius: 5px;
   background: #fbfcfd;
 }
 
@@ -1036,7 +1129,7 @@ textarea {
   width: 132px;
   min-height: 132px;
   border: 1px solid var(--line);
-  border-radius: 3px;
+  border-radius: 5px;
   background: white;
   overflow: hidden;
 }
@@ -1139,7 +1232,7 @@ textarea {
   display: block;
   overflow: hidden;
   border: 1px solid var(--line);
-  border-radius: 3px;
+  border-radius: 5px;
   background: white;
 }
 
@@ -1187,7 +1280,7 @@ textarea {
   min-height: 44px;
   padding: 8px 13px;
   border: 1px solid var(--line);
-  border-radius: 3px;
+  border-radius: 5px;
   background: white;
   color: var(--foreground);
   cursor: pointer;
@@ -1255,7 +1348,7 @@ textarea {
   width: min(268px, calc(100vw - 36px));
   padding: 12px;
   border: 1px solid var(--line);
-  border-radius: 3px;
+  border-radius: 5px;
   background: white;
   box-shadow: 0 16px 34px rgba(28, 39, 48, 0.12);
 }
@@ -1297,7 +1390,7 @@ textarea {
   height: 36px;
   padding: 0 30px 0 12px;
   border: 1px solid var(--line);
-  border-radius: 3px;
+  border-radius: 5px;
   background: white;
   color: var(--foreground);
   font: inherit;
@@ -1315,7 +1408,7 @@ textarea {
 .calendar-month-option {
   min-height: 34px;
   padding: 0 8px;
-  border-radius: 2px;
+  border-radius: 4px;
   border: 1px solid var(--line);
   background: white;
   color: var(--foreground);
@@ -1347,7 +1440,7 @@ textarea {
 
 .calendar-cell {
   min-height: 158px;
-  border-radius: 3px;
+  border-radius: 5px;
   border: 1px solid var(--line);
   background: rgba(255, 255, 255, 0.88);
   padding: 0;
@@ -1494,7 +1587,7 @@ textarea {
   gap: 16px;
   padding: 18px;
   border: 1px solid var(--line);
-  border-radius: 7px;
+  border-radius: 6px;
   background: rgba(255, 255, 255, 0.9);
 }
 
@@ -1526,6 +1619,29 @@ textarea {
 }
 
 @media (max-width: 1100px) {
+  .dashboard-main > .page-stack {
+    height: auto;
+    min-height: 0;
+  }
+
+  .dashboard-main > .page-stack > .panel,
+  .dashboard-main > .page-stack > .page-stack,
+  .dashboard-main > .page-stack > .project-grid,
+  .inbox-layout,
+  .inbox-detail,
+  .review-layout > .page-stack,
+  .review-layout > .detail-sidebar,
+  .project-detail-layout > .page-stack,
+  .detail-sidebar,
+  .inbox-list {
+    height: auto;
+    overflow: visible;
+  }
+
+  .inbox-detail {
+    display: flex;
+  }
+
   .dashboard-shell,
   .inbox-layout,
   .project-detail-layout,

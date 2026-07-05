@@ -79,9 +79,9 @@ export default async function InboxPage({ searchParams }: InboxPageProps) {
           )}
         </aside>
 
-        <div className="page-stack">
+        <div className="page-stack inbox-detail">
           {!inbox.activeThread ? (
-            <div className="panel">
+            <div className="panel inbox-empty">
               <EmptyState
                 title="Select a conversation"
                 description="Choose a thread on the left to view the chat and AI summary."
@@ -89,7 +89,7 @@ export default async function InboxPage({ searchParams }: InboxPageProps) {
             </div>
           ) : (
             <>
-              <section className="panel">
+              <section className="panel inbox-ai-panel">
                 <div className="panel-header">
                   <div>
                     <p className="eyebrow">AI Intake</p>
@@ -141,7 +141,7 @@ export default async function InboxPage({ searchParams }: InboxPageProps) {
                 )}
               </section>
 
-              <section className="panel">
+              <section className="panel inbox-conversation-panel">
                 <div className="panel-header">
                   <div>
                     <p className="eyebrow">Conversation</p>
