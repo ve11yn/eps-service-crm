@@ -7,6 +7,32 @@ import type { Database } from "@/types/database";
 
 type ProfileRow = Database["public"]["Tables"]["profiles"]["Row"];
 type ProfileUpdate = Database["public"]["Tables"]["profiles"]["Update"];
+type ProfileReadRow = Pick<
+  ProfileRow,
+  | "id"
+  | "email"
+  | "username"
+  | "display_name"
+  | "role_code"
+  | "phone"
+  | "is_active"
+  | "avatar_url"
+  | "created_at"
+  | "updated_at"
+>;
+type ProfileListRow = Pick<
+  ProfileRow,
+  | "id"
+  | "email"
+  | "username"
+  | "display_name"
+  | "role_code"
+  | "phone"
+  | "is_active"
+  | "avatar_url"
+  | "created_at"
+  | "updated_at"
+>;
 
 const getProfileByIdCached = cachedQuery(
   ["profiles", "get-by-id"],
@@ -15,7 +41,7 @@ const getProfileByIdCached = cachedQuery(
 
     const { data, error } = await supabase
       .from("profiles")
-      .select("*")
+      .select("id, email, username, display_name, role_code, phone, is_active, avatar_url, created_at, updated_at")
       .eq("id", profileId)
       .maybeSingle();
 
@@ -33,7 +59,7 @@ const getProfileByUsernameCached = cachedQuery(
 
     const { data, error } = await supabase
       .from("profiles")
-      .select("*")
+      .select("id, email, username, display_name, role_code, phone, is_active, avatar_url, created_at, updated_at")
       .eq("username", username)
       .maybeSingle();
 
@@ -51,7 +77,7 @@ const listProfilesCached = cachedQuery(
 
     const { data, error } = await supabase
       .from("profiles")
-      .select("*")
+      .select("id, email, username, display_name, role_code, phone, is_active, avatar_url, created_at, updated_at")
       .order("created_at", { ascending: false });
 
     if (error) throw error;
@@ -77,17 +103,17 @@ const countProfilesCached = cachedQuery(
   [CACHE_TAGS.profiles],
 );
 
-export async function getProfileById(profileId: string): Promise<ProfileRow | null> {
+export async function getProfileById(profileId: string): Promise<ProfileReadRow | null> {
   return getProfileByIdCached(profileId);
 }
 
 export async function getProfileByUsername(
   username: string,
-): Promise<ProfileRow | null> {
+): Promise<ProfileReadRow | null> {
   return getProfileByUsernameCached(username);
 }
 
-export async function listProfiles(): Promise<ProfileRow[]> {
+export async function listProfiles(): Promise<ProfileListRow[]> {
   return listProfilesCached();
 }
 

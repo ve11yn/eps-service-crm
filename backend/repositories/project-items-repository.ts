@@ -9,6 +9,27 @@ import type { Database } from "@/types/database";
 type ProjectItemRow = Database["public"]["Tables"]["project_items"]["Row"];
 type ProjectItemInsert = Database["public"]["Tables"]["project_items"]["Insert"];
 type ProjectItemUpdate = Database["public"]["Tables"]["project_items"]["Update"];
+type ProjectItemListRow = Pick<
+  ProjectItemRow,
+  | "id"
+  | "project_id"
+  | "title"
+  | "description"
+  | "area_name"
+  | "action_summary"
+  | "quoted_amount"
+  | "priority_code"
+  | "item_group"
+  | "item_type"
+  | "is_add_on"
+  | "is_pi"
+  | "is_checklist_item"
+  | "sort_order"
+  | "status_code"
+  | "created_at"
+  | "updated_at"
+  | "completed_at"
+>;
 
 const getProjectItemByIdCached = cachedQuery(
   ["project-items", "get-by-id"],
@@ -17,7 +38,9 @@ const getProjectItemByIdCached = cachedQuery(
 
     const { data, error } = await supabase
       .from("project_items")
-      .select("*")
+      .select(
+        "id, project_id, title, description, area_name, action_summary, quoted_amount, priority_code, item_group, item_type, is_add_on, is_pi, is_checklist_item, sort_order, status_code, created_at, updated_at, completed_at",
+      )
       .eq("id", itemId)
       .maybeSingle();
 
@@ -35,7 +58,9 @@ const listProjectItemsByProjectIdCached = cachedQuery(
 
     const { data, error } = await supabase
       .from("project_items")
-      .select("*")
+      .select(
+        "id, project_id, title, description, area_name, action_summary, quoted_amount, priority_code, item_group, item_type, is_add_on, is_pi, is_checklist_item, sort_order, status_code, created_at, updated_at, completed_at",
+      )
       .eq("project_id", projectId)
       .order("sort_order", { ascending: true })
       .order("created_at", { ascending: true });
@@ -47,13 +72,15 @@ const listProjectItemsByProjectIdCached = cachedQuery(
   [CACHE_TAGS.projectItems],
 );
 
-export async function getProjectItemById(itemId: string): Promise<ProjectItemRow | null> {
+export async function getProjectItemById(
+  itemId: string,
+): Promise<ProjectItemListRow | null> {
   return getProjectItemByIdCached(itemId);
 }
 
 export async function listProjectItemsByProjectId(
   projectId: string,
-): Promise<ProjectItemRow[]> {
+): Promise<ProjectItemListRow[]> {
   return listProjectItemsByProjectIdCached(projectId);
 }
 

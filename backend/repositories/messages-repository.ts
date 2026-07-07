@@ -8,6 +8,18 @@ import type { Database } from "@/types/database";
 
 type MessageRow = Database["public"]["Tables"]["messages"]["Row"];
 type MessageInsert = Database["public"]["Tables"]["messages"]["Insert"];
+type MessageListRow = Pick<
+  MessageRow,
+  | "id"
+  | "thread_id"
+  | "direction_code"
+  | "sender_name"
+  | "sender_phone"
+  | "content"
+  | "media_caption"
+  | "sent_at"
+  | "created_at"
+>;
 
 const getMessageByExternalMessageIdCached = cachedQuery(
   ["messages", "get-by-external-id"],
@@ -34,7 +46,7 @@ const listMessagesByThreadIdCached = cachedQuery(
 
     const { data, error } = await supabase
       .from("messages")
-      .select("*")
+      .select("id, thread_id, direction_code, sender_name, sender_phone, content, media_caption, sent_at, created_at")
       .eq("thread_id", threadId)
       .order("sent_at", { ascending: true });
 
@@ -53,7 +65,7 @@ export async function getMessageByExternalMessageId(
 
 export async function listMessagesByThreadId(
   threadId: string,
-): Promise<MessageRow[]> {
+): Promise<MessageListRow[]> {
   return listMessagesByThreadIdCached(threadId);
 }
 

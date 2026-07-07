@@ -8,6 +8,17 @@ import type { Database } from "@/types/database";
 type MediaAssetRow = Database["public"]["Tables"]["media_assets"]["Row"];
 type MediaAssetInsert = Database["public"]["Tables"]["media_assets"]["Insert"];
 type MediaAssetUpdate = Database["public"]["Tables"]["media_assets"]["Update"];
+type MediaAssetListRow = Pick<
+  MediaAssetRow,
+  | "id"
+  | "project_id"
+  | "project_item_id"
+  | "storage_bucket"
+  | "storage_path"
+  | "caption"
+  | "evidence_type"
+  | "created_at"
+>;
 
 const listMediaAssetsByProjectIdCached = cachedQuery(
   ["media-assets", "list-by-project"],
@@ -16,7 +27,9 @@ const listMediaAssetsByProjectIdCached = cachedQuery(
 
     const { data, error } = await supabase
       .from("media_assets")
-      .select("*")
+      .select(
+        "id, project_id, project_item_id, storage_bucket, storage_path, caption, evidence_type, created_at",
+      )
       .eq("project_id", projectId)
       .order("created_at", { ascending: true });
 
@@ -77,6 +90,6 @@ export async function updateMediaAsset(
 
 export async function listMediaAssetsByProjectId(
   projectId: string,
-): Promise<MediaAssetRow[]> {
+): Promise<MediaAssetListRow[]> {
   return listMediaAssetsByProjectIdCached(projectId);
 }

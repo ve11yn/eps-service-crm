@@ -9,6 +9,65 @@ import type { Database } from "@/types/database";
 type LeadRow = Database["public"]["Tables"]["leads"]["Row"];
 type LeadInsert = Database["public"]["Tables"]["leads"]["Insert"];
 type LeadUpdate = Database["public"]["Tables"]["leads"]["Update"];
+type LeadListRow = Pick<
+  LeadRow,
+  | "id"
+  | "lead_code"
+  | "title"
+  | "status_code"
+  | "source_channel_code"
+  | "received_at"
+  | "last_activity_at"
+  | "assigned_to_profile_id"
+  | "primary_contact_id"
+  | "primary_property_id"
+  | "created_at"
+  | "updated_at"
+>;
+type LeadDetailRow = Pick<
+  LeadRow,
+  | "id"
+  | "lead_code"
+  | "title"
+  | "status_code"
+  | "source_channel_code"
+  | "received_at"
+  | "last_activity_at"
+  | "assigned_to_profile_id"
+  | "primary_contact_id"
+  | "primary_property_id"
+  | "summary"
+  | "customer_request"
+  | "ai_summary"
+  | "site_visit_required"
+  | "qualification_notes"
+  | "lost_reason"
+  | "whatsapp_thread_id"
+  | "created_at"
+  | "updated_at"
+>;
+type LatestLeadRow = Pick<
+  LeadRow,
+  | "id"
+  | "lead_code"
+  | "title"
+  | "status_code"
+  | "source_channel_code"
+  | "received_at"
+  | "last_activity_at"
+  | "assigned_to_profile_id"
+  | "primary_contact_id"
+  | "primary_property_id"
+  | "summary"
+  | "customer_request"
+  | "ai_summary"
+  | "site_visit_required"
+  | "qualification_notes"
+  | "lost_reason"
+  | "whatsapp_thread_id"
+  | "created_at"
+  | "updated_at"
+>;
 
 const listLeadsCached = cachedQuery(
   ["leads", "list"],
@@ -17,7 +76,9 @@ const listLeadsCached = cachedQuery(
 
     const { data, error } = await supabase
       .from("leads")
-      .select("*")
+      .select(
+        "id, lead_code, title, status_code, source_channel_code, received_at, last_activity_at, assigned_to_profile_id, primary_contact_id, primary_property_id, created_at, updated_at",
+      )
       .order("created_at", { ascending: false });
 
     if (error) throw error;
@@ -34,7 +95,9 @@ const getLeadByIdCached = cachedQuery(
 
     const { data, error } = await supabase
       .from("leads")
-      .select("*")
+      .select(
+        "id, lead_code, title, status_code, source_channel_code, received_at, last_activity_at, assigned_to_profile_id, primary_contact_id, primary_property_id, summary, customer_request, ai_summary, site_visit_required, qualification_notes, lost_reason, whatsapp_thread_id, created_at, updated_at",
+      )
       .eq("id", leadId)
       .maybeSingle();
 
@@ -52,7 +115,9 @@ const getLatestLeadByThreadIdCached = cachedQuery(
 
     const { data, error } = await supabase
       .from("leads")
-      .select("*")
+      .select(
+        "id, lead_code, title, status_code, source_channel_code, received_at, last_activity_at, assigned_to_profile_id, primary_contact_id, primary_property_id, summary, customer_request, ai_summary, site_visit_required, qualification_notes, lost_reason, whatsapp_thread_id, created_at, updated_at",
+      )
       .eq("whatsapp_thread_id", threadId)
       .order("created_at", { ascending: false })
       .limit(1)
@@ -65,17 +130,17 @@ const getLatestLeadByThreadIdCached = cachedQuery(
   [CACHE_TAGS.leads],
 );
 
-export async function listLeads(): Promise<LeadRow[]> {
+export async function listLeads(): Promise<LeadListRow[]> {
   return listLeadsCached();
 }
 
-export async function getLeadById(leadId: string): Promise<LeadRow | null> {
+export async function getLeadById(leadId: string): Promise<LeadDetailRow | null> {
   return getLeadByIdCached(leadId);
 }
 
 export async function getLatestLeadByThreadId(
   threadId: string,
-): Promise<LeadRow | null> {
+): Promise<LatestLeadRow | null> {
   return getLatestLeadByThreadIdCached(threadId);
 }
 

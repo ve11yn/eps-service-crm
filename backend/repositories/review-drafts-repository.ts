@@ -8,6 +8,21 @@ import type { Database } from "@/types/database";
 type ReviewDraftRow = Database["public"]["Tables"]["review_drafts"]["Row"];
 type ReviewDraftInsert = Database["public"]["Tables"]["review_drafts"]["Insert"];
 type ReviewDraftUpdate = Database["public"]["Tables"]["review_drafts"]["Update"];
+type ReviewDraftListRow = Pick<
+  ReviewDraftRow,
+  | "id"
+  | "thread_id"
+  | "lead_id"
+  | "contact_id"
+  | "property_id"
+  | "approved_project_id"
+  | "status"
+  | "source_channel_code"
+  | "extraction_payload"
+  | "review_notes"
+  | "created_at"
+  | "updated_at"
+>;
 
 const getReviewDraftByIdCached = cachedQuery(
   ["review-drafts", "get-by-id"],
@@ -55,7 +70,9 @@ const listReviewDraftsCached = cachedQuery(
 
     const { data, error } = await supabase
       .from("review_drafts")
-      .select("*")
+      .select(
+        "id, thread_id, lead_id, contact_id, property_id, approved_project_id, status, source_channel_code, extraction_payload, review_notes, created_at, updated_at",
+      )
       .order("created_at", { ascending: false });
 
     if (error) throw error;
@@ -77,7 +94,7 @@ export async function getLatestActiveReviewDraftByThreadId(
   return getLatestActiveReviewDraftByThreadIdCached(threadId);
 }
 
-export async function listReviewDrafts(): Promise<ReviewDraftRow[]> {
+export async function listReviewDrafts(): Promise<ReviewDraftListRow[]> {
   return listReviewDraftsCached();
 }
 

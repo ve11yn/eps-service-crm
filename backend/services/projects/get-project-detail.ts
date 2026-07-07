@@ -18,11 +18,38 @@ const getProjectDetailCached = cachedQuery(
       .from("projects")
       .select(
         `
-        *,
-        contacts:primary_contact_id (*),
-        properties:primary_property_id (*),
-        whatsapp_threads:whatsapp_thread_id (*),
-        project_items (*)
+        id,
+        project_code,
+        title,
+        source_lead_id,
+        source_channel_code,
+        status_code,
+        primary_contact_id,
+        primary_property_id,
+        whatsapp_thread_id,
+        scope_summary,
+        remarks,
+        enquiry_at,
+        scheduled_start_at,
+        scheduled_end_at,
+        handover_at,
+        payment_due_at,
+        payment_follow_up_at,
+        warranty_expires_at,
+        created_at,
+        updated_at,
+        contacts:primary_contact_id (
+          id, full_name, whatsapp_number, primary_phone, email, notes, created_at, updated_at
+        ),
+        properties:primary_property_id (
+          id, property_name, address_line_1, address_line_2, unit_no, postal_code, access_notes, created_at, updated_at
+        ),
+        whatsapp_threads:whatsapp_thread_id (
+          id, contact_id, external_thread_id, thread_subject, last_message_at, is_archived, created_at, updated_at
+        ),
+        project_items (
+          id, project_id, title, description, area_name, action_summary, quoted_amount, priority_code, item_group, item_type, is_add_on, is_pi, is_checklist_item, sort_order, status_code, created_at, updated_at, completed_at
+        )
       `,
       )
       .eq("id", projectId)
@@ -35,7 +62,22 @@ const getProjectDetailCached = cachedQuery(
       ? data.whatsapp_threads[0]
       : data.whatsapp_threads;
 
-    const mediaAssets = await listMediaAssetsByProjectId(projectId);
+    const mediaAssetsPromise = listMediaAssetsByProjectId(projectId);
+    const threadDataPromise = thread
+      ? Promise.all([
+          listMessagesByThreadId(thread.id),
+          getLatestActiveReviewDraftByThreadId(thread.id),
+        ])
+      : Promise.resolve<[Awaited<ReturnType<typeof listMessagesByThreadId>>, Awaited<ReturnType<typeof getLatestActiveReviewDraftByThreadId>>]>([
+          [],
+          null,
+        ]);
+
+    const [mediaAssets, [threadMessages, threadReviewDraft]] = await Promise.all([
+      mediaAssetsPromise,
+      threadDataPromise,
+    ]);
+
     const mediaAssetsWithUrls = await Promise.all(
       mediaAssets.map(async (asset) => {
         const { data: signedUrlData } = await supabase.storage
@@ -48,13 +90,6 @@ const getProjectDetailCached = cachedQuery(
         };
       }),
     );
-
-    const [threadMessages, threadReviewDraft] = thread
-      ? await Promise.all([
-          listMessagesByThreadId(thread.id),
-          getLatestActiveReviewDraftByThreadId(thread.id),
-        ])
-      : [[], null];
 
     const projectItems = Array.isArray(data.project_items)
       ? data.project_items.map((item) => ({

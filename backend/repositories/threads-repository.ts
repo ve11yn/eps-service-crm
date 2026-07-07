@@ -17,7 +17,9 @@ const getThreadByIdCached = cachedQuery(
 
     const { data, error } = await supabase
       .from("whatsapp_threads")
-      .select("*")
+      .select(
+        "id, contact_id, external_thread_id, source_channel_code, thread_subject, last_message_at, latest_ai_summary, ai_last_summarized_at, is_archived, created_at, updated_at",
+      )
       .eq("id", threadId)
       .maybeSingle();
 
@@ -35,7 +37,9 @@ const getThreadByExternalThreadIdCached = cachedQuery(
 
     const { data, error } = await supabase
       .from("whatsapp_threads")
-      .select("*")
+      .select(
+        "id, contact_id, external_thread_id, source_channel_code, thread_subject, last_message_at, latest_ai_summary, ai_last_summarized_at, is_archived, created_at, updated_at",
+      )
       .eq("external_thread_id", externalThreadId)
       .maybeSingle();
 

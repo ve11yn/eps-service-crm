@@ -52,7 +52,9 @@ const getInboxOverviewCached = cachedQuery(
 
     const { data: threads, error } = await supabase
       .from("whatsapp_threads")
-      .select("*, contacts:contact_id(*)")
+      .select(
+        "id, contact_id, external_thread_id, thread_subject, last_message_at, is_archived, created_at, updated_at, contacts:contact_id(id, full_name, whatsapp_number, primary_phone, email)",
+      )
       .eq("is_archived", false)
       .order("last_message_at", { ascending: false, nullsFirst: false });
 

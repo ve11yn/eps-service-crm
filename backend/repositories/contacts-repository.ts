@@ -17,7 +17,7 @@ const getContactByIdCached = cachedQuery(
 
     const { data, error } = await supabase
       .from("contacts")
-      .select("*")
+      .select("id, full_name, whatsapp_number, primary_phone, email, notes, created_at, updated_at")
       .eq("id", contactId)
       .maybeSingle();
 
@@ -35,7 +35,7 @@ const getContactByWhatsAppNumberCached = cachedQuery(
 
     const { data, error } = await supabase
       .from("contacts")
-      .select("*")
+      .select("id, full_name, whatsapp_number, primary_phone, email, notes, created_at, updated_at")
       .eq("whatsapp_number", whatsappNumber)
       .maybeSingle();
 

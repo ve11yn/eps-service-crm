@@ -9,6 +9,18 @@ import type { Database } from "@/types/database";
 type ProjectRow = Database["public"]["Tables"]["projects"]["Row"];
 type ProjectInsert = Database["public"]["Tables"]["projects"]["Insert"];
 type ProjectUpdate = Database["public"]["Tables"]["projects"]["Update"];
+type ProjectListRow = Pick<
+  ProjectRow,
+  | "id"
+  | "project_code"
+  | "title"
+  | "status_code"
+  | "scheduled_start_at"
+  | "scheduled_end_at"
+  | "payment_due_at"
+  | "updated_at"
+  | "created_at"
+>;
 
 const getProjectByIdCached = cachedQuery(
   ["projects", "get-by-id"],
@@ -35,7 +47,9 @@ const listProjectsCached = cachedQuery(
 
     const { data, error } = await supabase
       .from("projects")
-      .select("*")
+      .select(
+        "id, project_code, title, status_code, scheduled_start_at, scheduled_end_at, payment_due_at, updated_at, created_at",
+      )
       .order("created_at", { ascending: false });
 
     if (error) throw error;
@@ -49,7 +63,7 @@ export async function getProjectById(projectId: string): Promise<ProjectRow | nu
   return getProjectByIdCached(projectId);
 }
 
-export async function listProjects(): Promise<ProjectRow[]> {
+export async function listProjects(): Promise<ProjectListRow[]> {
   return listProjectsCached();
 }
 
