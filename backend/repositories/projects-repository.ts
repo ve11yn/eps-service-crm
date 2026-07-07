@@ -1,6 +1,8 @@
 // fetch/create/update project records and project status
 import "server-only";
 
+import { CACHE_TAGS } from "@/lib/cache/cache-tags";
+import { cachedQuery, invalidateCachedTags } from "@/lib/cache/query-cache";
 import { createAdminSupabaseClient } from "@/lib/supabase/admin";
 import type { Database } from "@/types/database";
 
@@ -8,29 +10,47 @@ type ProjectRow = Database["public"]["Tables"]["projects"]["Row"];
 type ProjectInsert = Database["public"]["Tables"]["projects"]["Insert"];
 type ProjectUpdate = Database["public"]["Tables"]["projects"]["Update"];
 
+const getProjectByIdCached = cachedQuery(
+  ["projects", "get-by-id"],
+  async (projectId: string) => {
+    const supabase = createAdminSupabaseClient();
+
+    const { data, error } = await supabase
+      .from("projects")
+      .select("*")
+      .eq("id", projectId)
+      .maybeSingle();
+
+    if (error) throw error;
+    return data;
+  },
+  15,
+  [CACHE_TAGS.projects],
+);
+
+const listProjectsCached = cachedQuery(
+  ["projects", "list"],
+  async () => {
+    const supabase = createAdminSupabaseClient();
+
+    const { data, error } = await supabase
+      .from("projects")
+      .select("*")
+      .order("created_at", { ascending: false });
+
+    if (error) throw error;
+    return data ?? [];
+  },
+  10,
+  [CACHE_TAGS.projects],
+);
+
 export async function getProjectById(projectId: string): Promise<ProjectRow | null> {
-  const supabase = createAdminSupabaseClient();
-
-  const { data, error } = await supabase
-    .from("projects")
-    .select("*")
-    .eq("id", projectId)
-    .maybeSingle();
-
-  if (error) throw error;
-  return data;
+  return getProjectByIdCached(projectId);
 }
 
 export async function listProjects(): Promise<ProjectRow[]> {
-  const supabase = createAdminSupabaseClient();
-
-  const { data, error } = await supabase
-    .from("projects")
-    .select("*")
-    .order("created_at", { ascending: false });
-
-  if (error) throw error;
-  return data ?? [];
+  return listProjectsCached();
 }
 
 export async function createProject(payload: ProjectInsert): Promise<ProjectRow> {
@@ -43,6 +63,13 @@ export async function createProject(payload: ProjectInsert): Promise<ProjectRow>
     .single();
 
   if (error) throw error;
+  invalidateCachedTags([
+    CACHE_TAGS.projects,
+    CACHE_TAGS.dashboard,
+    CACHE_TAGS.requests,
+    CACHE_TAGS.reports,
+    CACHE_TAGS.inbox,
+  ]);
   return data;
 }
 

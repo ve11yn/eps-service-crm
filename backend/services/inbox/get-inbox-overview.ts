@@ -1,5 +1,7 @@
 import "server-only";
 
+import { CACHE_TAGS } from "@/lib/cache/cache-tags";
+import { cachedQuery } from "@/lib/cache/query-cache";
 import { getLatestActiveReviewDraftByThreadId, listMessagesByThreadId } from "@/backend/repositories";
 import { createAdminSupabaseClient } from "@/lib/supabase/admin";
 import type { Json } from "@/types/database";
@@ -43,43 +45,52 @@ function buildSuggestedReply(extractionPayload: Json): string {
   return `Hi ${customerName}, thanks for reaching out. We can help with ${issue}. ${questionText}`;
 }
 
-export async function getInboxOverview(selectedThreadId?: string) {
-  const supabase = createAdminSupabaseClient();
+const getInboxOverviewCached = cachedQuery(
+  ["inbox", "overview"],
+  async (selectedThreadId?: string) => {
+    const supabase = createAdminSupabaseClient();
 
-  const { data: threads, error } = await supabase
-    .from("whatsapp_threads")
-    .select("*, contacts:contact_id(*)")
-    .eq("is_archived", false)
-    .order("last_message_at", { ascending: false, nullsFirst: false });
+    const { data: threads, error } = await supabase
+      .from("whatsapp_threads")
+      .select("*, contacts:contact_id(*)")
+      .eq("is_archived", false)
+      .order("last_message_at", { ascending: false, nullsFirst: false });
 
-  if (error) throw error;
+    if (error) throw error;
 
-  const threadList = threads ?? [];
-  const activeThread =
-    threadList.find((thread) => thread.id === selectedThreadId) ?? threadList[0] ?? null;
+    const threadList = threads ?? [];
+    const activeThread =
+      threadList.find((thread) => thread.id === selectedThreadId) ?? threadList[0] ?? null;
 
-  if (!activeThread) {
+    if (!activeThread) {
+      return {
+        threads: [],
+        activeThread: null,
+        messages: [],
+        reviewDraft: null,
+        suggestedReply: "",
+      };
+    }
+
+    const [messages, reviewDraft] = await Promise.all([
+      listMessagesByThreadId(activeThread.id),
+      getLatestActiveReviewDraftByThreadId(activeThread.id),
+    ]);
+
     return {
-      threads: [],
-      activeThread: null,
-      messages: [],
-      reviewDraft: null,
-      suggestedReply: "",
+      threads: threadList,
+      activeThread,
+      messages,
+      reviewDraft,
+      suggestedReply: reviewDraft
+        ? buildSuggestedReply(reviewDraft.extraction_payload)
+        : "",
     };
-  }
+  },
+  8,
+  [CACHE_TAGS.inbox, CACHE_TAGS.threads, CACHE_TAGS.messages, CACHE_TAGS.reviewDrafts],
+);
 
-  const [messages, reviewDraft] = await Promise.all([
-    listMessagesByThreadId(activeThread.id),
-    getLatestActiveReviewDraftByThreadId(activeThread.id),
-  ]);
-
-  return {
-    threads: threadList,
-    activeThread,
-    messages,
-    reviewDraft,
-    suggestedReply: reviewDraft
-      ? buildSuggestedReply(reviewDraft.extraction_payload)
-      : "",
-  };
+export async function getInboxOverview(selectedThreadId?: string) {
+  return getInboxOverviewCached(selectedThreadId);
 }

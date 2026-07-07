@@ -1,6 +1,8 @@
 // fetch/create/update property records
 import "server-only";
 
+import { CACHE_TAGS } from "@/lib/cache/cache-tags";
+import { cachedQuery, invalidateCachedTags } from "@/lib/cache/query-cache";
 import { createAdminSupabaseClient } from "@/lib/supabase/admin";
 import type { Database } from "@/types/database";
 
@@ -8,17 +10,26 @@ type PropertyRow = Database["public"]["Tables"]["properties"]["Row"];
 type PropertyInsert = Database["public"]["Tables"]["properties"]["Insert"];
 type PropertyUpdate = Database["public"]["Tables"]["properties"]["Update"];
 
+const getPropertyByIdCached = cachedQuery(
+  ["properties", "get-by-id"],
+  async (propertyId: string) => {
+    const supabase = createAdminSupabaseClient();
+
+    const { data, error } = await supabase
+      .from("properties")
+      .select("*")
+      .eq("id", propertyId)
+      .maybeSingle();
+
+    if (error) throw error;
+    return data;
+  },
+  30,
+  [CACHE_TAGS.properties],
+);
+
 export async function getPropertyById(propertyId: string): Promise<PropertyRow | null> {
-  const supabase = createAdminSupabaseClient();
-
-  const { data, error } = await supabase
-    .from("properties")
-    .select("*")
-    .eq("id", propertyId)
-    .maybeSingle();
-
-  if (error) throw error;
-  return data;
+  return getPropertyByIdCached(propertyId);
 }
 
 export async function createProperty(payload: PropertyInsert): Promise<PropertyRow> {
@@ -31,6 +42,7 @@ export async function createProperty(payload: PropertyInsert): Promise<PropertyR
     .single();
 
   if (error) throw error;
+  invalidateCachedTags([CACHE_TAGS.properties, CACHE_TAGS.projects, CACHE_TAGS.requests, CACHE_TAGS.inbox]);
   return data;
 }
 
@@ -51,5 +63,6 @@ export async function updateProperty(
     .single();
 
   if (error) throw error;
+  invalidateCachedTags([CACHE_TAGS.properties, CACHE_TAGS.projects, CACHE_TAGS.requests, CACHE_TAGS.inbox]);
   return data;
 }
