@@ -3,7 +3,7 @@
 import Image from "next/image";
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { formatDateTime } from "@/frontend/lib/format";
+import { formatDateTime, formatSourceChannelLabel } from "@/frontend/lib/format";
 import {
   listToText,
   parseConversationMessages,
@@ -27,6 +27,57 @@ function normalizeConfidence(value: string): number {
   if (parsed > 1) return 1;
 
   return parsed;
+}
+
+function getWorkItemGuidance(item: AiLeadExtraction["workItems"][number]) {
+  const haystack = [
+    item.title,
+    item.description,
+    item.areaName,
+    item.itemType,
+    item.itemGroup,
+  ]
+    .filter((value): value is string => typeof value === "string")
+    .join(" ")
+    .toLowerCase();
+
+  if (haystack.includes("plumb") || haystack.includes("leak") || haystack.includes("pipe")) {
+    return {
+      photoHint:
+        "Ask for one wide photo and one close-up so the leak can be tied to the right part of the job.",
+      followUpHint: "Confirm whether the leak is active, whether water can be shut off, and whether access is safe.",
+    };
+  }
+
+  if (haystack.includes("clean")) {
+    return {
+      photoHint:
+        "Ask for before photos of the main space and any stained or high-traffic areas.",
+      followUpHint: "Confirm scope, access, and whether any delicate surfaces need special handling.",
+    };
+  }
+
+  if (haystack.includes("electr") || haystack.includes("power") || haystack.includes("light")) {
+    return {
+      photoHint:
+        "Ask for a wide shot and a close-up of the affected switch, outlet, or fitting.",
+      followUpHint: "Confirm whether power is currently off, whether the issue is intermittent, and whether parts are already on site.",
+    };
+  }
+
+  if (haystack.includes("paint") || haystack.includes("wall") || haystack.includes("patch")) {
+    return {
+      photoHint:
+        "Ask for one wide photo and one close-up so the damaged surface is easy to identify.",
+      followUpHint: "Confirm the full area size, color match requirements, and any hidden defects behind the visible damage.",
+    };
+  }
+
+  return {
+    photoHint:
+      "Ask for one wide photo and one close-up photo so the work item can be tied to the correct part of the job.",
+    followUpHint: "Confirm access, urgency, and any missing measurements before approval.",
+  };
 }
 
 export function ReviewDraftEditor({ draft }: ReviewDraftEditorProps) {
@@ -585,7 +636,10 @@ export function ReviewDraftEditor({ draft }: ReviewDraftEditorProps) {
               <div>
                 <p className="eyebrow">Project Work Items</p>
                 <h2>Create Work Items</h2>
-     
+                <p className="report-panel-copy">
+                  Keep each item short and focused. Expand a row to add the task,
+                  priority, and photo guidance.
+                </p>
               </div>
               <button
                 type="button"
@@ -602,270 +656,303 @@ export function ReviewDraftEditor({ draft }: ReviewDraftEditorProps) {
               ) : (
                 extraction.workItems.map((item, index) => {
                   const isExpanded = expandedWorkItemIndex === index;
-                  const summary = item.areaName || item.itemType || item.priority || "No details yet";
+                  const summary =
+                    item.areaName || item.itemType || item.itemGroup || item.priority || "No details yet";
+                  const guidance = getWorkItemGuidance(item);
+                  const modeLabel = item.isChecklistItem
+                    ? "Checklist"
+                    : item.isPi
+                      ? "PI"
+                      : item.isAddOn
+                        ? "Add-on"
+                        : "Core";
 
                   return (
-                  <div
-                    key={`${draft.id}-work-item-${index}`}
-                    className={`work-item-editor ${isExpanded ? "is-expanded" : ""}`}
-                  >
-                    <div className="work-item-editor-index">{index + 1}</div>
-                    <button
-                      type="button"
-                      className="work-item-editor-header"
-                      aria-expanded={isExpanded}
-                      onClick={() => setExpandedWorkItemIndex(isExpanded ? null : index)}
+                    <div
+                      key={`${draft.id}-work-item-${index}`}
+                      className={`work-item-editor ${isExpanded ? "is-expanded" : ""}`}
                     >
-                      <span className="work-item-editor-title">
-                        {item.title || `Work Item ${index + 1}`}
-                      </span>
-                      <span className="work-item-editor-summary">{summary}</span>
-                    </button>
-
-                    {isExpanded ? (
-                      <>
-                        <div className="form-grid">
-                      <label className="field-block">
-                        <span className="field-label">Title</span>
-                        <input
-                          className="input"
-                          value={item.title}
-                          onChange={(event) => {
-                            const next = [...extraction.workItems];
-                            next[index] = { ...item, title: event.target.value };
-                            patchExtraction({ workItems: next });
-                          }}
-                        />
-                      </label>
-
-                      <label className="field-block">
-                        <span className="field-label">Priority</span>
-                        <select
-                          className="input input-select"
-                          value={item.priority ?? "normal"}
-                          onChange={(event) => {
-                            const next = [...extraction.workItems];
-                            next[index] = {
-                              ...item,
-                              priority: event.target.value as NonNullable<
-                                typeof item.priority
-                              >,
-                            };
-                            patchExtraction({ workItems: next });
-                          }}
-                        >
-                          <option value="low">Low</option>
-                          <option value="normal">Normal</option>
-                          <option value="high">High</option>
-                          <option value="urgent">Urgent</option>
-                        </select>
-                      </label>
-
-                      <label className="field-block">
-                        <span className="field-label">Area Name</span>
-                        <input
-                          className="input"
-                          value={item.areaName ?? ""}
-                          onChange={(event) => {
-                            const next = [...extraction.workItems];
-                            next[index] = { ...item, areaName: event.target.value };
-                            patchExtraction({ workItems: next });
-                          }}
-                        />
-                      </label>
-
-                      <label className="field-block">
-                        <span className="field-label">Item Type</span>
-                        <input
-                          className="input"
-                          value={item.itemType ?? ""}
-                          onChange={(event) => {
-                            const next = [...extraction.workItems];
-                            next[index] = { ...item, itemType: event.target.value };
-                            patchExtraction({ workItems: next });
-                          }}
-                        />
-                      </label>
-
-                      <label className="field-block">
-                        <span className="field-label">Item Group</span>
-                        <input
-                          className="input"
-                          value={item.itemGroup ?? ""}
-                          onChange={(event) => {
-                            const next = [...extraction.workItems];
-                            next[index] = { ...item, itemGroup: event.target.value };
-                            patchExtraction({ workItems: next });
-                          }}
-                        />
-                      </label>
-
-                      <label className="field-block field-block-wide">
-                        <span className="field-label">Action Summary</span>
-                        <input
-                          className="input"
-                          value={item.actionSummary ?? ""}
-                          onChange={(event) => {
-                            const next = [...extraction.workItems];
-                            next[index] = {
-                              ...item,
-                              actionSummary: event.target.value,
-                            };
-                            patchExtraction({ workItems: next });
-                          }}
-                        />
-                      </label>
-
-                      <label className="field-block field-block-wide">
-                        <span className="field-label">Description</span>
-                        <textarea
-                          className="composer-textarea"
-                          rows={3}
-                          value={item.description ?? ""}
-                          onChange={(event) => {
-                            const next = [...extraction.workItems];
-                            next[index] = {
-                              ...item,
-                              description: event.target.value,
-                            };
-                            patchExtraction({ workItems: next });
-                          }}
-                        />
-                      </label>
-                        </div>
-
-                        <div className="toggle-row">
-                      <label className="checkbox-row">
-                        <input
-                          type="checkbox"
-                          checked={item.isAddOn ?? false}
-                          onChange={(event) => {
-                            const next = [...extraction.workItems];
-                            next[index] = {
-                              ...item,
-                              isAddOn: event.target.checked,
-                            };
-                            patchExtraction({ workItems: next });
-                          }}
-                        />
-                        <span>Add On</span>
-                      </label>
-                      <label className="checkbox-row">
-                        <input
-                          type="checkbox"
-                          checked={item.isPi ?? false}
-                          onChange={(event) => {
-                            const next = [...extraction.workItems];
-                            next[index] = {
-                              ...item,
-                              isPi: event.target.checked,
-                            };
-                            patchExtraction({ workItems: next });
-                          }}
-                        />
-                        <span>PI</span>
-                      </label>
-                      <label className="checkbox-row">
-                        <input
-                          type="checkbox"
-                          checked={item.isChecklistItem ?? false}
-                          onChange={(event) => {
-                            const next = [...extraction.workItems];
-                            next[index] = {
-                              ...item,
-                              isChecklistItem: event.target.checked,
-                            };
-                            patchExtraction({ workItems: next });
-                          }}
-                        />
-                        <span>Checklist Item</span>
-                      </label>
-                        </div>
-
-                        <div className="work-item-media">
-                      <div>
-                        <span className="field-label">Images</span>
-                        <p className="helper-text">
-                          Images upload first, then stay linked to this task when the project is created.
-                        </p>
-                      </div>
-                      <label
-                        className={`button button-secondary work-item-upload-button ${uploadingWorkItemIndex === index ? "is-loading" : ""}`}
-                        aria-busy={uploadingWorkItemIndex === index}
+                      <div className="work-item-editor-index">{index + 1}</div>
+                      <button
+                        type="button"
+                        className="work-item-editor-header"
+                        aria-expanded={isExpanded}
+                        onClick={() =>
+                          setExpandedWorkItemIndex(isExpanded ? null : index)
+                        }
                       >
-                        {uploadingWorkItemIndex === index ? (
-                          <>
-                            <span aria-hidden="true" className="upload-spinner" />
-                            <span className="sr-only">Uploading image</span>
-                          </>
-                        ) : (
-                          <>
-                            <Image
-                              src="/upload-cloud.svg"
-                              alt=""
-                              width={26}
-                              height={26}
-                              className="upload-icon"
-                            />
-                            <span className="sr-only">Upload image</span>
-                          </>
-                        )}
-                        <input
-                          type="file"
-                          accept="image/*"
-                          disabled={uploadingWorkItemIndex !== null}
-                          onChange={(event) => {
-                            const file = event.target.files?.[0];
-                            event.target.value = "";
-                            if (!file) return;
-                            void uploadWorkItemImage(index, file);
-                          }}
-                        />
-                      </label>
-
-                      {uploadingWorkItemIndex === index ? (
-                        <div className="work-item-media-loading">
-                          <span className="upload-spinner" aria-hidden="true" />
-                          <span>Uploading image...</span>
+                        <div className="work-item-summary-row">
+                          <span className="work-item-editor-title">
+                            {item.title || `Work Item ${index + 1}`}
+                          </span>
+                          <span className="work-item-tag">{modeLabel}</span>
                         </div>
+                        <span className="work-item-editor-summary">{summary}</span>
+                      </button>
+
+                      {isExpanded ? (
+                        <>
+                          <div className="work-item-guidance">
+                            <div className="work-item-guidance-title">
+                              <span className="field-label">Photo Intake</span>
+                              <span className="work-item-tag is-soft">Guidance</span>
+                            </div>
+                            <p>{guidance.photoHint}</p>
+                            <p>{guidance.followUpHint}</p>
+                          </div>
+
+                          <div className="work-item-fields">
+                            <label className="field-block">
+                              <span className="field-label">Title</span>
+                              <input
+                                className="input"
+                                value={item.title}
+                                onChange={(event) => {
+                                  const next = [...extraction.workItems];
+                                  next[index] = { ...item, title: event.target.value };
+                                  patchExtraction({ workItems: next });
+                                }}
+                              />
+                            </label>
+
+                            <label className="field-block">
+                              <span className="field-label">Priority</span>
+                              <select
+                                className="input input-select"
+                                value={item.priority ?? "normal"}
+                                onChange={(event) => {
+                                  const next = [...extraction.workItems];
+                                  next[index] = {
+                                    ...item,
+                                    priority: event.target.value as NonNullable<
+                                      typeof item.priority
+                                    >,
+                                  };
+                                  patchExtraction({ workItems: next });
+                                }}
+                              >
+                                <option value="low">Low</option>
+                                <option value="normal">Normal</option>
+                                <option value="high">High</option>
+                                <option value="urgent">Urgent</option>
+                              </select>
+                            </label>
+
+                            <label className="field-block">
+                              <span className="field-label">Area Name</span>
+                              <input
+                                className="input"
+                                value={item.areaName ?? ""}
+                                onChange={(event) => {
+                                  const next = [...extraction.workItems];
+                                  next[index] = { ...item, areaName: event.target.value };
+                                  patchExtraction({ workItems: next });
+                                }}
+                              />
+                            </label>
+
+                            <label className="field-block">
+                              <span className="field-label">Item Type</span>
+                              <input
+                                className="input"
+                                value={item.itemType ?? ""}
+                                onChange={(event) => {
+                                  const next = [...extraction.workItems];
+                                  next[index] = { ...item, itemType: event.target.value };
+                                  patchExtraction({ workItems: next });
+                                }}
+                              />
+                            </label>
+
+                            <label className="field-block">
+                              <span className="field-label">Item Group</span>
+                              <input
+                                className="input"
+                                value={item.itemGroup ?? ""}
+                                onChange={(event) => {
+                                  const next = [...extraction.workItems];
+                                  next[index] = { ...item, itemGroup: event.target.value };
+                                  patchExtraction({ workItems: next });
+                                }}
+                              />
+                            </label>
+
+                            <label className="field-block field-block-wide">
+                              <span className="field-label">Action Summary</span>
+                              <input
+                                className="input"
+                                value={item.actionSummary ?? ""}
+                                onChange={(event) => {
+                                  const next = [...extraction.workItems];
+                                  next[index] = {
+                                    ...item,
+                                    actionSummary: event.target.value,
+                                  };
+                                  patchExtraction({ workItems: next });
+                                }}
+                              />
+                            </label>
+                          </div>
+
+                          <div className="work-item-fields work-item-fields-wide">
+                            <label className="field-block field-block-wide">
+                              <span className="field-label">Description</span>
+                              <textarea
+                                className="composer-textarea"
+                                rows={3}
+                                value={item.description ?? ""}
+                                onChange={(event) => {
+                                  const next = [...extraction.workItems];
+                                  next[index] = {
+                                    ...item,
+                                    description: event.target.value,
+                                  };
+                                  patchExtraction({ workItems: next });
+                                }}
+                              />
+                            </label>
+                          </div>
+
+                          <div className="toggle-row work-item-toggle-row">
+                            <label className="checkbox-row">
+                              <input
+                                type="checkbox"
+                                checked={item.isAddOn ?? false}
+                                onChange={(event) => {
+                                  const next = [...extraction.workItems];
+                                  next[index] = {
+                                    ...item,
+                                    isAddOn: event.target.checked,
+                                  };
+                                  patchExtraction({ workItems: next });
+                                }}
+                              />
+                              <span>Add On</span>
+                            </label>
+                            <label className="checkbox-row">
+                              <input
+                                type="checkbox"
+                                checked={item.isPi ?? false}
+                                onChange={(event) => {
+                                  const next = [...extraction.workItems];
+                                  next[index] = {
+                                    ...item,
+                                    isPi: event.target.checked,
+                                  };
+                                  patchExtraction({ workItems: next });
+                                }}
+                              />
+                              <span>PI</span>
+                            </label>
+                            <label className="checkbox-row">
+                              <input
+                                type="checkbox"
+                                checked={item.isChecklistItem ?? false}
+                                onChange={(event) => {
+                                  const next = [...extraction.workItems];
+                                  next[index] = {
+                                    ...item,
+                                    isChecklistItem: event.target.checked,
+                                  };
+                                  patchExtraction({ workItems: next });
+                                }}
+                                />
+                              <span>Checklist Item</span>
+                            </label>
+                          </div>
+
+                          <div className="work-item-media">
+                            <div>
+                              <span className="field-label">Images</span>
+                              <p className="helper-text">
+                                Images upload first, then stay linked to this task when the
+                                project is created.
+                              </p>
+                            </div>
+                            <label
+                              className={`button button-secondary work-item-upload-button ${uploadingWorkItemIndex === index ? "is-loading" : ""}`}
+                              aria-busy={uploadingWorkItemIndex === index}
+                            >
+                              {uploadingWorkItemIndex === index ? (
+                                <>
+                                  <span aria-hidden="true" className="upload-spinner" />
+                                  <span className="sr-only">Uploading image</span>
+                                </>
+                              ) : (
+                                <>
+                                  <Image
+                                    src="/upload-cloud.svg"
+                                    alt=""
+                                    width={26}
+                                    height={26}
+                                    className="upload-icon"
+                                  />
+                                  <span className="sr-only">Upload image</span>
+                                </>
+                              )}
+                              <input
+                                type="file"
+                                accept="image/*"
+                                disabled={uploadingWorkItemIndex !== null}
+                                onChange={(event) => {
+                                  const file = event.target.files?.[0];
+                                  event.target.value = "";
+                                  if (!file) return;
+                                  void uploadWorkItemImage(index, file);
+                                }}
+                              />
+                            </label>
+
+                            {uploadingWorkItemIndex === index ? (
+                              <div className="work-item-media-loading">
+                                <span className="upload-spinner" aria-hidden="true" />
+                                <span>Uploading image...</span>
+                              </div>
+                            ) : null}
+
+                            {(item.mediaAssets && item.mediaAssets.length > 0) ||
+                            uploadingWorkItemIndex === index ? (
+                              <div className="work-item-media-list">
+                                {uploadingWorkItemIndex === index ? (
+                                  <div className="work-item-media-chip is-loading">
+                                    <div className="work-item-media-skeleton" />
+                                    <span>Uploading...</span>
+                                  </div>
+                                ) : null}
+                                {(item.mediaAssets ?? []).map((mediaAsset) => (
+                                  <div key={mediaAsset.id} className="work-item-media-chip">
+                                    {mediaAsset.signedUrl ? (
+                                      // eslint-disable-next-line @next/next/no-img-element
+                                      <img
+                                        src={mediaAsset.signedUrl}
+                                        alt={mediaAsset.caption ?? "Work item image"}
+                                      />
+                                    ) : null}
+                                    <span>
+                                      {mediaAsset.fileName ?? mediaAsset.caption ?? "Uploaded image"}
+                                    </span>
+                                  </div>
+                                ))}
+                              </div>
+                            ) : (
+                              <p className="helper-text">
+                                No images uploaded for this work item yet.
+                              </p>
+                            )}
+                          </div>
+
+                          <div className="work-item-footer">
+                            <button
+                              type="button"
+                              className="button button-secondary"
+                              onClick={() => removeWorkItem(index)}
+                            >
+                              Remove
+                            </button>
+                          </div>
+                        </>
                       ) : null}
-
-                      {(item.mediaAssets && item.mediaAssets.length > 0) ||
-                      uploadingWorkItemIndex === index ? (
-                        <div className="work-item-media-list">
-                          {uploadingWorkItemIndex === index ? (
-                            <div className="work-item-media-chip is-loading">
-                              <div className="work-item-media-skeleton" />
-                              <span>Uploading...</span>
-                            </div>
-                          ) : null}
-                          {(item.mediaAssets ?? []).map((mediaAsset) => (
-                            <div key={mediaAsset.id} className="work-item-media-chip">
-                              {mediaAsset.signedUrl ? (
-                                // eslint-disable-next-line @next/next/no-img-element
-                                <img src={mediaAsset.signedUrl} alt={mediaAsset.caption ?? "Work item image"} />
-                              ) : null}
-                              <span>{mediaAsset.fileName ?? mediaAsset.caption ?? "Uploaded image"}</span>
-                            </div>
-                          ))}
-                        </div>
-                      ) : (
-                        <p className="helper-text">No images uploaded for this work item yet.</p>
-                      )}
-                        </div>
-
-                        <div className="work-item-footer">
-                          <button
-                            type="button"
-                            className="button button-secondary"
-                            onClick={() => removeWorkItem(index)}
-                          >
-                            Remove
-                          </button>
-                        </div>
-                      </>
-                    ) : null}
-                  </div>
+                    </div>
                   );
                 })
               )}
@@ -910,7 +997,7 @@ export function ReviewDraftEditor({ draft }: ReviewDraftEditorProps) {
                 <span>
                   <strong>Site visit required</strong>
                   <small>
-                    Mark this when EPS needs an inspection before or during project planning.
+                    Mark this when Gage needs an inspection before or during project planning.
                   </small>
                 </span>
               </label>
@@ -925,12 +1012,24 @@ export function ReviewDraftEditor({ draft }: ReviewDraftEditorProps) {
               </p>
             </div>
             <div className="detail-sidebar-group">
-              <span className="field-label">Thread</span>
-              <span>{draft.thread_id}</span>
+              <span className="field-label">Source Channel</span>
+              <span>{formatSourceChannelLabel(draft.source_channel_code)}</span>
+            </div>
+            <div className="detail-sidebar-group">
+              <span className="field-label">Linked Lead</span>
+              <span>{draft.lead_id ? "Linked" : "Not linked yet"}</span>
+            </div>
+            <div className="detail-sidebar-group">
+              <span className="field-label">Linked Project</span>
+              <span>{draft.approved_project_id ? "Created" : "Not created yet"}</span>
             </div>
             <div className="detail-sidebar-group">
               <span className="field-label">Created</span>
               <span>{formatDateTime(draft.created_at)}</span>
+            </div>
+            <div className="detail-sidebar-group">
+              <span className="field-label">Updated</span>
+              <span>{formatDateTime(draft.updated_at)}</span>
             </div>
             <div className="detail-sidebar-group">
               <span className="field-label">Review Notes</span>
@@ -1007,7 +1106,7 @@ export function ReviewDraftEditor({ draft }: ReviewDraftEditorProps) {
                     <p className="message-meta">
                       {message.senderName ??
                         (message.direction === "outbound"
-                          ? "EPS Admin"
+                          ? "Gage Admin"
                           : "Customer")}
                       {" · "}
                       {formatDateTime(message.sentAt)}

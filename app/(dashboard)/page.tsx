@@ -1,9 +1,8 @@
 import Link from "next/link";
 import { getDashboardOverview } from "@/backend/services/dashboard/get-dashboard-overview";
 import { StatCard } from "@/frontend/components/dashboard/stat-card";
-import { StatusBadge } from "@/frontend/components/dashboard/status-badge";
 import { EmptyState } from "@/frontend/components/dashboard/empty-state";
-import { formatDateTime } from "@/frontend/lib/format";
+import { ActionQueueItem } from "@/frontend/components/dashboard/action-queue-item";
 import { requireAppSession } from "@/lib/auth/session";
 
 export default async function HomePage() {
@@ -14,27 +13,42 @@ export default async function HomePage() {
     <div className="page-stack">
       <section className="page-header">
         <div>
-          <h1>Good Morning, {session.profile.displayName}</h1>
+          <h1>Need Action</h1>
         </div>
-       
       </section>
 
       <section className="stats-grid">
-        <StatCard label="To Review" value={dashboard.stats.toReview} hint="New WhatsApp extractions waiting for approval" />
-        <StatCard label="Active Projects" value={dashboard.stats.activeProjects} hint="Scheduled, ongoing, QA, and invoiced" />
-        <StatCard label="Completed" value={dashboard.stats.completedProjects} hint="Closed projects already marked done" />
-        <StatCard label="Scheduled Today" value={dashboard.stats.scheduledToday} hint="Projects with work starting today" />
+        <StatCard
+          label="To Review"
+          value={dashboard.stats.toReview}
+        />
+        <StatCard
+          label="Active Projects"
+          value={dashboard.stats.activeProjects}
+        />
+        <StatCard
+          label="Completed"
+          value={dashboard.stats.completedProjects}
+        />
+        <StatCard
+          label="Scheduled Today"
+          value={dashboard.stats.scheduledToday}
+        />
       </section>
 
       <section className="panel table-panel">
-        <div className="panel-header">
+        <div className="panel-header panel-header-no-wrap">
           <div>
-            <p className="eyebrow">Operations</p>
-            <h2>Needs Action</h2>
+            <h2>Need Action</h2>
           </div>
-          <Link className="button button-secondary" href="/inbox">
-            Open Inbox
-          </Link>
+          <div className="inline-actions">
+            <Link className="button button-secondary" href="/requests">
+              View All Requests
+            </Link>
+            {/* <Link className="button button-secondary" href="/inbox">
+              Open Inbox
+            </Link> */}
+          </div>
         </div>
 
         {dashboard.needsAction.length === 0 ? (
@@ -43,40 +57,28 @@ export default async function HomePage() {
             description="Once review drafts or active projects need attention, they will show here."
           />
         ) : (
-          <div className="table-wrap">
-            <table className="data-table">
-              <thead>
-                <tr>
-                  <th>Item</th>
-                  <th>Due</th>
-                  <th>Status</th>
-                  <th>Next Action</th>
-                </tr>
-              </thead>
-              <tbody>
-                {dashboard.needsAction.map((item) => (
-                  <tr key={`${item.type}-${item.id}`}>
-                    <td>
-                      <Link
-                        href={
-                          item.type === "review"
-                            ? `/reviews/${item.id}`
-                            : `/projects/${item.id}`
-                        }
-                        className="table-link"
-                      >
-                        {item.title}
-                      </Link>
-                    </td>
-                    <td>{formatDateTime(item.dueAt)}</td>
-                    <td>
-                      <StatusBadge status={item.status} />
-                    </td>
-                    <td>{item.nextAction}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+          <div className="review-draft-list">
+            <div className="review-draft-list-head" aria-hidden="true">
+              <span>Item</span>
+              <span>Queue</span>
+              <span>Status</span>
+              <span>Updated</span>
+              <span>Next Action</span>
+            </div>
+
+            {dashboard.needsAction.map((item) => (
+              <ActionQueueItem
+                key={`${item.type}-${item.id}`}
+                href={item.href}
+                title={item.title}
+                subtitle={item.subtitle}
+                contextLabel={item.contextLabel}
+                contextValue={item.contextValue}
+                status={item.status}
+                updatedAt={item.dueAt}
+                finalValue={item.finalValue}
+              />
+            ))}
           </div>
         )}
       </section>

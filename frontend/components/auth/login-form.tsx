@@ -4,15 +4,6 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createBrowserSupabaseClient } from "@/lib/supabase/client";
 
-type LoginSessionResponse = {
-  success: boolean;
-  session?: {
-    profile: {
-      roleCode: string;
-    };
-  };
-};
-
 export function LoginForm({
   nextPath = "/",
 }: {
@@ -55,7 +46,7 @@ export function LoginForm({
       }
 
       const supabase = createBrowserSupabaseClient();
-      const { error } = await supabase.auth.signInWithPassword({
+      const { data, error } = await supabase.auth.signInWithPassword({
         email: loginLookupPayload.email,
         password,
       });
@@ -67,19 +58,11 @@ export function LoginForm({
       let destination = nextPath;
 
       if (nextPath === "/") {
-        const response = await fetch("/api/auth/me", {
-          method: "GET",
-          cache: "no-store",
-        });
+        const payloadRoleCode = data.session?.user.user_metadata?.role_code as
+          | string
+          | undefined;
 
-        if (!response.ok) {
-          throw new Error("Failed to load account profile after sign-in.");
-        }
-
-        const payload = (await response.json()) as LoginSessionResponse;
-        const roleCode = payload.session?.profile.roleCode;
-
-        if (roleCode === "owner" || roleCode === "admin") {
+        if (payloadRoleCode === "owner" || payloadRoleCode === "admin") {
           destination = "/";
         } else {
           destination = "/worker";

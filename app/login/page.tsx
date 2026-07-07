@@ -16,7 +16,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
       <section className="auth-card">
         <div className="page-stack">
           <div>
-            <p className="eyebrow">EPS Services CRM</p>
+            <p className="eyebrow">Gage Operations CRM</p>
             <h1>Login</h1>
             <p className="page-header-copy">
               Sign in with your username and password.

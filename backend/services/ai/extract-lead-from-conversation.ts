@@ -137,7 +137,7 @@ function simulateLeadExtraction(
 
   const extraction: AiLeadExtraction = {
     summary:
-      firstCustomerMessage || "Customer started a WhatsApp enquiry with EPS.",
+      firstCustomerMessage || "Customer started a WhatsApp enquiry with Gage.",
     urgency,
     leadTitle: firstCustomerMessage || undefined,
     projectTitle: undefined,

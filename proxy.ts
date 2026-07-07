@@ -24,18 +24,35 @@ function isAssetPath(pathname: string) {
   );
 }
 
+function authUnavailableResponse(pathname: string) {
+  if (pathname.startsWith("/api")) {
+    return NextResponse.json(
+      { success: false, error: "Authentication service unavailable" },
+      { status: 503 },
+    );
+  }
+
+  return new NextResponse("Authentication service unavailable", {
+    status: 503,
+  });
+}
+
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  if (isAssetPath(pathname)) {
+  if (isAssetPath(pathname) || isPublicPath(pathname)) {
     return NextResponse.next();
   }
 
-  const { response, user } = await updateSession(request);
-
-  if (isPublicPath(pathname)) {
-    return response;
+  let session;
+  try {
+    session = await updateSession(request);
+  } catch (error) {
+    console.error("[proxy.auth]", error);
+    return authUnavailableResponse(pathname);
   }
+
+  const { response, user } = session;
 
   if (!user) {
     if (pathname.startsWith("/api")) {

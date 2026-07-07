@@ -12,6 +12,8 @@ type StaffAccount = {
   phone: string | null;
   isActive: boolean;
   createdAt: string;
+  assignedLeadCount: number;
+  assignedItemCount: number;
 };
 
 type StaffEditForm = {
@@ -182,6 +184,7 @@ export function StaffManagement({
                 <th>Username</th>
                 <th>Email</th>
                 <th>Role</th>
+                <th>Assignments</th>
                 <th>Status</th>
                 <th className="table-action-header" aria-label="Edit" />
               </tr>
@@ -193,6 +196,7 @@ export function StaffManagement({
                   <td>{member.username ?? "Empty"}</td>
                   <td>{member.email ?? "Empty"}</td>
                   <td>{member.roleCode}</td>
+                  <td>{member.assignedLeadCount + member.assignedItemCount}</td>
                   <td>{member.isActive ? "Active" : "Inactive"}</td>
                   <td className="table-action-cell">
                     <button

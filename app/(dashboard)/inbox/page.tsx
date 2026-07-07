@@ -159,7 +159,7 @@ export default async function InboxPage({ searchParams }: InboxPageProps) {
                       className={`message-bubble ${message.direction_code === "outbound" ? "is-outbound" : "is-inbound"}`}
                     >
                       <p className="message-meta">
-                        {message.sender_name ?? (message.direction_code === "outbound" ? "EPS Admin" : "Customer")} · {formatDateTime(message.sent_at)}
+                        {message.sender_name ?? (message.direction_code === "outbound" ? "Gage Admin" : "Customer")} · {formatDateTime(message.sent_at)}
                       </p>
                       <p>{message.content ?? message.media_caption ?? "Attachment"}</p>
                     </article>

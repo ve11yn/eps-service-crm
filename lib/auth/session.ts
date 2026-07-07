@@ -1,5 +1,6 @@
 import "server-only";
 
+import { cache } from "react";
 import { redirect } from "next/navigation";
 import { getProfileById } from "@/backend/repositories";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
@@ -18,7 +19,7 @@ export type AppSession = {
   };
 };
 
-export async function getCurrentAppSession(): Promise<AppSession | null> {
+const getCurrentAppSessionCached = cache(async (): Promise<AppSession | null> => {
   const supabase = await createServerSupabaseClient();
   const {
     data: { user },
@@ -45,6 +46,10 @@ export async function getCurrentAppSession(): Promise<AppSession | null> {
       isActive: profile.is_active,
     },
   };
+});
+
+export async function getCurrentAppSession(): Promise<AppSession | null> {
+  return getCurrentAppSessionCached();
 }
 
 export async function requireAppSession(allowedRoles?: AppRole[]) {

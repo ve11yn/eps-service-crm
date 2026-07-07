@@ -28,6 +28,13 @@ type StaffAccount = {
   phone: string | null;
   isActive: boolean;
   createdAt: string;
+  assignedLeadCount: number;
+  assignedItemCount: number;
+};
+
+type LoginProfileRow = {
+  email: string | null;
+  is_active: boolean;
 };
 
 export async function getSetupStatus() {
@@ -96,6 +103,7 @@ export async function registerSelfServiceUser(input: {
   }
 
   const profile = await updateProfile(data.user.id, {
+    email: data.user.email ?? input.email.trim().toLowerCase(),
     display_name: input.displayName,
     role_code: input.roleCode,
     phone: null,
@@ -126,26 +134,49 @@ export async function listStaffAccounts(): Promise<StaffAccount[]> {
   const supabase = createAdminSupabaseClient();
   const profiles = await listProfiles();
 
-  const { data, error } = await supabase.auth.admin.listUsers({
-    page: 1,
-    perPage: 200,
-  });
+  const [leadsResult, projectItemsResult] = await Promise.all([
+    supabase
+      .from("leads")
+      .select("assigned_to_profile_id")
+      .not("assigned_to_profile_id", "is", null),
+    supabase
+      .from("project_items")
+      .select("assigned_profile_id")
+      .not("assigned_profile_id", "is", null),
+  ]);
 
-  if (error) throw error;
+  if (leadsResult.error) throw leadsResult.error;
+  if (projectItemsResult.error) throw projectItemsResult.error;
 
-  const emailByUserId = new Map(
-    (data.users ?? []).map((user) => [user.id, user.email ?? null]),
-  );
+  const leadCounts = new Map<string, number>();
+  for (const lead of leadsResult.data ?? []) {
+    if (!lead.assigned_to_profile_id) continue;
+    leadCounts.set(
+      lead.assigned_to_profile_id,
+      (leadCounts.get(lead.assigned_to_profile_id) ?? 0) + 1,
+    );
+  }
+
+  const itemCounts = new Map<string, number>();
+  for (const item of projectItemsResult.data ?? []) {
+    if (!item.assigned_profile_id) continue;
+    itemCounts.set(
+      item.assigned_profile_id,
+      (itemCounts.get(item.assigned_profile_id) ?? 0) + 1,
+    );
+  }
 
   return profiles.map((profile) => ({
     id: profile.id,
-    email: emailByUserId.get(profile.id) ?? null,
+    email: profile.email,
     username: profile.username,
     displayName: profile.display_name,
     roleCode: profile.role_code as AppRole,
     phone: profile.phone,
     isActive: profile.is_active,
     createdAt: profile.created_at,
+    assignedLeadCount: leadCounts.get(profile.id) ?? 0,
+    assignedItemCount: itemCounts.get(profile.id) ?? 0,
   }));
 }
 
@@ -182,6 +213,7 @@ export async function createStaffUser(input: {
   }
 
   const profile = await updateProfile(data.user.id, {
+    email: data.user.email ?? input.email.trim().toLowerCase(),
     display_name: input.displayName,
     role_code: input.roleCode,
     phone: null,
@@ -261,6 +293,7 @@ export async function updateStaffAccount(input: {
   }
 
   const profile = await updateProfile(input.profileId, {
+    email: data.user.email ?? input.email.trim().toLowerCase(),
     display_name: input.displayName,
     role_code: input.roleCode,
     phone: input.phone,
@@ -300,22 +333,23 @@ export async function resolveLoginEmailByUsername(
   usernameInput: string,
 ): Promise<string> {
   const username = normalizeUsername(usernameInput);
-  const profile = await getProfileByUsername(username);
+  const supabase = createAdminSupabaseClient();
+
+  const { data: profile, error } = await supabase
+    .from("profiles")
+    .select("email, is_active")
+    .eq("username", username)
+    .maybeSingle<LoginProfileRow>();
+
+  if (error) throw error;
 
   if (!profile || !profile.is_active) {
     throw new Error("Invalid username or password.");
   }
 
-  const supabase = createAdminSupabaseClient();
-  const { data, error } = await supabase.auth.admin.getUserById(profile.id);
-
-  if (error) throw error;
-
-  const email = data.user?.email;
-
-  if (!email) {
+  if (!profile.email) {
     throw new Error("This account is missing a valid login email.");
   }
 
-  return email;
+  return profile.email;
 }

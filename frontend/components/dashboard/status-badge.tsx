@@ -12,6 +12,7 @@ const labelMap: Record<string, string> = {
   quote_draft: "Ready to Quote",
   scheduled: "Scheduled",
   completed: "Completed",
+  on_hold: "On Hold",
   rejected: "Rejected",
   pending: "Pending",
 };

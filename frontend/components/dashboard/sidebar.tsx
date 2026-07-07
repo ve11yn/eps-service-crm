@@ -7,10 +7,10 @@ import { LogoutButton } from "@/frontend/components/auth/logout-button";
 
 const items = [
   { href: "/", label: "Home" },
-  { href: "/reviews", label: "Reviews" },
   { href: "/inbox", label: "Inbox" },
   { href: "/projects", label: "Projects" },
   { href: "/schedule", label: "Schedule" },
+  { href: "/reports", label: "Reports" },
 ];
 
 function isActive(pathname: string, href: string): boolean {
@@ -35,14 +35,13 @@ export function Sidebar({
       <div className="dashboard-brand">
         <Image
           src="/eps-logo.png"
-          alt="EPS Services"
+          alt="Gage Handyman & Cleaning Service"
           width={58}
           height={58}
           className="dashboard-brand-logo"
           priority
         />
         <div>
-          <p className="dashboard-brand-title">EPS Services</p>
           <p className="dashboard-brand-subtitle">
             {displayName ? `${displayName} · ${roleLabel ?? "Staff"}` : "Business Dashboard"}
           </p>

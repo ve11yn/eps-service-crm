@@ -1,6 +1,10 @@
 import "server-only";
 
-import { listMediaAssetsByProjectId } from "@/backend/repositories";
+import {
+  getLatestActiveReviewDraftByThreadId,
+  listMediaAssetsByProjectId,
+  listMessagesByThreadId,
+} from "@/backend/repositories";
 import { createAdminSupabaseClient } from "@/lib/supabase/admin";
 
 export async function getProjectDetail(projectId: string) {
@@ -23,6 +27,10 @@ export async function getProjectDetail(projectId: string) {
   if (error) throw error;
   if (!data) return null;
 
+  const thread = Array.isArray(data.whatsapp_threads)
+    ? data.whatsapp_threads[0]
+    : data.whatsapp_threads;
+
   const mediaAssets = await listMediaAssetsByProjectId(projectId);
   const mediaAssetsWithUrls = await Promise.all(
     mediaAssets.map(async (asset) => {
@@ -37,6 +45,13 @@ export async function getProjectDetail(projectId: string) {
     }),
   );
 
+  const [threadMessages, threadReviewDraft] = thread
+    ? await Promise.all([
+        listMessagesByThreadId(thread.id),
+        getLatestActiveReviewDraftByThreadId(thread.id),
+      ])
+    : [[], null];
+
   const projectItems = Array.isArray(data.project_items)
     ? data.project_items.map((item) => ({
         ...item,
@@ -50,5 +65,10 @@ export async function getProjectDetail(projectId: string) {
     ...data,
     project_items: projectItems,
     media_assets: mediaAssetsWithUrls,
+    inbox_preview: {
+      thread,
+      messages: threadMessages,
+      review_draft: threadReviewDraft,
+    },
   };
 }

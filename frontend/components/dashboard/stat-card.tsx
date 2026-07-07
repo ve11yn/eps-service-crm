@@ -9,8 +9,10 @@ export function StatCard({
 }) {
   return (
     <article className="panel stat-card">
-      <p className="stat-card-label">{label}</p>
-      <p className="stat-card-value">{value}</p>
+      <div className="stat-card-top">
+        <p className="stat-card-label">{label}</p>
+        <p className="stat-card-value">{value}</p>
+      </div>
       {hint ? <p className="stat-card-hint">{hint}</p> : null}
     </article>
   );

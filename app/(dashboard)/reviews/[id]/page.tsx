@@ -21,9 +21,14 @@ export default async function ReviewDraftDetailPage({
 
   return (
     <div className="page-stack">
-      <Link href="/reviews" className="back-link">
-        ← Back to review queue
-      </Link>
+      <div className="page-header page-header-inline">
+        <Link href="/reviews" className="back-link">
+          ← Back to review queue
+        </Link>
+        <Link href={`/inbox?thread=${draft.thread_id}`} className="button button-secondary">
+          View Inbox
+        </Link>
+      </div>
       <ReviewDraftEditor draft={draft} />
     </div>
   );

@@ -1,0 +1,23 @@
+Handover guidance for Gage's CRM
+
+Ownership
+- Gage owns the domain, hosting, Supabase project, WhatsApp Business API account, and any AI or accounting integrations.
+
+Roles
+- Owner: full operational control, final approvals, access to all data and settings.
+- Admin: manage users, review drafts, approve quotes, assign work, reconcile jobs, and oversee closeout.
+- Coordinator: manage day-to-day scheduling, intake, and customer communication.
+- Field worker: receive assigned work, update job status, and upload evidence for completed work.
+
+What users can do
+- Login with their assigned role only.
+- Review WhatsApp intake, projects, schedules, and assigned work.
+- Create or edit work items through the review workflow.
+- Upload photos and supporting evidence where permitted.
+- View reports and handover notes if they have the right access.
+
+Operational notes
+- Keep API keys, webhook secrets, and service-role credentials with the owner.
+- Rotate access when staff changes or vendors are replaced.
+- Apply Supabase migrations before validating auth and data routes.
+- Keep exported copies of quotes, invoices, and evidence files outside the app as part of the owner handover.

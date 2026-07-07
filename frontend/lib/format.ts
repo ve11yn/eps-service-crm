@@ -162,3 +162,20 @@ export function isSameMonth(left: Date, right: Date): boolean {
 export function slugifyStatus(value?: string | null): string {
   return (value ?? "unknown").toLowerCase().replace(/[^a-z0-9]+/g, "-");
 }
+
+const sourceChannelLabelMap: Record<string, string> = {
+  whatsapp: "WhatsApp",
+  web: "Web",
+  phone: "Phone",
+  manual: "Manual",
+  referral: "Referral",
+};
+
+export function formatSourceChannelLabel(value?: string | null): string {
+  if (!value) return "Unknown";
+
+  return (
+    sourceChannelLabelMap[value] ??
+    value.replace(/[_-]+/g, " ").replace(/\b\w/g, (character) => character.toUpperCase())
+  );
+}

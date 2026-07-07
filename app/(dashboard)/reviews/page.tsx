@@ -1,8 +1,10 @@
 import Link from "next/link";
 import { listReviewDrafts } from "@/backend/repositories";
 import { EmptyState } from "@/frontend/components/dashboard/empty-state";
-import { StatusBadge } from "@/frontend/components/dashboard/status-badge";
-import { formatDateTime } from "@/frontend/lib/format";
+import {
+  ActionQueueItem,
+  formatQueueSource,
+} from "@/frontend/components/dashboard/action-queue-item";
 import { parseLeadExtraction } from "@/frontend/lib/review-drafts";
 
 export default async function ReviewDraftsPage() {
@@ -12,9 +14,12 @@ export default async function ReviewDraftsPage() {
     <div className="page-stack">
       <section className="page-header">
         <div>
+          <Link href="/requests" className="back-link">
+            ← Back to Requests
+          </Link>
+          <p className="eyebrow">Reviews</p>
           <h1>Review Queue</h1>
         </div>
-     
       </section>
 
       <section className="panel table-panel">
@@ -28,13 +33,13 @@ export default async function ReviewDraftsPage() {
         {drafts.length === 0 ? (
           <EmptyState
             title="No review drafts yet"
-            description="Run AI extraction from the inbox or mock WhatsApp route and the drafts will show here."
+            description="Run AI extraction from an inbox conversation and the drafts will show here."
           />
         ) : (
           <div className="review-draft-list">
             <div className="review-draft-list-head" aria-hidden="true">
               <span>Customer / Job</span>
-              <span>Thread</span>
+              <span>Source</span>
               <span>Status</span>
               <span>Updated</span>
               <span>Decision</span>
@@ -56,24 +61,17 @@ export default async function ReviewDraftsPage() {
                     : "Awaiting review";
 
               return (
-                <Link
+                <ActionQueueItem
                   key={draft.id}
                   href={`/reviews/${draft.id}`}
-                  className="review-draft-row"
-                >
-                  <span className="review-draft-main">
-                    <span className="review-draft-title">{title}</span>
-                    <span className="helper-text">{customer}</span>
-                  </span>
-                  <span className="review-draft-meta">{draft.thread_id}</span>
-                  <span>
-                    <StatusBadge status={draft.status} />
-                  </span>
-                  <span className="review-draft-meta">
-                    {formatDateTime(draft.updated_at)}
-                  </span>
-                  <span className="review-draft-meta">{decision}</span>
-                </Link>
+                  title={title}
+                  subtitle={customer}
+                  contextLabel="Source"
+                  contextValue={formatQueueSource(draft.source_channel_code)}
+                  status={draft.status}
+                  updatedAt={draft.updated_at}
+                  finalValue={decision}
+                />
               );
             })}
           </div>

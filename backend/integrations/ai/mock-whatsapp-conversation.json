@@ -10,7 +10,7 @@
     },
     {
       "direction": "outbound",
-      "senderName": "EPS Admin",
+      "senderName": "Gage Admin",
       "sentAt": "2026-06-22T09:03:00+08:00",
       "text": "Can you share your address and whether you need a site check first?"
     },
@@ -22,7 +22,7 @@
     },
     {
       "direction": "outbound",
-      "senderName": "EPS Admin",
+      "senderName": "Gage Admin",
       "sentAt": "2026-06-22T09:09:00+08:00",
       "text": "Understood. Do you want us to prepare a quote after inspection?"
     },
