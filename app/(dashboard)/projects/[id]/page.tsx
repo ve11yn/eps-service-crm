@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { getProjectDetail } from "@/backend/services/projects/get-project-detail";
 import { EmptyState } from "@/frontend/components/dashboard/empty-state";
 import { StatusBadge } from "@/frontend/components/dashboard/status-badge";
+import { BackButton } from "@/frontend/components/navigation/back-button";
 import { formatDate, formatDateTime, formatMoney } from "@/frontend/lib/format";
 
 type ProjectDetailPageProps = {
@@ -37,9 +38,7 @@ export default async function ProjectDetailPage({
     <div className="page-stack">
       <section className="page-header">
         <div>
-          <Link href="/projects" className="back-link">
-            ← Back to Projects
-          </Link>
+          <BackButton fallbackHref="/projects" label="← Back to Projects" className="back-link" />
           <h1>{project.title}</h1>
           <p className="page-header-copy">{project.project_code}</p>
         </div>

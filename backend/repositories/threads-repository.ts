@@ -99,6 +99,15 @@ export async function updateThread(
     .single();
 
   if (error) throw error;
+  invalidateCachedTags([
+    CACHE_TAGS.threads,
+    CACHE_TAGS.messages,
+    CACHE_TAGS.leads,
+    CACHE_TAGS.dashboard,
+    CACHE_TAGS.requests,
+    CACHE_TAGS.inbox,
+    CACHE_TAGS.reports,
+  ]);
   return data;
 }
 

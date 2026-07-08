@@ -10,6 +10,7 @@ import {
   parseLeadExtraction,
   textToList,
 } from "@/frontend/lib/review-drafts";
+import { BackButton } from "@/frontend/components/navigation/back-button";
 import type { Database } from "@/types/database";
 import type { AiLeadExtraction } from "@/types/integration";
 
@@ -311,327 +312,336 @@ export function ReviewDraftEditor({ draft }: ReviewDraftEditorProps) {
   }
 
   return (
-    <div className="page-stack">
-      <section className="page-header">
+    <div className="page-stack review-page">
+      <section className="page-header review-page-header">
         <div>
+          <BackButton
+            fallbackHref="/requests"
+            label="Back"
+            className="back-icon-button"
+            iconOnly
+          />
           <p className="eyebrow">Review Draft</p>
           <h1>Review Intake</h1>
+          <p className="page-header-copy">
+            Review the customer details, scope, work items, and source conversation
+            before approving the project.
+          </p>
         </div>
-
+        <div className="review-header-actions">
+          <a href={`/inbox?thread=${draft.thread_id}`} className="button button-secondary">
+            View Inbox
+          </a>
+        </div>
       </section>
 
-      <section className="review-layout">
-        <div className="page-stack">
-          <section className="panel">
-            <div className="panel-header">
-              <div>
-                <p className="eyebrow">Core Details</p>
-                <h2>Customer and Job</h2>
-              </div>
-              <span className="helper-text">
-                Updated {formatDateTime(draft.updated_at)}
-              </span>
-            </div>
+      <section className="panel review-summary-panel">
+        <div className="panel-header">
+          <div>
+            <p className="eyebrow">Review Snapshot</p>
+            <h2>Draft Overview</h2>
+          </div>
+          <span className="helper-text">Updated {formatDateTime(draft.updated_at)}</span>
+        </div>
 
-            <div className="form-grid">
-              <label className="field-block">
-                <span className="field-label">Project Title</span>
-                <input
-                  className="input"
-                  value={extraction.projectTitle ?? ""}
-                  onChange={(event) =>
-                    patchExtraction({ projectTitle: event.target.value })
-                  }
-                />
-              </label>
+        <div className="summary-grid review-summary-grid">
+          <div className="review-summary-item">
+            <span className="summary-label">Draft Status</span>
+            <p className="summary-value">{draft.status}</p>
+          </div>
+          <div className="review-summary-item">
+            <span className="summary-label">Source Channel</span>
+            <p className="summary-value">{formatSourceChannelLabel(draft.source_channel_code)}</p>
+          </div>
+          <div className="review-summary-item">
+            <span className="summary-label">Linked Lead</span>
+            <p className="summary-value">{draft.lead_id ? "Linked" : "Not linked yet"}</p>
+          </div>
+          <div className="review-summary-item">
+            <span className="summary-label">Linked Project</span>
+            <p className="summary-value">{draft.approved_project_id ? "Created" : "Not created yet"}</p>
+          </div>
+          <div className="review-summary-item">
+            <span className="summary-label">Created</span>
+            <p className="summary-value">{formatDateTime(draft.created_at)}</p>
+          </div>
+          <div className="review-summary-item">
+            <span className="summary-label">Updated</span>
+            <p className="summary-value">{formatDateTime(draft.updated_at)}</p>
+          </div>
+        </div>
+      </section>
 
-              <label className="field-block">
-                <span className="field-label">Lead Title</span>
-                <input
-                  className="input"
-                  value={extraction.leadTitle ?? ""}
-                  onChange={(event) =>
-                    patchExtraction({ leadTitle: event.target.value })
-                  }
-                />
-              </label>
+      <section className="panel">
+        <div className="panel-header">
+          <div>
+            <p className="eyebrow">Core Details</p>
+            <h2>Customer and Job</h2>
+          </div>
+        </div>
 
-              <label className="field-block">
-                <span className="field-label">Customer Name</span>
-                <input
-                  className="input"
-                  value={extraction.customerName ?? ""}
-                  onChange={(event) =>
-                    patchExtraction({ customerName: event.target.value })
-                  }
-                />
-              </label>
+        <div className="form-grid">
+          <label className="field-block">
+            <span className="field-label">Project Title</span>
+            <input
+              className="input"
+              value={extraction.projectTitle ?? ""}
+              onChange={(event) => patchExtraction({ projectTitle: event.target.value })}
+            />
+          </label>
 
-              <label className="field-block">
-                <span className="field-label">Phone</span>
-                <input
-                  className="input"
-                  value={extraction.contactPhone ?? ""}
-                  onChange={(event) =>
-                    patchExtraction({ contactPhone: event.target.value })
-                  }
-                />
-              </label>
+          <label className="field-block">
+            <span className="field-label">Lead Title</span>
+            <input
+              className="input"
+              value={extraction.leadTitle ?? ""}
+              onChange={(event) => patchExtraction({ leadTitle: event.target.value })}
+            />
+          </label>
 
-              <label className="field-block">
-                <span className="field-label">Alternate Phone</span>
-                <input
-                  className="input"
-                  value={extraction.alternatePhone ?? ""}
-                  onChange={(event) =>
-                    patchExtraction({ alternatePhone: event.target.value })
-                  }
-                />
-              </label>
+          <label className="field-block">
+            <span className="field-label">Customer Name</span>
+            <input
+              className="input"
+              value={extraction.customerName ?? ""}
+              onChange={(event) => patchExtraction({ customerName: event.target.value })}
+            />
+          </label>
 
-              <label className="field-block">
-                <span className="field-label">Email</span>
-                <input
-                  className="input"
-                  value={extraction.email ?? ""}
-                  onChange={(event) =>
-                    patchExtraction({ email: event.target.value })
-                  }
-                />
-              </label>
+          <label className="field-block">
+            <span className="field-label">Phone</span>
+            <input
+              className="input"
+              value={extraction.contactPhone ?? ""}
+              onChange={(event) => patchExtraction({ contactPhone: event.target.value })}
+            />
+          </label>
 
-              <label className="field-block">
-                <span className="field-label">Urgency</span>
-                <select
-                  className="input input-select"
-                  value={extraction.urgency}
-                  onChange={(event) =>
-                    patchExtraction({
-                      urgency: event.target.value as AiLeadExtraction["urgency"],
-                    })
-                  }
-                >
-                  <option value="low">Low</option>
-                  <option value="medium">Medium</option>
-                  <option value="high">High</option>
-                </select>
-              </label>
+          <label className="field-block">
+            <span className="field-label">Alternate Phone</span>
+            <input
+              className="input"
+              value={extraction.alternatePhone ?? ""}
+              onChange={(event) => patchExtraction({ alternatePhone: event.target.value })}
+            />
+          </label>
 
-              <label className="field-block">
-                <span className="field-label">Customer Type</span>
-                <select
-                  className="input input-select"
-                  value={extraction.customerType ?? ""}
-                  onChange={(event) =>
-                    patchExtraction({
-                      customerType: event.target.value
-                        ? (event.target.value as AiLeadExtraction["customerType"])
-                        : undefined,
-                    })
-                  }
-                >
-                  <option value="">Empty</option>
-                  <option value="owner">Owner</option>
-                  <option value="tenant">Tenant</option>
-                  <option value="landlord">Landlord</option>
-                  <option value="agent">Agent</option>
-                </select>
-              </label>
+          <label className="field-block">
+            <span className="field-label">Email</span>
+            <input
+              className="input"
+              value={extraction.email ?? ""}
+              onChange={(event) => patchExtraction({ email: event.target.value })}
+            />
+          </label>
 
-              <label className="field-block">
-                <span className="field-label">Confidence</span>
-                <input
-                  className="input"
-                  type="number"
-                  min="0"
-                  max="1"
-                  step="0.1"
-                  value={String(extraction.confidence ?? 0)}
-                  onChange={(event) =>
-                    patchExtraction({
-                      confidence: normalizeConfidence(event.target.value),
-                    })
-                  }
-                />
-              </label>
-            </div>
-          </section>
+          <label className="field-block">
+            <span className="field-label">Urgency</span>
+            <select
+              className="input input-select"
+              value={extraction.urgency}
+              onChange={(event) =>
+                patchExtraction({
+                  urgency: event.target.value as AiLeadExtraction["urgency"],
+                })
+              }
+            >
+              <option value="low">Low</option>
+              <option value="medium">Medium</option>
+              <option value="high">High</option>
+            </select>
+          </label>
 
-          <section className="panel">
-            <div className="panel-header">
-              <div>
-                <p className="eyebrow">Location and Scope</p>
-                <h2>Address, Service, and Notes</h2>
-              </div>
-            </div>
+          <label className="field-block">
+            <span className="field-label">Customer Type</span>
+            <select
+              className="input input-select"
+              value={extraction.customerType ?? ""}
+              onChange={(event) =>
+                patchExtraction({
+                  customerType: event.target.value
+                    ? (event.target.value as AiLeadExtraction["customerType"])
+                    : undefined,
+                })
+              }
+            >
+              <option value="">Empty</option>
+              <option value="owner">Owner</option>
+              <option value="tenant">Tenant</option>
+              <option value="landlord">Landlord</option>
+              <option value="agent">Agent</option>
+            </select>
+          </label>
 
-            <div className="form-grid">
-              <label className="field-block field-block-wide">
-                <span className="field-label">Summary</span>
-                <textarea
-                  className="composer-textarea"
-                  rows={4}
-                  value={extraction.summary}
-                  onChange={(event) =>
-                    patchExtraction({ summary: event.target.value })
-                  }
-                />
-              </label>
+          <label className="field-block">
+            <span className="field-label">Confidence</span>
+            <input
+              className="input"
+              type="number"
+              min="0"
+              max="1"
+              step="0.1"
+              value={String(extraction.confidence ?? 0)}
+              onChange={(event) =>
+                patchExtraction({
+                  confidence: normalizeConfidence(event.target.value),
+                })
+              }
+            />
+          </label>
+        </div>
+      </section>
 
-              <label className="field-block field-block-wide">
-                <span className="field-label">Issue</span>
-                <textarea
-                  className="composer-textarea"
-                  rows={3}
-                  value={extraction.issue ?? ""}
-                  onChange={(event) =>
-                    patchExtraction({ issue: event.target.value })
-                  }
-                />
-              </label>
+      <section className="panel">
+        <div className="panel-header">
+          <div>
+            <p className="eyebrow">Location and Scope</p>
+            <h2>Address, Service, and Notes</h2>
+          </div>
+        </div>
 
-              <label className="field-block">
-                <span className="field-label">Address</span>
-                <input
-                  className="input"
-                  value={extraction.address ?? ""}
-                  onChange={(event) =>
-                    patchExtraction({ address: event.target.value })
-                  }
-                />
-              </label>
+        <div className="form-grid">
+          <label className="field-block field-block-wide">
+            <span className="field-label">Summary</span>
+            <textarea
+              className="composer-textarea"
+              rows={4}
+              value={extraction.summary}
+              onChange={(event) => patchExtraction({ summary: event.target.value })}
+            />
+          </label>
 
-              <label className="field-block">
-                <span className="field-label">Address Line 1</span>
-                <input
-                  className="input"
-                  value={extraction.addressLine1 ?? ""}
-                  onChange={(event) =>
-                    patchExtraction({ addressLine1: event.target.value })
-                  }
-                />
-              </label>
+          <label className="field-block field-block-wide">
+            <span className="field-label">Issue</span>
+            <textarea
+              className="composer-textarea"
+              rows={3}
+              value={extraction.issue ?? ""}
+              onChange={(event) => patchExtraction({ issue: event.target.value })}
+            />
+          </label>
 
-              <label className="field-block">
-                <span className="field-label">Unit Number</span>
-                <input
-                  className="input"
-                  value={extraction.unitNumber ?? ""}
-                  onChange={(event) =>
-                    patchExtraction({ unitNumber: event.target.value })
-                  }
-                />
-              </label>
+          <label className="field-block">
+            <span className="field-label">Address</span>
+            <input
+              className="input"
+              value={extraction.address ?? ""}
+              onChange={(event) => patchExtraction({ address: event.target.value })}
+            />
+          </label>
 
-              <label className="field-block">
-                <span className="field-label">Postal Code</span>
-                <input
-                  className="input"
-                  value={extraction.postalCode ?? ""}
-                  onChange={(event) =>
-                    patchExtraction({ postalCode: event.target.value })
-                  }
-                />
-              </label>
+          <label className="field-block">
+            <span className="field-label">Address Line 1</span>
+            <input
+              className="input"
+              value={extraction.addressLine1 ?? ""}
+              onChange={(event) => patchExtraction({ addressLine1: event.target.value })}
+            />
+          </label>
 
-              <label className="field-block">
-                <span className="field-label">Property Name</span>
-                <input
-                  className="input"
-                  value={extraction.propertyName ?? ""}
-                  onChange={(event) =>
-                    patchExtraction({ propertyName: event.target.value })
-                  }
-                />
-              </label>
+          <label className="field-block">
+            <span className="field-label">Unit Number</span>
+            <input
+              className="input"
+              value={extraction.unitNumber ?? ""}
+              onChange={(event) => patchExtraction({ unitNumber: event.target.value })}
+            />
+          </label>
 
-              <label className="field-block">
-                <span className="field-label">Access Notes</span>
-                <input
-                  className="input"
-                  value={extraction.accessNotes ?? ""}
-                  onChange={(event) =>
-                    patchExtraction({ accessNotes: event.target.value })
-                  }
-                />
-              </label>
+          <label className="field-block">
+            <span className="field-label">Postal Code</span>
+            <input
+              className="input"
+              value={extraction.postalCode ?? ""}
+              onChange={(event) => patchExtraction({ postalCode: event.target.value })}
+            />
+          </label>
 
-              <label className="field-block">
-                <span className="field-label">Preferred Date</span>
-                <input
-                  className="input"
-                  value={extraction.preferredDate ?? ""}
-                  onChange={(event) =>
-                    patchExtraction({ preferredDate: event.target.value })
-                  }
-                />
-              </label>
+          <label className="field-block">
+            <span className="field-label">Property Name</span>
+            <input
+              className="input"
+              value={extraction.propertyName ?? ""}
+              onChange={(event) => patchExtraction({ propertyName: event.target.value })}
+            />
+          </label>
 
-              <label className="field-block">
-                <span className="field-label">Preferred Time Window</span>
-                <input
-                  className="input"
-                  value={extraction.preferredTimeWindow ?? ""}
-                  onChange={(event) =>
-                    patchExtraction({ preferredTimeWindow: event.target.value })
-                  }
-                />
-              </label>
+          <label className="field-block">
+            <span className="field-label">Access Notes</span>
+            <input
+              className="input"
+              value={extraction.accessNotes ?? ""}
+              onChange={(event) => patchExtraction({ accessNotes: event.target.value })}
+            />
+          </label>
 
-              <label className="field-block field-block-wide">
-                <span className="field-label">Requested Services</span>
-                <input
-                  className="input"
-                  value={listToText(extraction.requestedServices)}
-                  onChange={(event) =>
-                    patchExtraction({
-                      requestedServices: textToList(event.target.value),
-                    })
-                  }
-                />
-              </label>
+          <label className="field-block">
+            <span className="field-label">Preferred Date</span>
+            <input
+              className="input"
+              value={extraction.preferredDate ?? ""}
+              onChange={(event) => patchExtraction({ preferredDate: event.target.value })}
+            />
+          </label>
 
-              <label className="field-block field-block-wide">
-                <span className="field-label">Labels</span>
-                <input
-                  className="input"
-                  value={listToText(extraction.labels)}
-                  onChange={(event) =>
-                    patchExtraction({
-                      labels: textToList(event.target.value),
-                    })
-                  }
-                />
-              </label>
+          <label className="field-block">
+            <span className="field-label">Preferred Time Window</span>
+            <input
+              className="input"
+              value={extraction.preferredTimeWindow ?? ""}
+              onChange={(event) => patchExtraction({ preferredTimeWindow: event.target.value })}
+            />
+          </label>
 
-              <label className="field-block field-block-wide">
-                <span className="field-label">Scope Summary</span>
-                <textarea
-                  className="composer-textarea"
-                  rows={3}
-                  value={extraction.scopeSummary ?? ""}
-                  onChange={(event) =>
-                    patchExtraction({ scopeSummary: event.target.value })
-                  }
-                />
-              </label>
+          <label className="field-block field-block-wide">
+            <span className="field-label">Requested Services</span>
+            <input
+              className="input"
+              value={listToText(extraction.requestedServices)}
+              onChange={(event) =>
+                patchExtraction({
+                  requestedServices: textToList(event.target.value),
+                })
+              }
+            />
+          </label>
 
-              <label className="field-block field-block-wide">
-                <span className="field-label">Remarks</span>
-                <textarea
-                  className="composer-textarea"
-                  rows={3}
-                  value={extraction.remarks ?? ""}
-                  onChange={(event) =>
-                    patchExtraction({ remarks: event.target.value })
-                  }
-                />
-              </label>
-            </div>
+          <label className="field-block field-block-wide">
+            <span className="field-label">Labels</span>
+            <input
+              className="input"
+              value={listToText(extraction.labels)}
+              onChange={(event) =>
+                patchExtraction({
+                  labels: textToList(event.target.value),
+                })
+              }
+            />
+          </label>
 
-          </section>
+          <label className="field-block field-block-wide">
+            <span className="field-label">Scope Summary</span>
+            <textarea
+              className="composer-textarea"
+              rows={3}
+              value={extraction.scopeSummary ?? ""}
+              onChange={(event) => patchExtraction({ scopeSummary: event.target.value })}
+            />
+          </label>
 
-          <section className="panel work-item-panel">
+          <label className="field-block field-block-wide">
+            <span className="field-label">Remarks</span>
+            <textarea
+              className="composer-textarea"
+              rows={3}
+              value={extraction.remarks ?? ""}
+              onChange={(event) => patchExtraction({ remarks: event.target.value })}
+            />
+          </label>
+        </div>
+      </section>
+
+      <section className="panel work-item-panel">
             <div className="panel-header">
               <div>
                 <p className="eyebrow">Project Work Items</p>
@@ -958,17 +968,19 @@ export function ReviewDraftEditor({ draft }: ReviewDraftEditorProps) {
               )}
             </div>
           </section>
+
+      <section className="panel approval-panel">
+        <div className="panel-header">
+          <div>
+            <p className="eyebrow">Approval and Notes</p>
+            <h2>Decision Area</h2>
+          </div>
+          <strong className="approval-status">{draft.status}</strong>
         </div>
 
-        <aside className="detail-sidebar">
-          <section className="panel approval-panel">
-            <div className="detail-sidebar-group">
-              <span className="field-label">Draft Status</span>
-              <strong className="approval-status">{draft.status}</strong>
-            </div>
-
+        <div className="approval-layout">
+          <div className="approval-main">
             <div className="approval-decision">
-              <p className="field-label">Approval Outcome</p>
               <label className={`approval-option ${extraction.shouldCreateProject ? "is-selected" : ""}`}>
                 <input
                   type="checkbox"
@@ -1007,10 +1019,13 @@ export function ReviewDraftEditor({ draft }: ReviewDraftEditorProps) {
               <span className="field-label">What happens next</span>
               <p>
                 {extraction.shouldCreateProject
-                  ? "Clicking Approve will create a project and attach the listed work items."
-                  : "Clicking Approve will save this as a lead only. No project will be created."}
+                  ? "Approve to create a project and attach the listed work items."
+                  : "Approve to save this as a lead only. No project will be created."}
               </p>
             </div>
+          </div>
+
+          <div className="approval-side">
             <div className="detail-sidebar-group">
               <span className="field-label">Source Channel</span>
               <span>{formatSourceChannelLabel(draft.source_channel_code)}</span>
@@ -1024,14 +1039,6 @@ export function ReviewDraftEditor({ draft }: ReviewDraftEditorProps) {
               <span>{draft.approved_project_id ? "Created" : "Not created yet"}</span>
             </div>
             <div className="detail-sidebar-group">
-              <span className="field-label">Created</span>
-              <span>{formatDateTime(draft.created_at)}</span>
-            </div>
-            <div className="detail-sidebar-group">
-              <span className="field-label">Updated</span>
-              <span>{formatDateTime(draft.updated_at)}</span>
-            </div>
-            <div className="detail-sidebar-group">
               <span className="field-label">Review Notes</span>
               <textarea
                 className="composer-textarea"
@@ -1041,83 +1048,77 @@ export function ReviewDraftEditor({ draft }: ReviewDraftEditorProps) {
                 placeholder="Add admin notes, missing information, or clarification points..."
               />
             </div>
-            <div className="action-stack">
-              <button
-                type="button"
-                className="button button-secondary"
-                onClick={() => saveDraft("needs_review")}
-                disabled={isSaving || isApproving || isRejecting}
-              >
-                {isSaving ? "Saving..." : "Save Draft"}
-              </button>
-              <button
-                type="button"
-                className="button button-primary"
-                onClick={approveDraft}
-                disabled={isSaving || isApproving || isRejecting}
-              >
-                {isApproving
-                  ? "Approving..."
-                  : extraction.shouldCreateProject
-                    ? "Approve and Create Project"
-                    : "Approve as Lead"}
-              </button>
-              <p className="helper-text">
-                {extraction.shouldCreateProject
-                  ? "This will convert the draft into a lead and project."
-                  : "This will convert the draft into a lead only."}
-              </p>
-              <button
-                type="button"
-                className="button button-secondary"
-                onClick={() => rejectDraft(true)}
-                disabled={isSaving || isApproving || isRejecting}
-              >
-                {isRejecting ? "Updating..." : "Needs More Info"}
-              </button>
-              <button
-                type="button"
-                className="button button-secondary"
-                onClick={() => rejectDraft(false)}
-                disabled={isSaving || isApproving || isRejecting}
-              >
-                {isRejecting ? "Rejecting..." : "Reject Draft"}
-              </button>
-              {statusMessage ? <p className="helper-text">{statusMessage}</p> : null}
-            </div>
-          </section>
+          </div>
+        </div>
 
-          <section className="panel">
-            <div className="panel-header">
-              <div>
-                <p className="eyebrow">Conversation</p>
-                <h2>Source Chat</h2>
-              </div>
-            </div>
-            <div className="message-list">
-              {conversation.length === 0 ? (
-                <p className="helper-text">No conversation snapshot saved.</p>
-              ) : (
-                conversation.map((message, index) => (
-                  <article
-                    key={`${draft.id}-conversation-${index}`}
-                    className={`message-bubble ${message.direction === "outbound" ? "is-outbound" : "is-inbound"}`}
-                  >
-                    <p className="message-meta">
-                      {message.senderName ??
-                        (message.direction === "outbound"
-                          ? "Gage Admin"
-                          : "Customer")}
-                      {" · "}
-                      {formatDateTime(message.sentAt)}
-                    </p>
-                    <p>{message.text}</p>
-                  </article>
-                ))
-              )}
-            </div>
-          </section>
-        </aside>
+        <div className="approval-actions">
+          <button
+            type="button"
+            className="button button-secondary"
+            onClick={() => saveDraft("needs_review")}
+            disabled={isSaving || isApproving || isRejecting}
+          >
+            {isSaving ? "Saving..." : "Save Draft"}
+          </button>
+          <button
+            type="button"
+            className="button button-primary"
+            onClick={approveDraft}
+            disabled={isSaving || isApproving || isRejecting}
+          >
+            {isApproving
+              ? "Approving..."
+              : extraction.shouldCreateProject
+                ? "Approve and Create Project"
+                : "Approve as Lead"}
+          </button>
+          <button
+            type="button"
+            className="button button-secondary"
+            onClick={() => rejectDraft(true)}
+            disabled={isSaving || isApproving || isRejecting}
+          >
+            {isRejecting ? "Updating..." : "Needs More Info"}
+          </button>
+          <button
+            type="button"
+            className="button button-secondary"
+            onClick={() => rejectDraft(false)}
+            disabled={isSaving || isApproving || isRejecting}
+          >
+            {isRejecting ? "Rejecting..." : "Reject Draft"}
+          </button>
+          {statusMessage ? <p className="helper-text approval-status-message">{statusMessage}</p> : null}
+        </div>
+      </section>
+
+      <section className="panel">
+        <div className="panel-header">
+          <div>
+            <p className="eyebrow">Conversation</p>
+            <h2>Source Chat</h2>
+          </div>
+        </div>
+        <div className="message-list">
+          {conversation.length === 0 ? (
+            <p className="helper-text">No conversation snapshot saved.</p>
+          ) : (
+            conversation.map((message, index) => (
+              <article
+                key={`${draft.id}-conversation-${index}`}
+                className={`message-bubble ${message.direction === "outbound" ? "is-outbound" : "is-inbound"}`}
+              >
+                <p className="message-meta">
+                  {message.senderName ??
+                    (message.direction === "outbound" ? "Gage Admin" : "Customer")}
+                  {" · "}
+                  {formatDateTime(message.sentAt)}
+                </p>
+                <p>{message.text}</p>
+              </article>
+            ))
+          )}
+        </div>
       </section>
     </div>
   );

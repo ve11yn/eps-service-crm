@@ -276,7 +276,7 @@ textarea {
 .report-summary-grid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 3px;
+  gap: 16px;
 }
 
 .report-metric {
@@ -297,8 +297,8 @@ textarea {
 
 .report-metric-value {
   margin: 12px 0 6px;
-  font-size: 2rem;
-  font-weight: 700;
+  font-size: 2.2rem;
+  font-weight: 300;
   line-height: 1;
 }
 
@@ -306,6 +306,40 @@ textarea {
   margin: 0;
   color: var(--text-muted);
   line-height: 1.45;
+}
+
+.report-page {
+  gap: 24px;
+}
+
+.report-page-header {
+  align-items: flex-end;
+}
+
+.report-kpi-grid {
+  margin-bottom: 4px;
+}
+
+.report-stack {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 18px;
+}
+
+.report-section {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  min-height: 100%;
+}
+
+.report-section-header {
+  align-items: center;
+}
+
+.report-section-header .helper-text {
+  text-align: right;
+  color: var(--text-muted);
 }
 
 .report-insight-grid {
@@ -361,7 +395,7 @@ textarea {
 .report-panel {
   display: flex;
   flex-direction: column;
-  gap: 18px;
+  gap: 14px;
 }
 
 .report-panel-copy {
@@ -378,7 +412,7 @@ textarea {
 .report-bar-list {
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 12px;
 }
 
 .report-bar-row {
@@ -420,7 +454,7 @@ textarea {
 .report-speed-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 3px;
+  gap: 12px;
 }
 
 .stat-card {
@@ -981,6 +1015,39 @@ textarea {
   gap: 3px;
 }
 
+.review-page {
+  gap: 18px;
+}
+
+.review-page-header {
+  align-items: flex-start;
+}
+
+.review-summary-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.review-summary-item {
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  background: var(--surface);
+}
+
+.summary-value {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+  line-height: 1.45;
+  color: var(--foreground);
+}
+
+.review-summary-panel {
+  border-color: rgba(31, 126, 214, 0.14);
+  background: linear-gradient(180deg, #ffffff, #f8fbfc);
+}
+
 .summary-label,
 .field-label,
 .helper-text {
@@ -1008,20 +1075,6 @@ textarea {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 16px 18px;
-}
-
-.review-layout {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) 360px;
-  gap: 5px;
-  align-items: stretch;
-  min-height: 0;
-}
-
-.review-layout > .page-stack,
-.review-layout > .detail-sidebar {
-  min-height: 0;
-  overflow: auto;
 }
 
 .toggle-row {
@@ -1214,6 +1267,27 @@ textarea {
   background: linear-gradient(180deg, #ffffff, #f8fbfc);
 }
 
+.approval-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 300px;
+  gap: 18px;
+  align-items: start;
+}
+
+.approval-main,
+.approval-side {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.approval-side {
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  background: var(--surface);
+}
+
 .approval-status {
   display: inline-flex;
   width: fit-content;
@@ -1275,6 +1349,36 @@ textarea {
   line-height: 1.5;
 }
 
+.approval-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 18px;
+  align-items: center;
+  padding-top: 4px;
+}
+
+.approval-actions .button {
+  white-space: nowrap;
+}
+
+.approval-status-message {
+  flex-basis: 100%;
+  margin: 0;
+}
+
+.review-header-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: flex-end;
+  align-self: flex-start;
+}
+
+.review-header-actions .button {
+  white-space: nowrap;
+}
+
 .detail-nav {
   display: flex;
   flex-direction: column;
@@ -1299,6 +1403,41 @@ textarea {
   display: inline-block;
   margin-bottom: 14px;
   color: var(--text-muted);
+}
+
+button.back-link {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  font: inherit;
+  text-align: left;
+}
+
+.back-icon-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  margin: 0 0 12px;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: var(--foreground);
+  cursor: pointer;
+  transition: 150ms ease;
+}
+
+.back-icon-button:hover {
+  color: var(--accent);
+  background: transparent;
+}
+
+.back-icon-button svg {
+  width: 28px;
+  height: 28px;
 }
 
 .details-grid {
@@ -2057,7 +2196,8 @@ textarea {
   .review-layout > .detail-sidebar,
   .project-detail-layout > .page-stack,
   .detail-sidebar,
-  .inbox-list {
+  .inbox-list,
+  .approval-layout {
     height: auto;
     overflow: visible;
   }
@@ -2074,7 +2214,8 @@ textarea {
   .dashboard-shell,
   .inbox-layout,
   .project-detail-layout,
-  .review-layout {
+  .review-layout,
+  .approval-layout {
     grid-template-columns: 1fr;
   }
 
@@ -2093,6 +2234,14 @@ textarea {
   .report-two-column,
   .report-speed-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .review-summary-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .approval-layout {
+    grid-template-columns: 1fr;
   }
 }
 
@@ -2128,6 +2277,15 @@ textarea {
   .report-two-column,
   .report-speed-grid {
     grid-template-columns: 1fr;
+  }
+
+  .review-summary-grid,
+  .approval-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .review-header-actions {
+    justify-content: flex-start;
   }
 
   .review-draft-list-head {

@@ -8,6 +8,7 @@ import { LogoutButton } from "@/frontend/components/auth/logout-button";
 const items = [
   { href: "/", label: "Home" },
   { href: "/inbox", label: "Inbox" },
+  { href: "/requests", label: "Requests" },
   { href: "/projects", label: "Projects" },
   { href: "/schedule", label: "Schedule" },
   { href: "/reports", label: "Reports" },

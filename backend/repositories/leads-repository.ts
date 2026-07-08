@@ -181,6 +181,13 @@ export async function updateLead(
     .single();
 
   if (error) throw error;
+  invalidateCachedTags([
+    CACHE_TAGS.leads,
+    CACHE_TAGS.dashboard,
+    CACHE_TAGS.requests,
+    CACHE_TAGS.reports,
+    CACHE_TAGS.inbox,
+  ]);
   return data;
 }
 

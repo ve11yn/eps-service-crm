@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { listReviewDrafts, listProjects } from "@/backend/repositories";
 import {
   ActionQueueItem,
@@ -19,11 +18,7 @@ export default async function RequestsPage() {
     <div className="page-stack">
       <section className="page-header">
         <div>
-          <Link href="/" className="back-link">
-            ← Back to Home
-          </Link>
           <h1>Request Queue</h1>
-
         </div>
       </section>
 

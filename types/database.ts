@@ -2412,6 +2412,22 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      approve_review_draft_atomic: {
+        Args: {
+          p_create_project?: boolean | null
+          p_extraction: Json
+          p_review_draft_id: string
+          p_reviewed_by_profile_id?: string | null
+        }
+        Returns: {
+          contact_id: string | null
+          lead_id: string | null
+          project_id: string | null
+          property_id: string | null
+          review_draft_id: string | null
+          status: string | null
+        }[]
+      }
       current_user_role: { Args: never; Returns: string }
       is_owner_or_admin: { Args: never; Returns: boolean }
     }

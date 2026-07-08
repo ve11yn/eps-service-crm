@@ -104,6 +104,13 @@ export async function updateProject(
     .single();
 
   if (error) throw error;
+  invalidateCachedTags([
+    CACHE_TAGS.projects,
+    CACHE_TAGS.dashboard,
+    CACHE_TAGS.requests,
+    CACHE_TAGS.reports,
+    CACHE_TAGS.inbox,
+  ]);
   return data;
 }
 
