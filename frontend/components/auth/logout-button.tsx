@@ -2,9 +2,10 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import type { LucideIcon } from "lucide-react";
 import { createBrowserSupabaseClient } from "@/lib/supabase/client";
 
-export function LogoutButton() {
+export function LogoutButton({ icon: Icon }: { icon: LucideIcon }) {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -28,7 +29,8 @@ export function LogoutButton() {
       onClick={handleLogout}
       disabled={isSubmitting}
     >
-      {isSubmitting ? "Signing Out..." : "Logout"}
+      <Icon className="dashboard-nav-icon" aria-hidden="true" size={18} strokeWidth={2} />
+      <span>{isSubmitting ? "Signing Out..." : "Logout"}</span>
     </button>
   );
 }

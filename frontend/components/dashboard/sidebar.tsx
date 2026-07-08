@@ -3,15 +3,26 @@
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import {
+  BarChart3,
+  CalendarDays,
+  FolderKanban,
+  Home,
+  Inbox,
+  ListChecks,
+  LogOut,
+  Settings,
+} from "lucide-react";
 import { LogoutButton } from "@/frontend/components/auth/logout-button";
+import type { LucideIcon } from "lucide-react";
 
-const items = [
-  { href: "/", label: "Home" },
-  { href: "/inbox", label: "Inbox" },
-  { href: "/requests", label: "Requests" },
-  { href: "/projects", label: "Projects" },
-  { href: "/schedule", label: "Schedule" },
-  { href: "/reports", label: "Reports" },
+const items: Array<{ href: string; label: string; icon: LucideIcon }> = [
+  { href: "/", label: "Home", icon: Home },
+  { href: "/inbox", label: "Inbox", icon: Inbox },
+  { href: "/requests", label: "Requests", icon: ListChecks },
+  { href: "/projects", label: "Projects", icon: FolderKanban },
+  { href: "/schedule", label: "Schedule", icon: CalendarDays },
+  { href: "/reports", label: "Reports", icon: BarChart3 },
 ];
 
 function isActive(pathname: string, href: string): boolean {
@@ -52,6 +63,7 @@ export function Sidebar({
       <nav className="dashboard-nav">
         {items.map((item) => {
           const active = isActive(pathname, item.href);
+          const Icon = item.icon;
 
           return (
             <Link
@@ -59,7 +71,8 @@ export function Sidebar({
               href={item.href}
               className={`dashboard-nav-link ${active ? "is-active" : ""}`}
             >
-              {item.label}
+              <Icon className="dashboard-nav-icon" aria-hidden="true" size={18} strokeWidth={2} />
+              <span>{item.label}</span>
             </Link>
           );
         })}
@@ -67,9 +80,10 @@ export function Sidebar({
 
       <div className="dashboard-sidebar-footer">
         <Link href="/settings" className="dashboard-nav-link">
-          Settings
+          <Settings className="dashboard-nav-icon" aria-hidden="true" size={18} strokeWidth={2} />
+          <span>Settings</span>
         </Link>
-        <LogoutButton />
+        <LogoutButton icon={LogOut} />
       </div>
     </aside>
   );
