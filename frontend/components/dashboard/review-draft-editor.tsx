@@ -30,57 +30,6 @@ function normalizeConfidence(value: string): number {
   return parsed;
 }
 
-function getWorkItemGuidance(item: AiLeadExtraction["workItems"][number]) {
-  const haystack = [
-    item.title,
-    item.description,
-    item.areaName,
-    item.itemType,
-    item.itemGroup,
-  ]
-    .filter((value): value is string => typeof value === "string")
-    .join(" ")
-    .toLowerCase();
-
-  if (haystack.includes("plumb") || haystack.includes("leak") || haystack.includes("pipe")) {
-    return {
-      photoHint:
-        "Ask for one wide photo and one close-up so the leak can be tied to the right part of the job.",
-      followUpHint: "Confirm whether the leak is active, whether water can be shut off, and whether access is safe.",
-    };
-  }
-
-  if (haystack.includes("clean")) {
-    return {
-      photoHint:
-        "Ask for before photos of the main space and any stained or high-traffic areas.",
-      followUpHint: "Confirm scope, access, and whether any delicate surfaces need special handling.",
-    };
-  }
-
-  if (haystack.includes("electr") || haystack.includes("power") || haystack.includes("light")) {
-    return {
-      photoHint:
-        "Ask for a wide shot and a close-up of the affected switch, outlet, or fitting.",
-      followUpHint: "Confirm whether power is currently off, whether the issue is intermittent, and whether parts are already on site.",
-    };
-  }
-
-  if (haystack.includes("paint") || haystack.includes("wall") || haystack.includes("patch")) {
-    return {
-      photoHint:
-        "Ask for one wide photo and one close-up so the damaged surface is easy to identify.",
-      followUpHint: "Confirm the full area size, color match requirements, and any hidden defects behind the visible damage.",
-    };
-  }
-
-  return {
-    photoHint:
-      "Ask for one wide photo and one close-up photo so the work item can be tied to the correct part of the job.",
-    followUpHint: "Confirm access, urgency, and any missing measurements before approval.",
-  };
-}
-
 export function ReviewDraftEditor({ draft }: ReviewDraftEditorProps) {
   const router = useRouter();
   const [extraction, setExtraction] = useState<AiLeadExtraction>(() =>
@@ -645,8 +594,7 @@ export function ReviewDraftEditor({ draft }: ReviewDraftEditorProps) {
                 <p className="eyebrow">Project Work Items</p>
                 <h2>Create Work Items</h2>
                 <p className="report-panel-copy">
-                  Keep each item short and focused. Expand a row to add the task,
-                  priority, and photo guidance.
+                  Keep each item short and focused. Expand a row to add the task and priority.
                 </p>
               </div>
               <button
@@ -666,7 +614,6 @@ export function ReviewDraftEditor({ draft }: ReviewDraftEditorProps) {
                   const isExpanded = expandedWorkItemIndex === index;
                   const summary =
                     item.areaName || item.itemType || item.itemGroup || item.priority || "No details yet";
-                  const guidance = getWorkItemGuidance(item);
                   const modeLabel = item.isChecklistItem
                     ? "Checklist"
                     : item.isPi
@@ -700,15 +647,6 @@ export function ReviewDraftEditor({ draft }: ReviewDraftEditorProps) {
 
                       {isExpanded ? (
                         <>
-                          <div className="work-item-guidance">
-                            <div className="work-item-guidance-title">
-                              <span className="field-label">Photo Intake</span>
-                              <span className="work-item-tag is-soft">Guidance</span>
-                            </div>
-                            <p>{guidance.photoHint}</p>
-                            <p>{guidance.followUpHint}</p>
-                          </div>
-
                           <div className="work-item-fields">
                             <label className="field-block">
                               <span className="field-label">Title</span>
@@ -872,10 +810,7 @@ export function ReviewDraftEditor({ draft }: ReviewDraftEditorProps) {
                           <div className="work-item-media">
                             <div>
                               <span className="field-label">Images</span>
-                              <p className="helper-text">
-                                Images upload first, then stay linked to this task when the
-                                project is created.
-                              </p>
+
                             </div>
                             <label
                               className={`button button-secondary work-item-upload-button ${uploadingWorkItemIndex === index ? "is-loading" : ""}`}
