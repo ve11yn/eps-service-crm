@@ -156,8 +156,11 @@ export function ReviewDraftEditor({ draft }: ReviewDraftEditorProps) {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          extraction,
-          createProject: extraction.shouldCreateProject,
+          extraction: {
+            ...extraction,
+            shouldCreateProject: false,
+          },
+          createProject: false,
         }),
       });
 
@@ -172,10 +175,10 @@ export function ReviewDraftEditor({ draft }: ReviewDraftEditorProps) {
         throw new Error(payload.error ?? "Failed to approve review draft.");
       }
 
-      if (payload.projectId) {
-        router.push(`/projects/${payload.projectId}`);
+      if (payload.leadId) {
+        router.push(`/leads/${payload.leadId}`);
       } else {
-        router.push("/reviews");
+        router.push("/inbox");
       }
       router.refresh();
     } catch (error) {
@@ -216,7 +219,7 @@ export function ReviewDraftEditor({ draft }: ReviewDraftEditorProps) {
         );
       }
 
-      router.push("/reviews");
+      router.push("/inbox");
       router.refresh();
     } catch (error) {
       setStatusMessage(
@@ -316,16 +319,16 @@ export function ReviewDraftEditor({ draft }: ReviewDraftEditorProps) {
       <section className="page-header review-page-header">
         <div>
           <BackButton
-            fallbackHref="/requests"
+            fallbackHref="/inbox"
             label="Back"
             className="back-icon-button"
             iconOnly
           />
-          <p className="eyebrow">Review Draft</p>
-          <h1>Review Intake</h1>
+          <p className="eyebrow">Inbox</p>
+          <h1>Intake Review</h1>
           <p className="page-header-copy">
             Review the customer details, scope, work items, and source conversation
-            before approving the project.
+            before sending the enquiry into Leads.
           </p>
         </div>
         <div className="review-header-actions">
@@ -338,8 +341,8 @@ export function ReviewDraftEditor({ draft }: ReviewDraftEditorProps) {
       <section className="panel review-summary-panel">
         <div className="panel-header">
           <div>
-            <p className="eyebrow">Review Snapshot</p>
-            <h2>Draft Overview</h2>
+            <p className="eyebrow">Intake Snapshot</p>
+            <h2>AI Extraction</h2>
           </div>
           <span className="helper-text">Updated {formatDateTime(draft.updated_at)}</span>
         </div>
@@ -981,23 +984,6 @@ export function ReviewDraftEditor({ draft }: ReviewDraftEditorProps) {
         <div className="approval-layout">
           <div className="approval-main">
             <div className="approval-decision">
-              <label className={`approval-option ${extraction.shouldCreateProject ? "is-selected" : ""}`}>
-                <input
-                  type="checkbox"
-                  checked={extraction.shouldCreateProject}
-                  onChange={(event) =>
-                    patchExtraction({
-                      shouldCreateProject: event.target.checked,
-                    })
-                  }
-                />
-                <span>
-                  <strong>Create project on approval</strong>
-                  <small>
-                    Approval will create a lead, project, and the work items below.
-                  </small>
-                </span>
-              </label>
               <label className={`approval-option ${extraction.siteVisitRequired ? "is-selected" : ""}`}>
                 <input
                   type="checkbox"
@@ -1009,7 +995,7 @@ export function ReviewDraftEditor({ draft }: ReviewDraftEditorProps) {
                 <span>
                   <strong>Site visit required</strong>
                   <small>
-                    Mark this when Gage needs an inspection before or during project planning.
+                    Keep the record in the lead pipeline until inspection confirms the quote or job.
                   </small>
                 </span>
               </label>
@@ -1018,9 +1004,11 @@ export function ReviewDraftEditor({ draft }: ReviewDraftEditorProps) {
             <div className="approval-summary">
               <span className="field-label">What happens next</span>
               <p>
-                {extraction.shouldCreateProject
-                  ? "Approve to create a project and attach the listed work items."
-                  : "Approve to save this as a lead only. No project will be created."}
+                {extraction.siteVisitRequired
+                  ? "Approve to save this as a Lead in Site Visit. No project is created until admin confirms the site visit or a quote is approved."
+                  : extraction.workItems.length > 0
+                    ? "Approve to save this as a Lead and create a Draft Quote. The Project is created only after quote approval."
+                    : "Approve to save this as a Lead in Qualification. No project is created until the customer approves a quote or admin confirms a site visit."}
               </p>
             </div>
           </div>
@@ -1068,8 +1056,8 @@ export function ReviewDraftEditor({ draft }: ReviewDraftEditorProps) {
           >
             {isApproving
               ? "Approving..."
-              : extraction.shouldCreateProject
-                ? "Approve and Create Project"
+              : extraction.workItems.length > 0
+                ? "Approve Lead"
                 : "Approve as Lead"}
           </button>
           <button

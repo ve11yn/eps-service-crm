@@ -5,6 +5,7 @@ import { InboxComposer } from "@/frontend/components/dashboard/inbox-composer";
 import { ProcessThreadDraftButton } from "@/frontend/components/dashboard/process-thread-draft-button";
 import { StatusBadge } from "@/frontend/components/dashboard/status-badge";
 import { formatChatListTime, formatDateTime, getInitials } from "@/frontend/lib/format";
+import { requireAppSession } from "@/lib/auth/session";
 
 type InboxPageProps = {
   searchParams: Promise<{
@@ -13,6 +14,7 @@ type InboxPageProps = {
 };
 
 export default async function InboxPage({ searchParams }: InboxPageProps) {
+  await requireAppSession(["owner", "admin"]);
   const params = await searchParams;
   const inbox = await getInboxOverview(params.thread);
 
@@ -121,8 +123,8 @@ export default async function InboxPage({ searchParams }: InboxPageProps) {
                       </div>
                     </div>
                     <div className="inline-actions">
-                      <Link className="button button-primary" href={`/reviews/${inbox.reviewDraft.id}`}>
-                        Open Review Draft
+                      <Link className="button button-primary" href={`/inbox/reviews/${inbox.reviewDraft.id}`}>
+                        Review Intake
                       </Link>
                       <ProcessThreadDraftButton
                         threadId={inbox.activeThread.id}

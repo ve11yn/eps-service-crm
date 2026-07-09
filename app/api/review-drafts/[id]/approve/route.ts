@@ -34,7 +34,7 @@ export async function POST(request: Request, context: RouteContext) {
       contactId: result.contact.id,
       propertyId: result.property?.id ?? null,
       leadId: result.lead.id,
-      projectId: result.project?.id ?? null,
+      projectId: null,
       status: result.reviewDraft.status,
     });
   } catch (error) {

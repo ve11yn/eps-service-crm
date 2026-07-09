@@ -4,7 +4,7 @@ import { listProjects } from "@/backend/repositories";
 import { requireApiSession } from "@/lib/auth/api";
 
 export async function GET() {
-  const auth = await requireApiSession(["owner", "admin"]);
+  const auth = await requireApiSession(["owner", "admin", "coordinator"]);
 
   if (!auth.ok) {
     return auth.response;

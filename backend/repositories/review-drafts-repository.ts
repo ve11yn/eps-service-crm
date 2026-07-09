@@ -82,6 +82,26 @@ const listReviewDraftsCached = cachedQuery(
   [CACHE_TAGS.reviewDrafts],
 );
 
+const getLatestReviewDraftByLeadIdCached = cachedQuery(
+  ["review-drafts", "latest-by-lead"],
+  async (leadId: string) => {
+    const supabase = createAdminSupabaseClient();
+
+    const { data, error } = await supabase
+      .from("review_drafts")
+      .select("*")
+      .eq("lead_id", leadId)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (error) throw error;
+    return data;
+  },
+  10,
+  [CACHE_TAGS.reviewDrafts],
+);
+
 export async function getReviewDraftById(
   reviewDraftId: string,
 ): Promise<ReviewDraftRow | null> {
@@ -96,6 +116,12 @@ export async function getLatestActiveReviewDraftByThreadId(
 
 export async function listReviewDrafts(): Promise<ReviewDraftListRow[]> {
   return listReviewDraftsCached();
+}
+
+export async function getLatestReviewDraftByLeadId(
+  leadId: string,
+): Promise<ReviewDraftRow | null> {
+  return getLatestReviewDraftByLeadIdCached(leadId);
 }
 
 export async function createReviewDraft(

@@ -1,0 +1,141 @@
+import Link from "next/link";
+import { EmptyState } from "@/frontend/components/dashboard/empty-state";
+import { StatusBadge } from "@/frontend/components/dashboard/status-badge";
+import { formatDate, formatMoney } from "@/frontend/lib/format";
+import { requireAppSession } from "@/lib/auth/session";
+import { createAdminSupabaseClient } from "@/lib/supabase/admin";
+
+async function getFinanceRows() {
+  const supabase = createAdminSupabaseClient();
+  const [invoicesResult, paymentsResult] = await Promise.all([
+    supabase
+      .from("invoices")
+      .select("id, project_id, quote_id, invoice_number, status_code, total_amount, balance_due_amount, issued_at, due_at, paid_at, quickbooks_sync_id, projects:project_id (id, title, project_code)")
+      .order("created_at", { ascending: false }),
+    supabase
+      .from("payments")
+      .select("id, project_id, invoice_id, status_code, amount, payment_method, reference_number, reported_at, verified_at, projects:project_id (id, title, project_code)")
+      .order("created_at", { ascending: false }),
+  ]);
+
+  if (invoicesResult.error) throw invoicesResult.error;
+  if (paymentsResult.error) throw paymentsResult.error;
+
+  return {
+    invoices: invoicesResult.data ?? [],
+    payments: paymentsResult.data ?? [],
+  };
+}
+
+export default async function FinancePage() {
+  await requireAppSession(["owner", "admin"]);
+  const finance = await getFinanceRows();
+
+  return (
+    <div className="page-stack">
+      <section className="page-header">
+        <div>
+          <p className="eyebrow">Accounting</p>
+          <h1>Finance</h1>
+          <p className="page-header-copy">
+            Invoice status, payment status, and QuickBooks sync references.
+          </p>
+        </div>
+      </section>
+
+      <section className="panel table-panel">
+        <div className="panel-header">
+          <div>
+            <p className="eyebrow">Invoices</p>
+            <h2>{finance.invoices.length} invoices</h2>
+          </div>
+        </div>
+        {finance.invoices.length === 0 ? (
+          <EmptyState
+            title="No invoices yet"
+            description="Invoices should be generated after QA / Review and before project completion."
+          />
+        ) : (
+          <div className="review-draft-list">
+            <div className="review-draft-list-head" aria-hidden="true">
+              <span>Invoice</span>
+              <span>Status</span>
+              <span>Issued</span>
+              <span>Due</span>
+              <span>Balance</span>
+            </div>
+            {finance.invoices.map((invoice) => {
+              const project = Array.isArray(invoice.projects)
+                ? invoice.projects[0]
+                : invoice.projects;
+
+              return (
+                <Link
+                  key={invoice.id}
+                  href={project ? `/projects/${project.id}` : "/finance"}
+                  className="review-draft-row"
+                >
+                  <div>
+                    <strong>{invoice.invoice_number}</strong>
+                    <span>{project?.project_code ?? invoice.quickbooks_sync_id ?? "No project"}</span>
+                  </div>
+                  <StatusBadge status={invoice.status_code} />
+                  <span>{formatDate(invoice.issued_at)}</span>
+                  <span>{formatDate(invoice.due_at)}</span>
+                  <span>{formatMoney(invoice.balance_due_amount)}</span>
+                </Link>
+              );
+            })}
+          </div>
+        )}
+      </section>
+
+      <section className="panel table-panel">
+        <div className="panel-header">
+          <div>
+            <p className="eyebrow">Payments</p>
+            <h2>{finance.payments.length} payments</h2>
+          </div>
+        </div>
+        {finance.payments.length === 0 ? (
+          <EmptyState
+            title="No payments yet"
+            description="Payment records will appear after invoice issue or PayNow proof review."
+          />
+        ) : (
+          <div className="review-draft-list">
+            <div className="review-draft-list-head" aria-hidden="true">
+              <span>Payment</span>
+              <span>Status</span>
+              <span>Method</span>
+              <span>Reported</span>
+              <span>Amount</span>
+            </div>
+            {finance.payments.map((payment) => {
+              const project = Array.isArray(payment.projects)
+                ? payment.projects[0]
+                : payment.projects;
+
+              return (
+                <Link
+                  key={payment.id}
+                  href={project ? `/projects/${project.id}` : "/finance"}
+                  className="review-draft-row"
+                >
+                  <div>
+                    <strong>{payment.reference_number ?? payment.id}</strong>
+                    <span>{project?.project_code ?? "No project"}</span>
+                  </div>
+                  <StatusBadge status={payment.status_code} />
+                  <span>{payment.payment_method ?? "Not set"}</span>
+                  <span>{formatDate(payment.reported_at)}</span>
+                  <span>{formatMoney(payment.amount)}</span>
+                </Link>
+              );
+            })}
+          </div>
+        )}
+      </section>
+    </div>
+  );
+}

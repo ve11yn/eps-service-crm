@@ -68,7 +68,7 @@ export function buildLeadExtractionSystemPrompt(): string {
     "  ],",
     '  "confidence": 0.0',
     '}',
-    "Use shouldCreateProject=true only when the customer clearly approved, confirmed, or asked to proceed.",
+    "Always return shouldCreateProject=false. Projects are created only by quote approval or explicit admin site visit confirmation.",
     "Use siteVisitRequired=true when the conversation indicates inspection/checking is needed before a final quote.",
   ].join("\n");
 }

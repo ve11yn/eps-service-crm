@@ -99,7 +99,7 @@ export async function POST(request: Request, context: RouteContext) {
       storage_path: storagePath,
       mime_type: file.type,
       media_type: "image",
-      evidence_type: "draft_work_item",
+      evidence_type: "customer_supplied",
       caption: workItem.title || safeName,
       uploaded_by_profile_id: auth.session.profile.id,
     });

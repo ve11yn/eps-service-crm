@@ -31,6 +31,7 @@ const getOperationsOverviewCached = cachedQuery(
       messagesResult,
       profilesResult,
       projectItemsResult,
+      quotesResult,
     ] = await Promise.all([
       supabase
         .from("leads")
@@ -41,6 +42,9 @@ const getOperationsOverviewCached = cachedQuery(
       supabase
         .from("project_items")
         .select("assigned_profile_id, status_code, is_deferred, deferred_reason"),
+      supabase
+        .from("quotes")
+        .select("id, status_code"),
     ]);
 
     for (const result of [
@@ -49,6 +53,7 @@ const getOperationsOverviewCached = cachedQuery(
       messagesResult,
       profilesResult,
       projectItemsResult,
+      quotesResult,
     ]) {
       if (result.error) throw result.error;
     }
@@ -75,8 +80,9 @@ const getOperationsOverviewCached = cachedQuery(
       }))
       .sort((left, right) => right.count - left.count);
 
-    const convertedLeads = leads.filter((lead) => lead.status_code === "converted");
-    const conversionRate = leads.length > 0 ? convertedLeads.length / leads.length : 0;
+    const quotes = quotesResult.data ?? [];
+    const approvedQuotes = quotes.filter((quote) => quote.status_code === "approved");
+    const conversionRate = quotes.length > 0 ? approvedQuotes.length / quotes.length : 0;
 
     const threadStats = new Map<
       string,
@@ -147,7 +153,7 @@ const getOperationsOverviewCached = cachedQuery(
       if (!row) continue;
 
       row.assignedItemCount += 1;
-      if (!["completed", "cancelled"].includes(item.status_code)) {
+      if (item.status_code !== "completed") {
         row.openItemCount += 1;
       }
     }
@@ -177,8 +183,8 @@ const getOperationsOverviewCached = cachedQuery(
     return {
       leadSourceBreakdown: sourceBreakdown,
       conversion: {
-        totalLeads: leads.length,
-        convertedLeads: convertedLeads.length,
+        totalLeads: quotes.length,
+        convertedLeads: approvedQuotes.length,
         conversionRate,
       },
       response: {

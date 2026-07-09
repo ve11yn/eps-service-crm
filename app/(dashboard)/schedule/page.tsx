@@ -1,7 +1,9 @@
 import { getScheduleOverview } from "@/backend/services/schedule/get-schedule-overview";
 import { ScheduleCalendar } from "@/frontend/components/dashboard/schedule-calendar";
+import { requireAppSession } from "@/lib/auth/session";
 
 export default async function SchedulePage() {
+  await requireAppSession(["owner", "admin", "coordinator"]);
   const schedule = await getScheduleOverview();
 
   return (

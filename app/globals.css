@@ -828,6 +828,14 @@ textarea {
   margin-top: 18px;
 }
 
+.schedule-create-controls {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(180px, 1fr)) auto;
+  gap: 12px;
+  align-items: end;
+  width: 100%;
+}
+
 .status-badge {
   display: inline-flex;
   align-items: center;
@@ -845,22 +853,36 @@ textarea {
 .status-ai-processed,
 .status-awaiting-approval,
 .status-qa-review,
-.status-pending {
+.status-pending,
+.status-draft,
+.status-sent,
+.status-negotiating,
+.status-revised,
+.status-issued,
+.status-partially-paid,
+.status-overdue {
   background: var(--warning-soft);
 }
 
 .status-converted-to-project,
-.status-completed {
+.status-completed,
+.status-approved,
+.status-paid,
+.status-active {
   background: var(--success-soft);
 }
 
-.status-rejected {
+.status-rejected,
+.status-cancelled,
+.status-expired-rejected,
+.status-inactive {
   background: var(--danger-soft);
 }
 
 .status-in-progress,
-.status-quote-draft,
 .status-scheduled,
+.status-invoiced,
+.status-deferred,
 .status-converted-to-lead {
   background: var(--accent-soft);
 }
@@ -1233,6 +1255,84 @@ textarea {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 5px;
+}
+
+.lifecycle-strip {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 5px;
+}
+
+.lifecycle-step {
+  position: relative;
+  min-height: 168px;
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--surface);
+}
+
+.lifecycle-index {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  margin-bottom: 14px;
+  border-radius: 50%;
+  background: var(--surface-muted);
+  color: var(--text-muted);
+  font-size: 0.82rem;
+}
+
+.lifecycle-step strong {
+  display: block;
+  margin-top: 6px;
+  font-size: 0.98rem;
+  line-height: 1.3;
+}
+
+.lifecycle-step p {
+  margin: 10px 0 0;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.project-status-summary {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 5px;
+}
+
+.project-status-summary-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 72px;
+  padding: 14px 16px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: #f8fbfc;
+  transition: 150ms ease;
+}
+
+.project-status-summary-card:hover,
+.project-status-summary-card.is-active {
+  border-color: rgba(102, 118, 132, 0.28);
+  background: var(--surface-muted);
+}
+
+.project-status-summary-card strong {
+  color: var(--foreground);
+  font-size: 1.55rem;
+  font-weight: 300;
+  line-height: 1;
+}
+
+.project-status-summary-card .summary-label {
+  margin: 0;
+  line-height: 1.25;
 }
 
 .project-card {
@@ -2265,6 +2365,8 @@ button.back-link {
   .stats-grid,
   .report-summary-grid,
   .project-grid,
+  .lifecycle-strip,
+  .project-status-summary,
   .details-grid,
   .summary-grid,
   .form-grid,
@@ -2307,6 +2409,8 @@ button.back-link {
   .stats-grid,
   .report-summary-grid,
   .project-grid,
+  .lifecycle-strip,
+  .project-status-summary,
   .details-grid,
   .summary-grid,
   .calendar-grid,
@@ -2319,6 +2423,10 @@ button.back-link {
 
   .review-summary-grid,
   .approval-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .schedule-create-controls {
     grid-template-columns: 1fr;
   }
 

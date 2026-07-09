@@ -6,23 +6,36 @@ import { usePathname } from "next/navigation";
 import {
   BarChart3,
   CalendarDays,
+  CircleDollarSign,
   FolderKanban,
   Home,
   Inbox,
   ListChecks,
   LogOut,
+  ReceiptText,
   Settings,
+  Users,
 } from "lucide-react";
 import { LogoutButton } from "@/frontend/components/auth/logout-button";
 import type { LucideIcon } from "lucide-react";
+import type { AppRole } from "@/lib/auth/roles";
 
-const items: Array<{ href: string; label: string; icon: LucideIcon }> = [
-  { href: "/", label: "Home", icon: Home },
-  { href: "/inbox", label: "Inbox", icon: Inbox },
-  { href: "/requests", label: "Requests", icon: ListChecks },
-  { href: "/projects", label: "Projects", icon: FolderKanban },
-  { href: "/schedule", label: "Schedule", icon: CalendarDays },
-  { href: "/reports", label: "Reports", icon: BarChart3 },
+const items: Array<{
+  href: string;
+  label: string;
+  icon: LucideIcon;
+  roles: AppRole[];
+}> = [
+  { href: "/", label: "Dashboard", icon: Home, roles: ["owner", "admin", "coordinator"] },
+  { href: "/inbox", label: "Inbox", icon: Inbox, roles: ["owner", "admin"] },
+  { href: "/leads", label: "Leads", icon: ListChecks, roles: ["owner", "admin"] },
+  { href: "/quotes", label: "Quotes", icon: ReceiptText, roles: ["owner", "admin"] },
+  { href: "/projects", label: "Jobs / Projects", icon: FolderKanban, roles: ["owner", "admin", "coordinator"] },
+  { href: "/schedule", label: "Calendar", icon: CalendarDays, roles: ["owner", "admin", "coordinator"] },
+  { href: "/customers", label: "Customers & Properties", icon: Users, roles: ["owner", "admin"] },
+  { href: "/team", label: "Team", icon: Users, roles: ["owner", "admin", "coordinator"] },
+  { href: "/finance", label: "Finance", icon: CircleDollarSign, roles: ["owner", "admin"] },
+  { href: "/reports", label: "Reports", icon: BarChart3, roles: ["owner"] },
 ];
 
 function isActive(pathname: string, href: string): boolean {
@@ -36,11 +49,14 @@ function isActive(pathname: string, href: string): boolean {
 export function Sidebar({
   displayName,
   roleLabel,
+  roleCode,
 }: {
   displayName?: string;
   roleLabel?: string;
+  roleCode: AppRole;
 }) {
   const pathname = usePathname();
+  const visibleItems = items.filter((item) => item.roles.includes(roleCode));
 
   return (
     <aside className="dashboard-sidebar">
@@ -61,7 +77,7 @@ export function Sidebar({
       </div>
 
       <nav className="dashboard-nav">
-        {items.map((item) => {
+        {visibleItems.map((item) => {
           const active = isActive(pathname, item.href);
           const Icon = item.icon;
 
@@ -79,10 +95,12 @@ export function Sidebar({
       </nav>
 
       <div className="dashboard-sidebar-footer">
-        <Link href="/settings" className="dashboard-nav-link">
-          <Settings className="dashboard-nav-icon" aria-hidden="true" size={18} strokeWidth={2} />
-          <span>Settings</span>
-        </Link>
+        {["owner", "admin"].includes(roleCode) ? (
+          <Link href="/settings" className="dashboard-nav-link">
+            <Settings className="dashboard-nav-icon" aria-hidden="true" size={18} strokeWidth={2} />
+            <span>Settings</span>
+          </Link>
+        ) : null}
         <LogoutButton icon={LogOut} />
       </div>
     </aside>

@@ -39,7 +39,7 @@ export function ProcessThreadDraftButton({
         throw new Error(payload.error ?? "Failed to generate review draft.");
       }
 
-      router.push(`/reviews/${payload.reviewDraftId}`);
+      router.push(`/inbox/reviews/${payload.reviewDraftId}`);
       router.refresh();
     } catch (error) {
       setStatus(

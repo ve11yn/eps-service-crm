@@ -5,6 +5,7 @@ import { EmptyState } from "@/frontend/components/dashboard/empty-state";
 import { StatusBadge } from "@/frontend/components/dashboard/status-badge";
 import { BackButton } from "@/frontend/components/navigation/back-button";
 import { formatDate, formatDateTime, formatMoney } from "@/frontend/lib/format";
+import { requireAppSession } from "@/lib/auth/session";
 
 type ProjectDetailPageProps = {
   params: Promise<{
@@ -15,6 +16,7 @@ type ProjectDetailPageProps = {
 export default async function ProjectDetailPage({
   params,
 }: ProjectDetailPageProps) {
+  await requireAppSession(["owner", "admin", "coordinator"]);
   const { id } = await params;
   const project = await getProjectDetail(id);
 
@@ -88,8 +90,8 @@ export default async function ProjectDetailPage({
                   Open Inbox
                 </Link>
                 {inboxReviewDraft ? (
-                  <Link className="button button-primary" href={`/reviews/${inboxReviewDraft.id}`}>
-                    Open Review Draft
+                  <Link className="button button-primary" href={`/inbox/reviews/${inboxReviewDraft.id}`}>
+                    Review Intake
                   </Link>
                 ) : null}
               </div>

@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { getOperationsOverview } from "@/backend/services/reports/get-operations-overview";
+import { requireAppSession } from "@/lib/auth/session";
 
 function formatMinutes(value: number | null): string {
   if (value === null) return "No data";
@@ -56,6 +57,7 @@ function BarRow({
 }
 
 export default async function ReportsPage() {
+  await requireAppSession(["owner"]);
   const report = await getOperationsOverview();
 
   const totalWorkload = report.workload.reduce((sum, row) => sum + row.openItemCount, 0);
@@ -75,9 +77,9 @@ export default async function ReportsPage() {
 
       <section className="stats-grid report-kpi-grid">
         <Metric
-          label="Lead Conversion"
+          label="Quote Conversion"
           value={formatPercent(report.conversion.conversionRate)}
-          hint={`${report.conversion.convertedLeads} / ${report.conversion.totalLeads} leads`}
+          hint={`${report.conversion.convertedLeads} / ${report.conversion.totalLeads} quotes`}
         />
         <Metric
           label="Avg Response"

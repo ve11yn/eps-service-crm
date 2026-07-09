@@ -30,8 +30,31 @@ const getPropertyByIdCached = cachedQuery(
   [CACHE_TAGS.properties],
 );
 
+const listPropertiesCached = cachedQuery(
+  ["properties", "list"],
+  async () => {
+    const supabase = createAdminSupabaseClient();
+
+    const { data, error } = await supabase
+      .from("properties")
+      .select(
+        "id, property_name, address_line_1, address_line_2, unit_no, postal_code, country_code, landmark_notes, access_notes, created_at, updated_at",
+      )
+      .order("updated_at", { ascending: false });
+
+    if (error) throw error;
+    return data ?? [];
+  },
+  30,
+  [CACHE_TAGS.properties],
+);
+
 export async function getPropertyById(propertyId: string): Promise<PropertyRow | null> {
   return getPropertyByIdCached(propertyId);
+}
+
+export async function listProperties(): Promise<PropertyRow[]> {
+  return listPropertiesCached();
 }
 
 export async function createProperty(payload: PropertyInsert): Promise<PropertyRow> {

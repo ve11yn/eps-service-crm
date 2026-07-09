@@ -6,7 +6,7 @@ import { ActionQueueItem } from "@/frontend/components/dashboard/action-queue-it
 import { requireAppSession } from "@/lib/auth/session";
 
 export default async function HomePage() {
-  await requireAppSession(["owner", "admin"]);
+  await requireAppSession(["owner", "admin", "coordinator"]);
   const dashboard = await getDashboardOverview();
 
   return (

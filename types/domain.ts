@@ -3,20 +3,14 @@
 export type LeadStatus =
   | "new_enquiry"
   | "qualification"
-  | "site_visit"
-  | "quote_draft"
-  | "awaiting_approval"
-  | "converted"
-  | "lost";
+  | "site_visit";
 
 export type ProjectStatus =
   | "scheduled"
   | "in_progress"
   | "qa_review"
   | "invoiced"
-  | "completed"
-  | "on_hold"
-  | "cancelled";
+  | "completed";
 
 export type QuoteStatus =
   | "draft"
@@ -36,8 +30,7 @@ export type ProjectItemStatus =
   | "pending"
   | "in_progress"
   | "completed"
-  | "deferred"
-  | "cancelled";
+  | "deferred";
 
   export type Lead = {
   id: string;

@@ -27,7 +27,7 @@ const getDashboardOverviewCached = cachedQuery(
       supabase
         .from("projects")
         .select("id", { count: "exact", head: true })
-        .in("status_code", ["scheduled", "in_progress", "qa_review", "invoiced", "on_hold"]),
+        .in("status_code", ["scheduled", "in_progress", "qa_review", "invoiced"]),
       supabase
         .from("projects")
         .select("id", { count: "exact", head: true })
@@ -78,7 +78,7 @@ const getDashboardOverviewCached = cachedQuery(
       return {
         id: draft.id,
         type: "review" as const,
-        href: `/reviews/${draft.id}`,
+        href: `/inbox/reviews/${draft.id}`,
         contextLabel: "Queue",
         contextValue: "Need review",
         title,
@@ -100,17 +100,15 @@ const getDashboardOverviewCached = cachedQuery(
       href: `/projects/${project.id}`,
       contextLabel: "Queue",
       contextValue:
-        project.status_code === "on_hold"
-          ? "Escalate"
-          : project.status_code === "qa_review"
-            ? "QA / Review"
-            : project.status_code === "invoiced"
-              ? "Invoice follow-up"
-              : project.status_code === "in_progress"
-                ? "In progress"
-                : "Scheduled",
+        project.status_code === "qa_review"
+          ? "QA / Review"
+          : project.status_code === "invoiced"
+            ? "Invoice follow-up"
+            : project.status_code === "in_progress"
+              ? "In progress"
+              : "Scheduled",
       title: project.title,
-      subtitle: project.status_code === "on_hold" ? "Blocked job" : "Active project",
+      subtitle: "Active project",
       dueAt: project.scheduled_start_at ?? project.payment_due_at ?? null,
       status: project.status_code,
       finalValue:
@@ -118,9 +116,7 @@ const getDashboardOverviewCached = cachedQuery(
           ? "Check work completion and photos"
           : project.status_code === "invoiced"
             ? "Follow up payment"
-            : project.status_code === "on_hold"
-              ? "Escalate blocked work"
-              : "Confirm workers, schedule, and materials",
+            : "Confirm workers, schedule, and materials",
     }));
 
     const needsAction = [...reviewTasks, ...projectTasks].slice(0, 8);

@@ -5,13 +5,15 @@ import {
 } from "@/frontend/components/dashboard/action-queue-item";
 import { EmptyState } from "@/frontend/components/dashboard/empty-state";
 import { parseLeadExtraction } from "@/frontend/lib/review-drafts";
+import { requireAppSession } from "@/lib/auth/session";
 
 export default async function RequestsPage() {
+  await requireAppSession(["owner", "admin"]);
   const [drafts, projects] = await Promise.all([listReviewDrafts(), listProjects()]);
 
   const activeProjects = projects.filter(
     (project) =>
-      !["completed", "cancelled"].includes(project.status_code),
+      project.status_code !== "completed",
   );
 
   return (
@@ -63,7 +65,7 @@ export default async function RequestsPage() {
               return (
                 <ActionQueueItem
                   key={draft.id}
-                  href={`/reviews/${draft.id}`}
+                  href={`/inbox/reviews/${draft.id}`}
                   title={title}
                   subtitle={customer}
                   contextLabel="Source"
@@ -116,9 +118,7 @@ export default async function RequestsPage() {
                     ? "Check work completion and photos"
                     : project.status_code === "invoiced"
                       ? "Follow up payment"
-                      : project.status_code === "on_hold"
-                        ? "Escalate blocked work"
-                        : project.status_code === "in_progress"
+                      : project.status_code === "in_progress"
                           ? "Confirm work progress"
                           : "Review schedule and assignment"
                 }

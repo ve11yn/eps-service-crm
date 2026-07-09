@@ -2,6 +2,7 @@ import "server-only";
 
 import { getReviewDraftById } from "@/backend/repositories";
 import { logAuditEvent } from "@/backend/observability/audit";
+import { ensureDraftQuoteFromExtraction } from "@/backend/services/quotes/create-draft-quote-from-extraction";
 import { createAdminSupabaseClient } from "@/lib/supabase/admin";
 import type { Database, Json } from "@/types/database";
 import type { AiLeadExtraction } from "@/types/integration";
@@ -45,10 +46,7 @@ export async function approveReviewDraft(input: {
   const extraction: AiLeadExtraction = {
     ...savedExtraction,
     ...(input.extractionOverride ?? {}),
-    shouldCreateProject:
-      input.createProject ??
-      input.extractionOverride?.shouldCreateProject ??
-      savedExtraction.shouldCreateProject,
+    shouldCreateProject: false,
   };
 
   const supabase = createAdminSupabaseClient();
@@ -56,7 +54,7 @@ export async function approveReviewDraft(input: {
     p_review_draft_id: draft.id,
     p_reviewed_by_profile_id: input.reviewedByProfileId ?? null,
     p_extraction: stripTemporaryMediaUrls(extraction) as unknown as Json,
-    p_create_project: extraction.shouldCreateProject,
+    p_create_project: false,
   });
 
   if (error) throw error;
@@ -84,6 +82,14 @@ export async function approveReviewDraft(input: {
     },
   });
 
+  if (result.lead_id) {
+    await ensureDraftQuoteFromExtraction({
+      leadId: result.lead_id,
+      createdByProfileId: input.reviewedByProfileId ?? null,
+      extraction,
+    });
+  }
+
   return {
     reviewDraft: {
       ...draft,
@@ -94,6 +100,6 @@ export async function approveReviewDraft(input: {
     contact: { id: result.contact_id } as { id: string },
     property: result.property_id ? ({ id: result.property_id } as { id: string }) : null,
     lead: { id: result.lead_id } as { id: string },
-    project: result.project_id ? ({ id: result.project_id } as { id: string }) : null,
+    project: null,
   };
 }

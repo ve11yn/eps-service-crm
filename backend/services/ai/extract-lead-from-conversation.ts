@@ -129,8 +129,6 @@ function simulateLeadExtraction(
   const addressMatch = combinedText.match(
     /\d+[A-Za-z]?\s+[^.]*?(Singapore\s+\d{6})/i,
   );
-  const shouldCreateProject =
-    /approved|proceed|go ahead|confirm/i.test(combinedText);
   const siteVisitRequired = /site visit|inspection|check first|not sure/i.test(
     combinedText,
   );
@@ -160,7 +158,7 @@ function simulateLeadExtraction(
     scopeSummary: firstCustomerMessage || undefined,
     remarks: undefined,
     siteVisitRequired,
-    shouldCreateProject,
+    shouldCreateProject: false,
     workItems: inferWorkItems(combinedText),
     confidence: 0.45,
   };
@@ -202,7 +200,7 @@ function parseLeadExtraction(rawText: string): AiLeadExtraction {
     scopeSummary: parsed.scopeSummary,
     remarks: parsed.remarks,
     siteVisitRequired: Boolean(parsed.siteVisitRequired),
-    shouldCreateProject: Boolean(parsed.shouldCreateProject),
+    shouldCreateProject: false,
     workItems: Array.isArray(parsed.workItems) ? parsed.workItems : [],
     confidence:
       typeof parsed.confidence === "number" ? parsed.confidence : 0.5,

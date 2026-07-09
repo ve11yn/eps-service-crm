@@ -28,6 +28,23 @@ const getContactByIdCached = cachedQuery(
   [CACHE_TAGS.contacts],
 );
 
+const listContactsCached = cachedQuery(
+  ["contacts", "list"],
+  async () => {
+    const supabase = createAdminSupabaseClient();
+
+    const { data, error } = await supabase
+      .from("contacts")
+      .select("id, full_name, whatsapp_number, primary_phone, email, notes, created_at, updated_at")
+      .order("updated_at", { ascending: false });
+
+    if (error) throw error;
+    return data ?? [];
+  },
+  30,
+  [CACHE_TAGS.contacts],
+);
+
 const getContactByWhatsAppNumberCached = cachedQuery(
   ["contacts", "get-by-whatsapp"],
   async (whatsappNumber: string) => {
@@ -48,6 +65,10 @@ const getContactByWhatsAppNumberCached = cachedQuery(
 
 export async function getContactById(contactId: string): Promise<ContactRow | null> {
   return getContactByIdCached(contactId);
+}
+
+export async function listContacts(): Promise<ContactRow[]> {
+  return listContactsCached();
 }
 
 export async function getContactByWhatsAppNumber(

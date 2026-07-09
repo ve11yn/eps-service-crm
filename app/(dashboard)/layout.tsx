@@ -21,13 +21,14 @@ export default async function DashboardLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const session = await requireAppSession(["owner", "admin"]);
+  const session = await requireAppSession(["owner", "admin", "coordinator"]);
 
   return (
     <div className="dashboard-shell">
       <Sidebar
         displayName={session.profile.displayName}
         roleLabel={toRoleLabel(session.profile.roleCode)}
+        roleCode={session.profile.roleCode}
       />
       <main className="dashboard-main">{children}</main>
     </div>
