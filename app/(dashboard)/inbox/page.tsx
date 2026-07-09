@@ -4,7 +4,7 @@ import { EmptyState } from "@/frontend/components/dashboard/empty-state";
 import { InboxComposer } from "@/frontend/components/dashboard/inbox-composer";
 import { ProcessThreadDraftButton } from "@/frontend/components/dashboard/process-thread-draft-button";
 import { StatusBadge } from "@/frontend/components/dashboard/status-badge";
-import { formatDateTime } from "@/frontend/lib/format";
+import { formatChatListTime, formatDateTime, getInitials } from "@/frontend/lib/format";
 import { requireAppSession } from "@/lib/auth/session";
 
 type InboxPageProps = {
@@ -46,13 +46,7 @@ export default async function InboxPage({ searchParams }: InboxPageProps) {
               description="Once WhatsApp messages are saved into Supabase, they will appear here."
             />
           ) : (
-            <div className="workflow-list workflow-list-compact inbox-workflow-list">
-              <div className="workflow-list-head" aria-hidden="true">
-                <span>Name / Request</span>
-                <span>Status</span>
-                <span>Last Updated</span>
-                <span>Action</span>
-              </div>
+            <div className="thread-list">
               {inbox.threads.map((thread) => {
                 const active = inbox.activeThread?.id === thread.id;
                 const reviewDraft = reviewDraftsByThreadId[thread.id];
@@ -68,25 +62,33 @@ export default async function InboxPage({ searchParams }: InboxPageProps) {
                   thread.thread_subject ??
                   "WhatsApp contact";
                 const status = reviewDraft?.status ?? "new";
-                const updatedAt =
-                  reviewDraft?.updated_at ?? thread.last_message_at ?? thread.updated_at;
+                const chatTime = formatChatListTime(thread.last_message_at ?? thread.updated_at);
                 const action = reviewDraft
                   ? "Review Intake"
                   : "Run AI Extraction";
+                const requestLabel =
+                  thread.thread_subject && thread.thread_subject !== contactName
+                    ? thread.thread_subject
+                    : action;
 
                 return (
                   <Link
                     key={thread.id}
                     href={`/inbox?thread=${thread.id}`}
-                    className={`workflow-list-row inbox-list-row ${active ? "is-active" : ""}`}
+                    className={`thread-card ${active ? "is-active" : ""}`}
                   >
-                    <div className="workflow-list-main">
-                      <strong className="workflow-list-title">{contactName}</strong>
-                      <span className="workflow-list-meta">{profileLabel}</span>
+                    <div className="thread-card-left">
+                      <div className="thread-card-avatar">{getInitials(contactName)}</div>
+                      <div className="thread-card-body">
+                        <p className="thread-card-title">{contactName}</p>
+                        <p className="thread-card-subtitle">{profileLabel}</p>
+                        <span className="thread-card-request">{requestLabel}</span>
+                      </div>
                     </div>
-                    <StatusBadge status={status} />
-                    <span>{formatDateTime(updatedAt)}</span>
-                    <span className="workflow-list-action">{action}</span>
+                    <div className="thread-card-side">
+                      {chatTime ? <span className="thread-card-time">{chatTime}</span> : null}
+                      <StatusBadge status={status} />
+                    </div>
                   </Link>
                 );
               })}
