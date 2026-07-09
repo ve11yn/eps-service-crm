@@ -59,11 +59,7 @@ export default async function QuotesPage() {
     <div className="page-stack">
       <section className="page-header">
         <div>
-          <p className="eyebrow">Commercial</p>
           <h1>Quotes</h1>
-          <p className="page-header-copy">
-            Quote queue grouped by Lead, with each Lead keeping its own quote versions.
-          </p>
         </div>
       </section>
 
@@ -81,31 +77,31 @@ export default async function QuotesPage() {
             description="Create draft quotes from a Lead. Quote versions will stay grouped under that Lead."
           />
         ) : (
-          <div className="review-draft-list">
-            <div className="review-draft-list-head" aria-hidden="true">
-              <span>Lead / Latest Quote</span>
-              <span>Versions</span>
-              <span>Latest Status</span>
-              <span>Updated</span>
-              <span>Latest Total</span>
+          <div className="workflow-list quote-workflow-list">
+            <div className="workflow-list-head" aria-hidden="true">
+              <span>Name / Request</span>
+              <span>Status</span>
+              <span>Last Updated</span>
+              <span>Action</span>
             </div>
 
             {quoteGroups.map(({ key, latestQuote, quotes: groupQuotes }) => (
               <Link
                 key={key}
                 href={latestQuote.lead_id ? `/leads/${latestQuote.lead_id}` : `/quotes/${latestQuote.id}`}
-                className="review-draft-row"
+                className="workflow-list-row"
               >
-                <div>
-                  <strong>{getLeadTitle(latestQuote)}</strong>
-                  <span>
-                    {getLeadCode(latestQuote)} · Latest {latestQuote.quote_number}
+                <div className="workflow-list-main">
+                  <strong className="workflow-list-title">{getLeadTitle(latestQuote)}</strong>
+                  <span className="workflow-list-meta">
+                    {getLeadCode(latestQuote)} · Latest {latestQuote.quote_number} · {groupQuotes.length} version{groupQuotes.length === 1 ? "" : "s"}
                   </span>
                 </div>
-                <span>{groupQuotes.length} version{groupQuotes.length === 1 ? "" : "s"}</span>
                 <StatusBadge status={latestQuote.status_code} />
                 <span>{formatDateTime(latestQuote.updated_at)}</span>
-                <span>{formatMoney(latestQuote.total_amount)}</span>
+                <span className="workflow-list-action">
+                  Open Quote Stack · {formatMoney(latestQuote.total_amount)}
+                </span>
               </Link>
             ))}
           </div>

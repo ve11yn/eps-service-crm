@@ -4,7 +4,7 @@ import { EmptyState } from "@/frontend/components/dashboard/empty-state";
 import { InboxComposer } from "@/frontend/components/dashboard/inbox-composer";
 import { ProcessThreadDraftButton } from "@/frontend/components/dashboard/process-thread-draft-button";
 import { StatusBadge } from "@/frontend/components/dashboard/status-badge";
-import { formatChatListTime, formatDateTime, getInitials } from "@/frontend/lib/format";
+import { formatDateTime } from "@/frontend/lib/format";
 import { requireAppSession } from "@/lib/auth/session";
 
 type InboxPageProps = {
@@ -17,6 +17,10 @@ export default async function InboxPage({ searchParams }: InboxPageProps) {
   await requireAppSession(["owner", "admin"]);
   const params = await searchParams;
   const inbox = await getInboxOverview(params.thread);
+  const reviewDraftsByThreadId = inbox.reviewDraftsByThreadId as Record<
+    string,
+    { status: string; updated_at: string }
+  >;
 
   return (
     <div className="page-stack">
@@ -42,9 +46,16 @@ export default async function InboxPage({ searchParams }: InboxPageProps) {
               description="Once WhatsApp messages are saved into Supabase, they will appear here."
             />
           ) : (
-            <div className="thread-list">
+            <div className="workflow-list workflow-list-compact inbox-workflow-list">
+              <div className="workflow-list-head" aria-hidden="true">
+                <span>Name / Request</span>
+                <span>Status</span>
+                <span>Last Updated</span>
+                <span>Action</span>
+              </div>
               {inbox.threads.map((thread) => {
                 const active = inbox.activeThread?.id === thread.id;
+                const reviewDraft = reviewDraftsByThreadId[thread.id];
                 const contact = Array.isArray(thread.contacts)
                   ? thread.contacts[0]
                   : thread.contacts;
@@ -56,24 +67,26 @@ export default async function InboxPage({ searchParams }: InboxPageProps) {
                   contact?.email ??
                   thread.thread_subject ??
                   "WhatsApp contact";
-                const chatTime = formatChatListTime(thread.last_message_at);
+                const status = reviewDraft?.status ?? "new";
+                const updatedAt =
+                  reviewDraft?.updated_at ?? thread.last_message_at ?? thread.updated_at;
+                const action = reviewDraft
+                  ? "Review Intake"
+                  : "Run AI Extraction";
 
                 return (
                   <Link
                     key={thread.id}
                     href={`/inbox?thread=${thread.id}`}
-                    className={`thread-card ${active ? "is-active" : ""}`}
+                    className={`workflow-list-row inbox-list-row ${active ? "is-active" : ""}`}
                   >
-                    <div className="thread-card-avatar">{getInitials(contactName)}</div>
-                    <div className="thread-card-body">
-                      <div className="thread-card-contact-row">
-                        <p className="thread-card-title">{contactName}</p>
-                        <p className="thread-card-subtitle">{profileLabel}</p>
-                      </div>
-                      <div className="thread-card-meta-column">
-                        {chatTime ? <span className="thread-card-time">{chatTime}</span> : null}
-                      </div>
+                    <div className="workflow-list-main">
+                      <strong className="workflow-list-title">{contactName}</strong>
+                      <span className="workflow-list-meta">{profileLabel}</span>
                     </div>
+                    <StatusBadge status={status} />
+                    <span>{formatDateTime(updatedAt)}</span>
+                    <span className="workflow-list-action">{action}</span>
                   </Link>
                 );
               })}

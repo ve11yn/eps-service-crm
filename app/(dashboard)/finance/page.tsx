@@ -35,11 +35,7 @@ export default async function FinancePage() {
     <div className="page-stack">
       <section className="page-header">
         <div>
-          <p className="eyebrow">Accounting</p>
           <h1>Finance</h1>
-          <p className="page-header-copy">
-            Invoice status, payment status, and QuickBooks sync references.
-          </p>
         </div>
       </section>
 

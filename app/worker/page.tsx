@@ -4,21 +4,6 @@ import { StatusBadge } from "@/frontend/components/dashboard/status-badge";
 import { formatDateTime } from "@/frontend/lib/format";
 import { requireAppSession } from "@/lib/auth/session";
 
-function toRoleLabel(roleCode: string) {
-  switch (roleCode) {
-    case "coordinator":
-      return "Coordinator";
-    case "field_worker":
-      return "Field Worker";
-    case "owner":
-      return "Owner";
-    case "admin":
-      return "Admin";
-    default:
-      return roleCode;
-  }
-}
-
 export default async function WorkerPage() {
   const session = await requireAppSession([
     "owner",
@@ -33,11 +18,7 @@ export default async function WorkerPage() {
       <section className="auth-card" style={{ maxWidth: 980 }}>
         <div className="page-stack">
           <div>
-            <p className="eyebrow">{toRoleLabel(session.profile.roleCode)}</p>
             <h1>{session.profile.displayName}</h1>
-            <p className="page-header-copy">
-              Assigned work items and upcoming project tasks.
-            </p>
           </div>
 
           {items.length === 0 ? (

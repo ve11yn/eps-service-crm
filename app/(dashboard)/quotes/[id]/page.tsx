@@ -35,11 +35,9 @@ export default async function QuoteDetailPage({ params }: QuoteDetailPageProps) 
   return (
     <div className="page-stack">
       <section className="page-header">
-        <div>
-          <BackButton fallbackHref="/quotes" label="← Back to Quotes" className="back-link" />
-          <p className="eyebrow">Quote</p>
-          <h1>{quote.quote_number}</h1>
-          <p className="page-header-copy">Version {quote.version_number}</p>
+        <div className="page-header-title-row">
+          <BackButton fallbackHref="/quotes" label="Back to Quotes" className="back-icon-button" iconOnly />
+          <h1>Quotes</h1>
         </div>
         <StatusBadge status={quote.status_code} />
       </section>

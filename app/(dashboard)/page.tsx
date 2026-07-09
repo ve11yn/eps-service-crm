@@ -13,7 +13,7 @@ export default async function HomePage() {
     <div className="page-stack">
       <section className="page-header">
         <div>
-          <h1>Need Action</h1>
+          <h1>Dashboard</h1>
         </div>
       </section>
 

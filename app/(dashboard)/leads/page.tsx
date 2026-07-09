@@ -13,11 +13,7 @@ export default async function LeadsPage() {
     <div className="page-stack">
       <section className="page-header">
         <div>
-          <p className="eyebrow">Pipeline</p>
           <h1>Leads</h1>
-          <p className="page-header-copy">
-            WhatsApp enquiries stay here until a quote is approved or a site visit is confirmed.
-          </p>
         </div>
       </section>
 
@@ -35,24 +31,23 @@ export default async function LeadsPage() {
             description="Incoming WhatsApp enquiries will appear here before becoming quotes or projects."
           />
         ) : (
-          <div className="review-draft-list">
-            <div className="review-draft-list-head" aria-hidden="true">
-              <span>Customer / Request</span>
-              <span>Lead ID</span>
+          <div className="workflow-list lead-workflow-list">
+            <div className="workflow-list-head" aria-hidden="true">
+              <span>Name / Request</span>
               <span>Status</span>
-              <span>Updated</span>
-              <span>Next Action</span>
+              <span>Last Updated</span>
+              <span>Action</span>
             </div>
 
             {leads.map((lead) => (
-              <Link key={lead.id} href={`/leads/${lead.id}`} className="review-draft-row">
-                <div>
-                  <strong>{lead.title ?? "WhatsApp enquiry"}</strong>
+              <Link key={lead.id} href={`/leads/${lead.id}`} className="workflow-list-row">
+                <div className="workflow-list-main">
+                  <strong className="workflow-list-title">{lead.title ?? "WhatsApp enquiry"}</strong>
+                  <span className="workflow-list-meta">{lead.lead_code}</span>
                 </div>
-                <span>{lead.lead_code}</span>
                 <StatusBadge status={lead.status_code} />
                 <span>{formatDateTime(lead.last_activity_at ?? lead.updated_at)}</span>
-                <span>
+                <span className="workflow-list-action">
                   {lead.status_code === "site_visit"
                     ? "Confirm inspection or prepare quote"
                     : "Qualify and prepare quote"}

@@ -20,7 +20,7 @@ export default async function RequestsPage() {
     <div className="page-stack">
       <section className="page-header">
         <div>
-          <h1>Request Queue</h1>
+          <h1>Requests</h1>
         </div>
       </section>
 

@@ -9,16 +9,7 @@ export default async function SettingsPage() {
     <div className="page-stack">
       <section className="page-header">
         <div>
-          <p className="eyebrow">Configuration</p>
           <h1>Settings</h1>
-          <p className="page-header-copy">
-            Operational configuration for pricing, WhatsApp, permissions, and handover controls.
-          </p>
-          {settings.queryErrors.length > 0 ? (
-            <p className="helper-text">
-              Some database settings could not be read: {settings.queryErrors.slice(0, 2).join("; ")}
-            </p>
-          ) : null}
         </div>
       </section>
 

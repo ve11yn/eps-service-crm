@@ -37,11 +37,9 @@ export default async function LeadDetailPage({ params }: LeadDetailPageProps) {
   return (
     <div className="page-stack">
       <section className="page-header">
-        <div>
-          <BackButton fallbackHref="/leads" label="← Back to Leads" className="back-link" />
-          <p className="eyebrow">Lead</p>
-          <h1>{lead.title ?? "WhatsApp enquiry"}</h1>
-          <p className="page-header-copy">{lead.lead_code}</p>
+        <div className="page-header-title-row">
+          <BackButton fallbackHref="/leads" label="Back to Leads" className="back-icon-button" iconOnly />
+          <h1>Leads</h1>
         </div>
         <StatusBadge status={lead.status_code} />
       </section>

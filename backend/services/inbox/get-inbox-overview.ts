@@ -61,12 +61,31 @@ const getInboxOverviewCached = cachedQuery(
     if (error) throw error;
 
     const threadList = threads ?? [];
+    const threadIds = threadList.map((thread) => thread.id);
+    const { data: threadReviewDrafts, error: threadReviewDraftsError } =
+      threadIds.length > 0
+        ? await supabase
+            .from("review_drafts")
+            .select("id, thread_id, status, updated_at")
+            .in("thread_id", threadIds)
+            .in("status", ["new", "ai_processed", "needs_review"])
+            .order("updated_at", { ascending: false })
+        : { data: [], error: null };
+
+    if (threadReviewDraftsError) throw threadReviewDraftsError;
+
+    const reviewDraftsByThreadId = new Map(
+      (threadReviewDrafts ?? [])
+        .filter((draft) => draft.thread_id)
+        .map((draft) => [draft.thread_id, draft]),
+    );
     const activeThread =
       threadList.find((thread) => thread.id === selectedThreadId) ?? threadList[0] ?? null;
 
     if (!activeThread) {
       return {
         threads: [],
+        reviewDraftsByThreadId: {},
         activeThread: null,
         messages: [],
         reviewDraft: null,
@@ -81,6 +100,7 @@ const getInboxOverviewCached = cachedQuery(
 
     return {
       threads: threadList,
+      reviewDraftsByThreadId: Object.fromEntries(reviewDraftsByThreadId),
       activeThread,
       messages,
       reviewDraft,

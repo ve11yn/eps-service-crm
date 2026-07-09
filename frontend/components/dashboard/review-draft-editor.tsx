@@ -317,19 +317,14 @@ export function ReviewDraftEditor({ draft }: ReviewDraftEditorProps) {
   return (
     <div className="page-stack review-page">
       <section className="page-header review-page-header">
-        <div>
+        <div className="page-header-title-row">
           <BackButton
             fallbackHref="/inbox"
             label="Back"
             className="back-icon-button"
             iconOnly
           />
-          <p className="eyebrow">Inbox</p>
-          <h1>Intake Review</h1>
-          <p className="page-header-copy">
-            Review the customer details, scope, work items, and source conversation
-            before sending the enquiry into Leads.
-          </p>
+          <h1>Inbox</h1>
         </div>
         <div className="review-header-actions">
           <a href={`/inbox?thread=${draft.thread_id}`} className="button button-secondary">

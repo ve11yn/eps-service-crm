@@ -10,8 +10,7 @@ export default async function SchedulePage() {
     <div className="page-stack">
       <section className="page-header">
         <div>
-          <p className="eyebrow">Planning</p>
-          <h1>Schedule</h1>
+          <h1>Calendar</h1>
         </div>
       </section>
 

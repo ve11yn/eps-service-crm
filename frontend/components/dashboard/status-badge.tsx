@@ -1,6 +1,9 @@
 import { slugifyStatus } from "@/frontend/lib/format";
 
 const labelMap: Record<string, string> = {
+  new_enquiry: "New Enquiry",
+  qualification: "Qualification",
+  site_visit: "Site Visit",
   new: "New",
   ai_processed: "AI Processed",
   needs_review: "Needs Review",

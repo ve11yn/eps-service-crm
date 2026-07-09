@@ -34,14 +34,13 @@ export default async function ProjectsPage({ searchParams }: ProjectsPageProps) 
 
   return (
     <div className="page-stack">
-      <section className="page-header page-header-inline">
+      <section className="page-header">
         <div>
-          <p className="eyebrow">Operations</p>
           <h1>Jobs / Projects</h1>
-          <p className="page-header-copy">
-            Projects are opened only after a quote is approved or a site visit is confirmed.
-          </p>
         </div>
+      </section>
+
+      <section className="project-filter-bar" aria-label="Project filters">
         <ProjectFilters
           key={`${params.q ?? ""}:${params.status ?? ""}`}
           initialQuery={params.q ?? ""}

@@ -7,11 +7,7 @@ export default function RegisterPage() {
       <section className="auth-card">
         <div className="page-stack">
           <div>
-            <p className="eyebrow">Team Registration</p>
             <h1>Create Account</h1>
-            <p className="page-header-copy">
-              Register with your company role, email address, username, and password.
-            </p>
           </div>
 
           <RegisterForm />

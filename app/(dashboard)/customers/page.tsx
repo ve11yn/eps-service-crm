@@ -14,11 +14,7 @@ export default async function CustomersPage() {
     <div className="page-stack">
       <section className="page-header">
         <div>
-          <p className="eyebrow">Records</p>
           <h1>Customers &amp; Properties</h1>
-          <p className="page-header-copy">
-            Customer contacts and property addresses linked to leads, quotes, and projects.
-          </p>
         </div>
       </section>
 

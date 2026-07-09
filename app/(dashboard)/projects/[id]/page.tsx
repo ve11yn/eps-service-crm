@@ -39,10 +39,9 @@ export default async function ProjectDetailPage({
   return (
     <div className="page-stack">
       <section className="page-header">
-        <div>
-          <BackButton fallbackHref="/projects" label="← Back to Projects" className="back-link" />
-          <h1>{project.title}</h1>
-          <p className="page-header-copy">{project.project_code}</p>
+        <div className="page-header-title-row">
+          <BackButton fallbackHref="/projects" label="Back to Projects" className="back-icon-button" iconOnly />
+          <h1>Jobs / Projects</h1>
         </div>
         <StatusBadge status={project.status_code} />
       </section>

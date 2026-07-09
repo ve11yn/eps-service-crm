@@ -27,11 +27,7 @@ export default async function TeamPage() {
     <div className="page-stack">
       <section className="page-header">
         <div>
-          <p className="eyebrow">Roster</p>
           <h1>Team</h1>
-          <p className="page-header-copy">
-            Worker roles, availability, and current lead/work item load.
-          </p>
         </div>
       </section>
 
