@@ -315,6 +315,13 @@ textarea {
   align-items: center;
 }
 
+.projects-page-header {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  column-gap: var(--space-5);
+}
+
 .page-header h1 {
   margin: 0;
   font-size: var(--text-page-title);
@@ -925,20 +932,18 @@ textarea {
 .toolbar-form {
   display: flex;
   flex-wrap: nowrap;
-  gap: var(--space-3);
+  gap: var(--space-2);
   align-items: center;
   justify-content: flex-end;
+  width: auto;
 }
 
 .toolbar-form .input {
-  width: min(260px, 34vw);
-  flex: 0 1 260px;
-}
-
-.project-filter-bar {
-  display: flex;
-  justify-content: flex-end;
-  padding: 0 var(--panel-padding);
+  width: 280px;
+  max-width: 280px;
+  flex: 0 0 280px;
+  min-height: 36px;
+  background: var(--surface);
 }
 
 .project-status-dropdown {
@@ -949,8 +954,8 @@ textarea {
 
 .project-status-button {
   position: relative;
-  min-width: 170px;
-  min-height: var(--control-height);
+  min-width: 152px;
+  min-height: 36px;
   padding: 8px 34px 8px var(--space-3);
   border: 1px solid var(--line);
   border-radius: var(--component-radius);
@@ -958,7 +963,7 @@ textarea {
   color: var(--foreground);
   font: inherit;
   font-size: var(--text-sm);
-  font-weight: var(--font-semibold);
+  font-weight: var(--font-medium);
   text-align: left;
   cursor: pointer;
   transition: 150ms ease;
@@ -2689,6 +2694,12 @@ button.back-link {
     flex-direction: column;
   }
 
+  .projects-page-header {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    justify-items: stretch;
+  }
+
   .dashboard-nav {
     flex-direction: row;
     flex-wrap: wrap;
@@ -2731,19 +2742,18 @@ button.back-link {
 
   .toolbar-form {
     justify-content: flex-start;
+    width: 100%;
   }
 
   .toolbar-form .input {
-    width: min(150px, 44vw);
-    flex-basis: min(150px, 44vw);
-  }
-
-  .project-filter-bar {
-    justify-content: flex-start;
+    min-width: 0;
+    width: min(180px, 48vw);
+    max-width: min(180px, 48vw);
+    flex: 1 1 min(180px, 48vw);
   }
 
   .project-status-button {
-    min-width: 148px;
+    min-width: 128px;
   }
 
   .review-header-actions {

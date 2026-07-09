@@ -108,7 +108,7 @@ export default async function RequestsPage() {
                 key={project.id}
                 href={`/projects/${project.id}`}
                 title={project.title}
-                subtitle={project.project_code || "Unassigned"}
+                subtitle="Project request"
                 contextLabel="Type"
                 contextValue="Project"
                 status={project.status_code}

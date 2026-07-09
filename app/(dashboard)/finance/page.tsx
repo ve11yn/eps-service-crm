@@ -72,8 +72,8 @@ export default async function FinancePage() {
                   className="review-draft-row"
                 >
                   <div>
-                    <strong>{invoice.invoice_number}</strong>
-                    <span>{project?.project_code ?? invoice.quickbooks_sync_id ?? "No project"}</span>
+                    <strong>{project?.title ?? "Invoice"}</strong>
+                    <span>{project ? "Project invoice" : "Unlinked invoice"}</span>
                   </div>
                   <StatusBadge status={invoice.status_code} />
                   <span>{formatDate(invoice.issued_at)}</span>
@@ -119,8 +119,8 @@ export default async function FinancePage() {
                   className="review-draft-row"
                 >
                   <div>
-                    <strong>{payment.reference_number ?? payment.id}</strong>
-                    <span>{project?.project_code ?? "No project"}</span>
+                    <strong>{project?.title ?? "Payment"}</strong>
+                    <span>{project ? "Project payment" : "Unlinked payment"}</span>
                   </div>
                   <StatusBadge status={payment.status_code} />
                   <span>{payment.payment_method ?? "Not set"}</span>

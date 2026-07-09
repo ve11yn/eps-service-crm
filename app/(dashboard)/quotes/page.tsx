@@ -16,11 +16,6 @@ function getLeadTitle(quote: QuoteListItem) {
   return lead?.title ?? "Unlinked quote";
 }
 
-function getLeadCode(quote: QuoteListItem) {
-  const lead = Array.isArray(quote.leads) ? quote.leads[0] : quote.leads;
-  return lead?.lead_code ?? "No lead";
-}
-
 export default async function QuotesPage() {
   await requireAppSession(["owner", "admin"]);
   const quotes = await listQuotes();
@@ -66,7 +61,7 @@ export default async function QuotesPage() {
       <section className="panel table-panel">
         <div className="panel-header">
           <div>
-            <p className="eyebrow">Quote Pipeline</p>
+            <p className="eyebrow">Quote</p>
             <h2>{quoteGroups.length} lead quote stacks</h2>
           </div>
         </div>
@@ -94,7 +89,7 @@ export default async function QuotesPage() {
                 <div className="workflow-list-main">
                   <strong className="workflow-list-title">{getLeadTitle(latestQuote)}</strong>
                   <span className="workflow-list-meta">
-                    {getLeadCode(latestQuote)} · Latest {latestQuote.quote_number} · {groupQuotes.length} version{groupQuotes.length === 1 ? "" : "s"}
+                    {groupQuotes.length} quote version{groupQuotes.length === 1 ? "" : "s"}
                   </span>
                 </div>
                 <StatusBadge status={latestQuote.status_code} />

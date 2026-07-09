@@ -34,13 +34,10 @@ export default async function ProjectsPage({ searchParams }: ProjectsPageProps) 
 
   return (
     <div className="page-stack">
-      <section className="page-header">
+      <section className="page-header projects-page-header">
         <div>
           <h1>Jobs / Projects</h1>
         </div>
-      </section>
-
-      <section className="project-filter-bar" aria-label="Project filters">
         <ProjectFilters
           key={`${params.q ?? ""}:${params.status ?? ""}`}
           initialQuery={params.q ?? ""}
@@ -93,7 +90,6 @@ export default async function ProjectsPage({ searchParams }: ProjectsPageProps) 
                 <p className="project-card-meta">
                   Due {formatDate(project.scheduled_end_at ?? project.payment_due_at)}
                 </p>
-                <p className="project-card-code">{project.project_code}</p>
               </div>
             </Link>
           ))}

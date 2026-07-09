@@ -43,7 +43,6 @@ export default async function LeadsPage() {
               <Link key={lead.id} href={`/leads/${lead.id}`} className="workflow-list-row">
                 <div className="workflow-list-main">
                   <strong className="workflow-list-title">{lead.title ?? "WhatsApp enquiry"}</strong>
-                  <span className="workflow-list-meta">{lead.lead_code}</span>
                 </div>
                 <StatusBadge status={lead.status_code} />
                 <span>{formatDateTime(lead.last_activity_at ?? lead.updated_at)}</span>
