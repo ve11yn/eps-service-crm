@@ -177,6 +177,7 @@ textarea {
   display: flex;
   flex-direction: column;
   gap: var(--space-6);
+  overflow: auto;
 }
 
 .dashboard-brand {
@@ -278,6 +279,11 @@ textarea {
   display: flex;
   flex-direction: column;
   gap: var(--component-gap);
+  min-width: 0;
+}
+
+.page-stack > * {
+  min-width: 0;
 }
 
 .dashboard-main > .page-stack {
@@ -367,6 +373,7 @@ textarea {
 }
 
 .panel {
+  min-width: 0;
   background: var(--surface);
   border: 1px solid var(--line);
   border-radius: var(--component-radius);
@@ -380,6 +387,11 @@ textarea {
   align-items: flex-start;
   gap: var(--space-3);
   margin-bottom: var(--space-3);
+  min-width: 0;
+}
+
+.panel-header > * {
+  min-width: 0;
 }
 
 .panel-header-no-wrap {
@@ -503,10 +515,10 @@ textarea {
 
 .report-stat {
   min-width: 0;
-  padding: var(--space-3);
-  border: 1px solid var(--line);
-  border-radius: var(--component-radius);
-  background: var(--surface-hover);
+  padding: var(--space-2) 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
 }
 
 .report-stat-label,
@@ -527,6 +539,10 @@ textarea {
   font-weight: var(--font-semibold);
   line-height: 1.2;
   overflow-wrap: anywhere;
+}
+
+.report-stat + .report-stat {
+  border-top: 1px solid var(--line);
 }
 
 .report-insight-grid {
@@ -617,10 +633,15 @@ textarea {
   flex-direction: column;
   gap: var(--space-2);
   min-width: 0;
-  padding: var(--space-3);
-  border: 1px solid var(--line);
-  border-radius: var(--component-radius);
-  background: var(--surface);
+  padding: 0 0 var(--space-3);
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+}
+
+.report-load-row + .report-load-row {
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--line);
 }
 
 .report-load-row-header {
@@ -683,9 +704,9 @@ textarea {
 }
 
 .report-speed-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: var(--component-gap);
+  display: flex;
+  flex-direction: column;
+  gap: 0;
   min-width: 0;
 }
 
@@ -723,9 +744,9 @@ textarea {
 }
 
 .report-followup-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: var(--component-gap);
+  display: flex;
+  flex-direction: column;
+  gap: 0;
   min-width: 0;
 }
 
@@ -786,21 +807,25 @@ textarea {
 
 .table-wrap {
   overflow-x: auto;
+  overflow-y: hidden;
   margin: 0 calc(var(--panel-padding) * -1) calc(var(--panel-padding) * -1);
 }
 
 .data-table {
   width: 100%;
+  min-width: 720px;
   border-collapse: collapse;
   font-size: var(--text-sm);
 }
 
 .data-table th,
 .data-table td {
+  min-width: 0;
   text-align: left;
   padding: 12px 18px;
   border-top: 1px solid var(--line);
   vertical-align: middle;
+  overflow-wrap: anywhere;
 }
 
 .data-table th {
@@ -822,6 +847,8 @@ textarea {
 .review-draft-list {
   display: flex;
   flex-direction: column;
+  max-height: min(560px, calc(100vh - 220px));
+  overflow: auto;
   margin: 0 calc(var(--panel-padding) * -1) calc(var(--panel-padding) * -1);
   font-size: var(--text-sm);
 }
@@ -832,6 +859,7 @@ textarea {
   grid-template-columns: minmax(240px, 1.7fr) minmax(180px, 1.2fr) minmax(120px, 0.7fr) minmax(150px, 0.9fr) minmax(160px, 1fr);
   gap: var(--space-4);
   align-items: center;
+  min-width: 850px;
 }
 
 .review-draft-list-head {
@@ -894,6 +922,8 @@ textarea {
 
 .customer-record-list {
   font-size: var(--text-sm);
+  max-height: min(560px, calc(100vh - 220px));
+  overflow: auto;
 }
 
 .customer-record-row {
@@ -905,6 +935,7 @@ textarea {
   padding: var(--space-3) var(--panel-padding);
   border-top: 1px solid var(--line);
   transition: background 150ms ease;
+  min-width: 460px;
 }
 
 .customer-record-row:hover {
@@ -946,6 +977,8 @@ textarea {
 .workflow-list {
   display: flex;
   flex-direction: column;
+  max-height: min(560px, calc(100vh - 220px));
+  overflow: auto;
   margin: 0 calc(var(--panel-padding) * -1) calc(var(--panel-padding) * -1);
   font-size: var(--text-sm);
 }
@@ -956,12 +989,14 @@ textarea {
   grid-template-columns: minmax(280px, 1.8fr) minmax(140px, 0.8fr) minmax(150px, 0.9fr) minmax(220px, 1.1fr);
   gap: var(--space-4);
   align-items: center;
+  min-width: 790px;
 }
 
 .workflow-list-compact .workflow-list-head,
 .workflow-list-compact .workflow-list-row {
   grid-template-columns: minmax(180px, 1.4fr) minmax(112px, 0.8fr) minmax(120px, 0.8fr) minmax(128px, 0.8fr);
   gap: var(--space-3);
+  min-width: 560px;
 }
 
 .workflow-list-head {
@@ -1664,6 +1699,7 @@ textarea {
   display: flex;
   flex-direction: column;
   gap: var(--space-2);
+  min-width: 0;
 }
 
 .field-block-wide {
@@ -1674,6 +1710,7 @@ textarea {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: var(--space-4) var(--space-5);
+  min-width: 0;
 }
 
 .toggle-row {
@@ -1742,14 +1779,21 @@ textarea {
   display: flex;
   flex-direction: column;
   gap: var(--space-3);
+  min-width: 0;
 }
 
 .message-bubble {
   max-width: 78%;
+  min-width: 0;
   padding: var(--space-4);
   border-radius: var(--component-radius);
   background: var(--surface-hover);
   border: 1px solid var(--line);
+  overflow-wrap: anywhere;
+}
+
+.message-bubble p {
+  overflow-wrap: anywhere;
 }
 
 .message-bubble.is-outbound {
@@ -1789,6 +1833,7 @@ textarea {
   display: flex;
   justify-content: space-between;
   gap: var(--space-3);
+  min-width: 0;
 }
 
 .project-grid {
@@ -1796,6 +1841,7 @@ textarea {
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: var(--component-gap);
   align-content: start;
+  min-width: 0;
 }
 
 .lifecycle-strip {
@@ -1806,6 +1852,7 @@ textarea {
 
 .lifecycle-step {
   position: relative;
+  min-width: 0;
   min-height: 168px;
   padding: var(--space-4);
   border: 1px solid var(--line);
@@ -1839,6 +1886,7 @@ textarea {
   color: var(--text-muted);
   font-size: var(--text-sm);
   line-height: 1.5;
+  overflow-wrap: anywhere;
 }
 
 .project-status-summary {
@@ -1859,6 +1907,7 @@ textarea {
   border-radius: var(--component-radius);
   background: var(--surface);
   transition: 150ms ease;
+  min-width: 0;
 }
 
 .project-status-summary-card:hover,
@@ -1881,6 +1930,7 @@ textarea {
 
 .project-card {
   padding: 0;
+  min-width: 0;
   overflow: hidden;
   border-radius: var(--radius-md);
   box-shadow: var(--shadow-card);
@@ -1906,6 +1956,7 @@ textarea {
 .project-card-title-row {
   display: flex;
   align-items: flex-start;
+  min-width: 0;
   justify-content: space-between;
   gap: var(--space-3);
 }
@@ -2360,6 +2411,7 @@ button.back-link {
   display: flex;
   flex-direction: column;
   gap: var(--space-3);
+  min-width: 0;
 }
 
 .work-item-panel {
@@ -2374,6 +2426,7 @@ button.back-link {
   border: 1px solid var(--line);
   border-radius: var(--component-radius);
   background: var(--surface-hover);
+  min-width: 0;
 }
 
 .work-item-editor-index {
@@ -2449,6 +2502,7 @@ button.back-link {
   justify-content: space-between;
   gap: var(--space-3);
   align-items: flex-start;
+  min-width: 0;
 }
 
 .work-item-tag {
@@ -2478,6 +2532,7 @@ button.back-link {
   border: 1px solid color-mix(in srgb, var(--accent) 16%, var(--line));
   border-radius: var(--component-radius);
   background: var(--surface);
+  min-width: 0;
 }
 
 .work-item-guidance p {
@@ -2559,6 +2614,8 @@ button.back-link {
   display: flex;
   flex-wrap: wrap;
   gap: var(--space-3);
+  max-height: 320px;
+  overflow: auto;
 }
 
 .work-item-media-loading {
@@ -2651,12 +2708,14 @@ button.back-link {
   border-radius: var(--component-radius);
   border: 1px solid var(--line);
   background: var(--surface);
+  min-width: 0;
 }
 
 .todo-card-header {
   display: flex;
   justify-content: space-between;
   gap: var(--space-4);
+  min-width: 0;
 }
 
 .todo-card-header h3,
@@ -2669,6 +2728,7 @@ button.back-link {
   color: var(--text-muted);
   margin-top: var(--space-1);
   line-height: 1.5;
+  overflow-wrap: anywhere;
 }
 
 .todo-card-meta {
@@ -2678,6 +2738,8 @@ button.back-link {
   margin-top: var(--space-4);
   color: var(--text-muted);
   font-size: var(--text-sm);
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 
 .project-item-media-grid,
@@ -2686,6 +2748,8 @@ button.back-link {
   grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
   gap: var(--space-3);
   margin-top: var(--space-4);
+  max-height: 420px;
+  overflow: auto;
 }
 
 .project-item-media,
@@ -2995,7 +3059,8 @@ button.back-link {
   flex-direction: column;
   gap: var(--space-1);
   min-width: 0;
-  overflow: hidden;
+  overflow: auto;
+  max-height: 76px;
 }
 
 .calendar-event {
@@ -3052,6 +3117,7 @@ button.back-link {
   display: flex;
   flex-direction: column;
   gap: var(--space-3);
+  min-width: 0;
 }
 
 .calendar-modal-item {
@@ -3284,12 +3350,14 @@ button.back-link {
 
   .review-draft-row {
     grid-template-columns: 1fr;
+    min-width: 0;
     gap: var(--space-2);
     padding: var(--space-3) 0;
   }
 
   .customer-record-row {
     grid-template-columns: 1fr;
+    min-width: 0;
     gap: var(--space-2);
   }
 
