@@ -1,5 +1,12 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import {
+  CheckSquare,
+  FileText,
+  MessageCircle,
+  Paperclip,
+  TrendingUp,
+} from "lucide-react";
 import { getProjectDetail } from "@/backend/services/projects/get-project-detail";
 import { EmptyState } from "@/frontend/components/dashboard/empty-state";
 import { StatusBadge } from "@/frontend/components/dashboard/status-badge";
@@ -26,9 +33,6 @@ export default async function ProjectDetailPage({
 
   const contact = Array.isArray(project.contacts) ? project.contacts[0] : project.contacts;
   const property = Array.isArray(project.properties) ? project.properties[0] : project.properties;
-  const thread = Array.isArray(project.whatsapp_threads)
-    ? project.whatsapp_threads[0]
-    : project.whatsapp_threads;
   const projectItems = Array.isArray(project.project_items) ? project.project_items : [];
   const mediaAssets = Array.isArray(project.media_assets) ? project.media_assets : [];
   const inboxPreview = project.inbox_preview;
@@ -49,95 +53,90 @@ export default async function ProjectDetailPage({
       <section className="project-detail-layout">
         <aside className="panel detail-sidebar">
           <div className="detail-sidebar-group">
-            <p className="eyebrow">Sections</p>
-            <nav className="detail-nav">
-              <a href="#details">Details</a>
-              <a href="#todo">To-do</a>
-              <a href="#attachments">Attachments</a>
+            <p className="detail-sidebar-heading">Sections</p>
+            <nav className="detail-nav" aria-label="Project sections">
+              <a href="#inbox" className="detail-menu-link">
+                <MessageCircle className="dashboard-nav-icon" aria-hidden="true" size={18} strokeWidth={2} />
+                <span>Conversation</span>
+              </a>
+              <a href="#details" className="detail-menu-link">
+                <FileText className="dashboard-nav-icon" aria-hidden="true" size={18} strokeWidth={2} />
+                <span>Details</span>
+              </a>
+              <a href="#todo" className="detail-menu-link">
+                <CheckSquare className="dashboard-nav-icon" aria-hidden="true" size={18} strokeWidth={2} />
+                <span>To-do</span>
+              </a>
+              <a href="#attachments" className="detail-menu-link">
+                <Paperclip className="dashboard-nav-icon" aria-hidden="true" size={18} strokeWidth={2} />
+                <span>Attachments</span>
+              </a>
             </nav>
           </div>
 
-          <div className="detail-sidebar-group">
-            <p className="eyebrow">Progress</p>
-            <StatusBadge status={project.status_code} />
+          <div className="detail-sidebar-group" id="inbox">
+            <p className="detail-sidebar-heading">Conversation</p>
+            {inboxThread ? (
+              <div className="detail-summary-list">
+                <div className="detail-summary-item">
+                  <span>Thread</span>
+                  <strong>{inboxThread.thread_subject ?? "Chat thread"}</strong>
+                </div>
+                <div className="detail-summary-item">
+                  <span>Last activity</span>
+                  <strong>{formatDateTime(inboxThread.last_message_at)}</strong>
+                </div>
+                <div className="detail-summary-item">
+                  <span>Draft</span>
+                  <strong>{inboxReviewDraft ? inboxReviewDraft.status : "No draft yet"}</strong>
+                </div>
+                <div className="detail-summary-item">
+                  <span>Messages</span>
+                  <strong>{inboxMessages.length}</strong>
+                </div>
+                <div className="detail-summary-actions">
+                  <Link className="detail-sidebar-button" href={`/inbox?thread=${inboxThread.id}`}>
+                    <MessageCircle className="dashboard-nav-icon" aria-hidden="true" size={18} strokeWidth={2} />
+                    <span>Open Inbox</span>
+                  </Link>
+                  {inboxReviewDraft ? (
+                    <Link className="detail-sidebar-button detail-sidebar-button-primary" href={`/inbox/reviews/${inboxReviewDraft.id}`}>
+                      <FileText className="dashboard-nav-icon" aria-hidden="true" size={18} strokeWidth={2} />
+                      <span>Review Intake</span>
+                    </Link>
+                  ) : null}
+                </div>
+              </div>
+            ) : (
+              <div className="detail-summary-list">
+                <p className="detail-sidebar-note">No inbox linked yet.</p>
+                <Link className="detail-sidebar-button" href="/inbox">
+                  <MessageCircle className="dashboard-nav-icon" aria-hidden="true" size={18} strokeWidth={2} />
+                  <span>Open Inbox</span>
+                </Link>
+                {inboxReviewDraft ? (
+                  <Link className="detail-sidebar-button detail-sidebar-button-primary" href={`/inbox/reviews/${inboxReviewDraft.id}`}>
+                    <FileText className="dashboard-nav-icon" aria-hidden="true" size={18} strokeWidth={2} />
+                    <span>Review Intake</span>
+                  </Link>
+                ) : null}
+              </div>
+            )}
           </div>
 
           <div className="detail-sidebar-group">
-            <p className="eyebrow">Quick Actions</p>
-            <div className="action-stack">
-              <Link className="button button-secondary" href={thread ? `/inbox?thread=${thread.id}` : "/inbox"}>
-                Open Chat
-              </Link>
+            <p className="detail-sidebar-heading">Progress</p>
+            <div className="detail-menu-link detail-menu-status">
+              <TrendingUp className="dashboard-nav-icon" aria-hidden="true" size={18} strokeWidth={2} />
+              <span>Current status</span>
+              <StatusBadge status={project.status_code} />
             </div>
           </div>
+
         </aside>
 
         <div className="page-stack">
           <section className="panel media-hero" />
-
-          <section className="panel" id="inbox">
-            <div className="panel-header">
-              <div>
-                <p className="eyebrow">Inbox</p>
-                <h2>Conversation</h2>
-              </div>
-              <div className="inline-actions">
-                <Link
-                  className="button button-secondary"
-                  href={inboxThread ? `/inbox?thread=${inboxThread.id}` : "/inbox"}
-                >
-                  Open Inbox
-                </Link>
-                {inboxReviewDraft ? (
-                  <Link className="button button-primary" href={`/inbox/reviews/${inboxReviewDraft.id}`}>
-                    Review Intake
-                  </Link>
-                ) : null}
-              </div>
-            </div>
-
-            {inboxThread ? (
-              <div className="summary-grid">
-                <div>
-                  <span className="summary-label">Thread</span>
-                  <p>{inboxThread.thread_subject ?? "Chat thread"}</p>
-                </div>
-                <div>
-                  <span className="summary-label">Last activity</span>
-                  <p>{formatDateTime(inboxThread.last_message_at)}</p>
-                </div>
-                <div>
-                  <span className="summary-label">Draft</span>
-                  <p>{inboxReviewDraft ? inboxReviewDraft.status : "No draft yet"}</p>
-                </div>
-                <div>
-                  <span className="summary-label">Messages</span>
-                  <p>{inboxMessages.length}</p>
-                </div>
-              </div>
-            ) : (
-              <EmptyState
-                title="No inbox linked to this project yet"
-                description="When the WhatsApp thread is connected, the conversation will appear here."
-              />
-            )}
-
-            {inboxMessages.length > 0 ? (
-              <div className="message-list project-inbox-preview">
-                {inboxMessages.slice(-3).map((message) => (
-                  <article
-                    key={message.id}
-                    className={`message-bubble ${message.direction_code === "outbound" ? "is-outbound" : "is-inbound"}`}
-                  >
-                    <p className="message-meta">
-                      {message.sender_name ?? (message.direction_code === "outbound" ? "Gage Admin" : "Customer")} · {formatDateTime(message.sent_at)}
-                    </p>
-                    <p>{message.content ?? message.media_caption ?? "Attachment"}</p>
-                  </article>
-                ))}
-              </div>
-            ) : null}
-          </section>
 
           <section className="panel" id="details">
             <div className="panel-header">

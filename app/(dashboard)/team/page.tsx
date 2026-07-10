@@ -53,9 +53,9 @@ export default async function TeamPage() {
 
           {staff.map((member) => (
             <div key={member.id} className="review-draft-row">
-              <div>
-                <strong>{member.displayName}</strong>
-                <span>{member.email ?? member.username ?? "No login label"}</span>
+              <div className="review-draft-meta-group">
+                <strong className="review-draft-title">{member.displayName}</strong>
+                <span className="review-draft-meta">{member.email ?? member.username ?? "No login label"}</span>
               </div>
               <span>{roleLabel(member.roleCode)}</span>
               <StatusBadge status={member.isActive ? "active" : "inactive"} />

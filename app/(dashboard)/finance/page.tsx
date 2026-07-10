@@ -71,9 +71,9 @@ export default async function FinancePage() {
                   href={project ? `/projects/${project.id}` : "/finance"}
                   className="review-draft-row"
                 >
-                  <div>
-                    <strong>{project?.title ?? "Invoice"}</strong>
-                    <span>{project ? "Project invoice" : "Unlinked invoice"}</span>
+                  <div className="review-draft-meta-group">
+                    <strong className="review-draft-title">{project?.title ?? "Invoice"}</strong>
+                    <span className="review-draft-meta">{project ? "Project invoice" : "Unlinked invoice"}</span>
                   </div>
                   <StatusBadge status={invoice.status_code} />
                   <span>{formatDate(invoice.issued_at)}</span>
@@ -118,9 +118,9 @@ export default async function FinancePage() {
                   href={project ? `/projects/${project.id}` : "/finance"}
                   className="review-draft-row"
                 >
-                  <div>
-                    <strong>{project?.title ?? "Payment"}</strong>
-                    <span>{project ? "Project payment" : "Unlinked payment"}</span>
+                  <div className="review-draft-meta-group">
+                    <strong className="review-draft-title">{project?.title ?? "Payment"}</strong>
+                    <span className="review-draft-meta">{project ? "Project payment" : "Unlinked payment"}</span>
                   </div>
                   <StatusBadge status={payment.status_code} />
                   <span>{payment.payment_method ?? "Not set"}</span>

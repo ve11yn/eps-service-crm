@@ -32,15 +32,17 @@ export default async function CustomersPage() {
               description="Contacts are created from WhatsApp intake and lead review."
             />
           ) : (
-            <div className="review-draft-list">
+            <div className="review-draft-list customer-record-list">
               {contacts.map((contact) => (
-                <div key={contact.id} className="review-draft-row">
-                  <div>
+                <div key={contact.id} className="customer-record-row">
+                  <div className="customer-record-main">
                     <strong>{contact.full_name}</strong>
                     <span>{contact.email ?? "No email"}</span>
                   </div>
-                  <span>{contact.whatsapp_number ?? contact.primary_phone ?? "No phone"}</span>
-                  <span>{formatDateTime(contact.updated_at)}</span>
+                  <span className="customer-record-phone">
+                    {contact.whatsapp_number ?? contact.primary_phone ?? "No phone"}
+                  </span>
+                  <span className="customer-record-date">{formatDateTime(contact.updated_at)}</span>
                 </div>
               ))}
             </div>
@@ -60,15 +62,15 @@ export default async function CustomersPage() {
               description="Properties are captured during lead qualification."
             />
           ) : (
-            <div className="review-draft-list">
+            <div className="review-draft-list customer-record-list">
               {properties.map((property) => (
-                <div key={property.id} className="review-draft-row">
-                  <div>
+                <div key={property.id} className="customer-record-row property-record-row">
+                  <div className="customer-record-main">
                     <strong>{property.property_name ?? property.address_line_1}</strong>
                     <span>{property.access_notes ?? "No access notes"}</span>
                   </div>
-                  <span>{property.unit_no ?? "No unit"}</span>
-                  <span>{property.postal_code ?? property.country_code}</span>
+                  <span className="customer-record-phone">{property.unit_no ?? "No unit"}</span>
+                  <span className="customer-record-date">{property.postal_code ?? property.country_code}</span>
                 </div>
               ))}
             </div>

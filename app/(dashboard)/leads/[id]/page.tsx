@@ -114,9 +114,9 @@ export default async function LeadDetailPage({ params }: LeadDetailPageProps) {
             </div>
             {quotes.map((quote) => (
               <Link key={quote.id} href={`/quotes/${quote.id}`} className="review-draft-row">
-                <div>
-                  <strong>Quote version {quote.version_number}</strong>
-                  <span>{quote.project_id ? "Project created" : "No project yet"}</span>
+                <div className="review-draft-meta-group">
+                  <strong className="review-draft-title">Quote version {quote.version_number}</strong>
+                  <span className="review-draft-meta">{quote.project_id ? "Project created" : "No project yet"}</span>
                 </div>
                 <span>v{quote.version_number}</span>
                 <StatusBadge status={quote.status_code} />

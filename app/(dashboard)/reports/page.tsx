@@ -1,9 +1,8 @@
-import Link from "next/link";
 import { getOperationsOverview } from "@/backend/services/reports/get-operations-overview";
 import { requireAppSession } from "@/lib/auth/session";
 
 function formatMinutes(value: number | null): string {
-  if (value === null) return "No data";
+  if (value === null) return "-";
   if (value < 60) return `${Math.round(value)} min`;
   return `${Math.round(value / 60)} hr`;
 }
@@ -30,27 +29,47 @@ function Metric({
   );
 }
 
+function ReportStat({
+  label,
+  value,
+  hint,
+}: {
+  label: string;
+  value: string;
+  hint: string;
+}) {
+  return (
+    <div className="report-stat">
+      <span className="report-stat-label">{label}</span>
+      <strong className="report-stat-value">{value}</strong>
+      <span className="report-stat-hint">{hint}</span>
+    </div>
+  );
+}
+
 function BarRow({
   label,
   value,
   total,
-  meta,
 }: {
   label: string;
   value: number;
   total: number;
-  meta: string;
 }) {
-  const width = total > 0 ? Math.max(6, (value / total) * 100) : 0;
+  const share = total > 0 ? formatPercent(value / total) : "-";
+  const width = total > 0 ? Math.max(4, (value / total) * 100) : 0;
 
   return (
-    <div className="report-bar-row">
-      <div className="report-bar-row-header">
-        <span className="report-bar-label">{label}</span>
-        <span className="report-bar-meta">{meta}</span>
+    <div className="report-load-row">
+      <div className="report-load-row-header">
+        <div className="report-load-main">
+          <span className="report-load-label">{label}</span>
+          <span className="report-load-meta">{share} of open workload</span>
+        </div>
+        <span className="report-load-count">{value} open</span>
       </div>
-      <div className="report-bar-track" aria-hidden="true">
-        <div className="report-bar-fill" style={{ width: `${width}%` }} />
+      <div className="report-load-track" aria-hidden="true">
+        <div className="report-load-fill" style={{ width: `${width}%` }} />
       </div>
     </div>
   );
@@ -68,11 +87,7 @@ export default async function ReportsPage() {
       <section className="page-header report-page-header">
         <div>
           <h1>Reports</h1>
-
         </div>
-        <Link className="button button-secondary" href="/requests">
-          View All Requests
-        </Link>
       </section>
 
       <section className="stats-grid report-kpi-grid">
@@ -99,79 +114,92 @@ export default async function ReportsPage() {
       </section>
 
       <section className="report-stack">
-        <article className="panel report-section">
-          <div className="panel-header report-section-header">
-            <div>
-              <p className="eyebrow">Response Time</p>
-              <h2>Speed</h2>
+        <div className="report-side-stack">
+          <article className="panel report-section">
+            <div className="panel-header report-section-header">
+              <div>
+                <h2>Speed</h2>
+              </div>
+              <span className="helper-text">{report.insights.responseLabel}</span>
             </div>
-            <span className="helper-text">{report.insights.responseLabel}</span>
-          </div>
 
-          <div className="report-speed-grid">
-            <Metric
-              label="Average"
-              value={formatMinutes(report.response.averageResponseMinutes)}
-              hint="Mean response time"
-            />
-            <Metric
-              label="Median"
-              value={formatMinutes(report.response.medianResponseMinutes)}
-              hint="Typical response time"
-            />
-          </div>
-        </article>
+            <div className="report-speed-grid">
+              <ReportStat
+                label="Average"
+                value={formatMinutes(report.response.averageResponseMinutes)}
+                hint="Mean response time"
+              />
+              <ReportStat
+                label="Median"
+                value={formatMinutes(report.response.medianResponseMinutes)}
+                hint="Typical response time"
+              />
+            </div>
+          </article>
 
-        <article className="panel report-section">
+          <article className="panel report-section">
+            <div className="panel-header report-section-header">
+              <div>
+                <h2>Follow-up Load</h2>
+              </div>
+              <span className="helper-text">{report.insights.reworkLabel}</span>
+            </div>
+
+            <div className="report-followup-card">
+              <div className="report-followup-primary">
+                <span>Rework rate</span>
+                <strong>{formatPercent(report.rework.reworkRate)}</strong>
+              </div>
+              <div className="report-load-track" aria-hidden="true">
+                <div
+                  className="report-load-fill"
+                  style={{ width: `${Math.max(4, report.rework.reworkRate * 100)}%` }}
+                />
+              </div>
+              <div className="report-followup-grid">
+                <ReportStat
+                  label="Flagged Items"
+                  value={String(report.rework.reworkItems)}
+                  hint="Deferred or changed"
+                />
+                <ReportStat
+                  label="Total Items"
+                  value={String(report.rework.totalItems)}
+                  hint="All tracked work items"
+                />
+              </div>
+            </div>
+          </article>
+        </div>
+
+        <article className="panel report-section report-work-section">
           <div className="panel-header report-section-header">
             <div>
-              <p className="eyebrow">Workload</p>
               <h2>Open Work</h2>
             </div>
             <span className="helper-text">
-              {busiestMember ? `${busiestMember.displayName} busiest` : "No workload data"}
+              {busiestMember ? `${busiestMember.displayName} busiest` : "-"}
             </span>
           </div>
 
           {report.workload.length === 0 ? (
-            <p className="report-empty">No workload data yet.</p>
+            <p className="report-empty">-</p>
           ) : (
-            <div className="report-bar-list">
-              {report.workload.map((row) => (
-                <BarRow
-                  key={row.profileId}
-                  label={row.displayName}
-                  value={row.openItemCount}
-                  total={Math.max(totalWorkload, 1)}
-                  meta={`${row.openItemCount} open`}
-                />
-              ))}
+            <div className="report-scroll-panel">
+              <div className="report-load-list">
+                {report.workload.map((row) => (
+                  <BarRow
+                    key={row.profileId}
+                    label={row.displayName}
+                    value={row.openItemCount}
+                    total={Math.max(totalWorkload, 1)}
+                  />
+                ))}
+              </div>
             </div>
           )}
         </article>
 
-        <article className="panel report-section">
-          <div className="panel-header report-section-header">
-            <div>
-              <p className="eyebrow">Rework</p>
-              <h2>Follow-up Load</h2>
-            </div>
-            <span className="helper-text">{report.insights.reworkLabel}</span>
-          </div>
-
-          <div className="report-speed-grid">
-            <Metric
-              label="Flagged Items"
-              value={String(report.rework.reworkItems)}
-              hint="Deferred or changed"
-            />
-            <Metric
-              label="Total Items"
-              value={String(report.rework.totalItems)}
-              hint="All tracked work items"
-            />
-          </div>
-        </article>
       </section>
     </div>
   );

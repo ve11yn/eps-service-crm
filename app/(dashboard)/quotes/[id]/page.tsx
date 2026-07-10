@@ -113,9 +113,9 @@ export default async function QuoteDetailPage({ params }: QuoteDetailPageProps) 
             </div>
             {quoteItems.map((item) => (
               <div key={item.id} className="review-draft-row">
-                <div>
-                  <strong>{item.title}</strong>
-                  <span>{item.description ?? item.notes ?? "No description"}</span>
+                <div className="review-draft-meta-group">
+                  <strong className="review-draft-title">{item.title}</strong>
+                  <span className="review-draft-meta">{item.description ?? item.notes ?? "No description"}</span>
                 </div>
                 <span>{item.quantity}</span>
                 <span>{formatMoney(item.unit_price)}</span>

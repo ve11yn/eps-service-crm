@@ -13,7 +13,6 @@ import {
   ListChecks,
   LogOut,
   ReceiptText,
-  Settings,
   Users,
 } from "lucide-react";
 import { LogoutButton } from "@/frontend/components/auth/logout-button";
@@ -33,9 +32,17 @@ const items: Array<{
   { href: "/projects", label: "Jobs / Projects", icon: FolderKanban, roles: ["owner", "admin", "coordinator"] },
   { href: "/schedule", label: "Calendar", icon: CalendarDays, roles: ["owner", "admin", "coordinator"] },
   { href: "/customers", label: "Customers & Properties", icon: Users, roles: ["owner", "admin"] },
-  { href: "/team", label: "Team", icon: Users, roles: ["owner", "admin", "coordinator"] },
   { href: "/finance", label: "Finance", icon: CircleDollarSign, roles: ["owner", "admin"] },
   { href: "/reports", label: "Reports", icon: BarChart3, roles: ["owner"] },
+];
+
+const footerItems: Array<{
+  href: string;
+  label: string;
+  icon: LucideIcon;
+  roles: AppRole[];
+}> = [
+  { href: "/team", label: "Team", icon: Users, roles: ["owner", "admin", "coordinator"] },
 ];
 
 function isActive(pathname: string, href: string): boolean {
@@ -95,12 +102,23 @@ export function Sidebar({
       </nav>
 
       <div className="dashboard-sidebar-footer">
-        {["owner", "admin"].includes(roleCode) ? (
-          <Link href="/settings" className="dashboard-nav-link">
-            <Settings className="dashboard-nav-icon" aria-hidden="true" size={18} strokeWidth={2} />
-            <span>Settings</span>
-          </Link>
-        ) : null}
+        {footerItems
+          .filter((item) => item.roles.includes(roleCode))
+          .map((item) => {
+            const active = isActive(pathname, item.href);
+            const Icon = item.icon;
+
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                className={`dashboard-nav-link ${active ? "is-active" : ""}`}
+              >
+                <Icon className="dashboard-nav-icon" aria-hidden="true" size={18} strokeWidth={2} />
+                <span>{item.label}</span>
+              </Link>
+            );
+          })}
         <LogoutButton icon={LogOut} />
       </div>
     </aside>
