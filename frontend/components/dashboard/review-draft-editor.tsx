@@ -11,6 +11,7 @@ import {
   textToList,
 } from "@/frontend/lib/review-drafts";
 import { BackButton } from "@/frontend/components/navigation/back-button";
+import { StatusBadge } from "@/frontend/components/dashboard/status-badge";
 import type { Database } from "@/types/database";
 import type { AiLeadExtraction } from "@/types/integration";
 
@@ -903,16 +904,22 @@ export function ReviewDraftEditor({ draft }: ReviewDraftEditorProps) {
           </section>
 
       <section className="panel approval-panel">
-        <div className="panel-header">
+        <div className="panel-header approval-panel-header">
           <div>
-            <p className="eyebrow">Approval and Notes</p>
-            <h2>Decision Area</h2>
+            <h2>Final Review</h2>
+            <p className="approval-panel-copy">
+              Confirm whether an inspection is needed before this enquiry moves forward.
+            </p>
           </div>
-          <strong className="approval-status">{draft.status}</strong>
+          <StatusBadge status={draft.status} />
         </div>
 
         <div className="approval-layout">
           <div className="approval-main">
+            <div className="approval-section-copy">
+              <strong>Next step</strong>
+              <p>Leave this off when the available details are enough to prepare a quote.</p>
+            </div>
             <div className="approval-decision">
               <label className={`approval-option ${extraction.siteVisitRequired ? "is-selected" : ""}`}>
                 <input
@@ -924,87 +931,54 @@ export function ReviewDraftEditor({ draft }: ReviewDraftEditorProps) {
                 />
                 <span>
                   <strong>Site visit required</strong>
-                  <small>
-                    Keep the record in the lead pipeline until inspection confirms the quote or job.
-                  </small>
                 </span>
               </label>
             </div>
 
             <div className="approval-summary">
-              <span className="field-label">What happens next</span>
+              <span className="field-label">After approval</span>
               <p>
                 {extraction.siteVisitRequired
-                  ? "Approve to save this as a Lead in Site Visit. No project is created until admin confirms the site visit or a quote is approved."
+                  ? "Save as a Site Visit lead."
                   : extraction.workItems.length > 0
-                    ? "Approve to save this as a Lead and create a Draft Quote. The Project is created only after quote approval."
-                    : "Approve to save this as a Lead in Qualification. No project is created until the customer approves a quote or admin confirms a site visit."}
+                    ? "Save as a lead and prepare a draft quote."
+                    : "Save as a lead in Qualification."}
               </p>
             </div>
           </div>
 
           <div className="approval-side">
-            <div className="detail-sidebar-group">
-              <span className="field-label">Source Channel</span>
-              <span>{formatSourceChannelLabel(draft.source_channel_code)}</span>
+            <div className="approval-section-copy">
+              <strong>Review notes</strong>
+              <p>Add context for the admin team or explain what information is still missing.</p>
             </div>
-            <div className="detail-sidebar-group">
-              <span className="field-label">Linked Lead</span>
-              <span>{draft.lead_id ? "Linked" : "Not linked yet"}</span>
-            </div>
-            <div className="detail-sidebar-group">
-              <span className="field-label">Linked Project</span>
-              <span>{draft.approved_project_id ? "Created" : "Not created yet"}</span>
-            </div>
-            <div className="detail-sidebar-group">
-              <span className="field-label">Review Notes</span>
+            <label className="field-block approval-notes-field">
               <textarea
                 className="composer-textarea"
-                rows={6}
+                rows={5}
                 value={reviewNotes}
                 onChange={(event) => setReviewNotes(event.target.value)}
-                placeholder="Add admin notes, missing information, or clarification points..."
+                placeholder="Add a note if needed"
               />
-            </div>
+              <small>Notes are required when requesting more information or rejecting this draft.</small>
+            </label>
           </div>
         </div>
 
         <div className="approval-actions">
-          <button
-            type="button"
-            className="button button-secondary"
-            onClick={() => saveDraft("needs_review")}
-            disabled={isSaving || isApproving || isRejecting}
-          >
-            {isSaving ? "Saving..." : "Save Draft"}
-          </button>
-          <button
-            type="button"
-            className="button button-primary"
-            onClick={approveDraft}
-            disabled={isSaving || isApproving || isRejecting}
-          >
-            {isApproving
-              ? "Approving..."
-              : extraction.workItems.length > 0
-                ? "Approve Lead"
-                : "Approve as Lead"}
-          </button>
-          <button
-            type="button"
-            className="button button-secondary"
-            onClick={() => rejectDraft(true)}
-            disabled={isSaving || isApproving || isRejecting}
-          >
-            {isRejecting ? "Updating..." : "Needs More Info"}
-          </button>
-          <button
-            type="button"
-            className="button button-secondary"
-            onClick={() => rejectDraft(false)}
-            disabled={isSaving || isApproving || isRejecting}
-          >
-            {isRejecting ? "Rejecting..." : "Reject Draft"}
+          <div className="approval-action-secondary">
+            <button type="button" className="button button-secondary" onClick={() => saveDraft("needs_review")} disabled={isSaving || isApproving || isRejecting}>
+              {isSaving ? "Saving..." : "Save Draft"}
+            </button>
+            <button type="button" className="button button-secondary" onClick={() => rejectDraft(true)} disabled={isSaving || isApproving || isRejecting || !reviewNotes.trim()}>
+              {isRejecting ? "Updating..." : "More Info"}
+            </button>
+            <button type="button" className="button button-danger" onClick={() => rejectDraft(false)} disabled={isSaving || isApproving || isRejecting || !reviewNotes.trim()}>
+              {isRejecting ? "Rejecting..." : "Reject Draft"}
+            </button>
+          </div>
+          <button type="button" className="button button-primary approval-primary-action" onClick={approveDraft} disabled={isSaving || isApproving || isRejecting}>
+            {isApproving ? "Approving..." : "Approve Lead"}
           </button>
           {statusMessage ? <p className="helper-text approval-status-message">{statusMessage}</p> : null}
         </div>

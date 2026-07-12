@@ -18,6 +18,10 @@ type EditableQuoteItem = {
   decisionStatus: DecisionStatus;
   decisionNotes: string;
   catalogLabel: string | null;
+  pricingMatchStatus: "matched" | "needs_review" | "manual";
+  pricingMatchConfidence: number | null;
+  pricingMatchMethod: string | null;
+  pricingMatchNotes: string | null;
 };
 
 type PricingResult = {
@@ -92,6 +96,10 @@ export function QuoteEditor({
         decisionStatus: "proposed",
         decisionNotes: "",
         catalogLabel: null,
+        pricingMatchStatus: "manual",
+        pricingMatchConfidence: null,
+        pricingMatchMethod: "human",
+        pricingMatchNotes: null,
       },
     ]);
   }
@@ -128,6 +136,10 @@ export function QuoteEditor({
         decisionStatus: "proposed",
         decisionNotes: "",
         catalogLabel: result.pricing_catalogs?.name ?? "Service catalogue",
+        pricingMatchStatus: "matched",
+        pricingMatchConfidence: 1,
+        pricingMatchMethod: "human_catalogue_selection",
+        pricingMatchNotes: "Catalogue item selected by an administrator.",
       },
     ]);
     setCatalogResults([]);
@@ -156,6 +168,10 @@ export function QuoteEditor({
             pricingItemId: item.pricingItemId,
             decisionStatus: item.decisionStatus,
             decisionNotes: item.decisionNotes || null,
+            pricingMatchStatus: item.pricingMatchStatus,
+            pricingMatchConfidence: item.pricingMatchConfidence,
+            pricingMatchMethod: item.pricingMatchMethod,
+            pricingMatchNotes: item.pricingMatchNotes,
           })),
         }),
       });
@@ -232,6 +248,9 @@ export function QuoteEditor({
                 </button>
               </div>
             </div>
+            {item.pricingMatchStatus === "needs_review" ? (
+              <p className="notice notice-warning">No confident catalogue match was found. Enter a price or choose a catalogue item before including this work.</p>
+            ) : null}
             <div className="form-grid quote-item-grid">
               <label className="field-block quote-title-field">
                 <span className="field-label">Title</span>
@@ -260,11 +279,11 @@ export function QuoteEditor({
               </label>
               <label className="field-block">
                 <span className="field-label">Unit price ({currencyCode})</span>
-                <input className="input" type="number" min="0" step="0.01" value={item.unitPrice} onChange={(event) => updateItem(item.clientKey, { unitPrice: Number(event.target.value) })} />
+                <input className="input" type="number" min="0" step="0.01" placeholder="Price required" value={item.pricingMatchStatus === "needs_review" && item.unitPrice === 0 ? "" : item.unitPrice} onChange={(event) => { const unitPrice = Number(event.target.value); updateItem(item.clientKey, { unitPrice, pricingMatchStatus: unitPrice > 0 ? "manual" : item.pricingMatchStatus, pricingMatchConfidence: unitPrice > 0 ? null : item.pricingMatchConfidence, decisionStatus: unitPrice > 0 && item.decisionStatus === "deferred" ? "proposed" : item.decisionStatus }); }} />
               </label>
               <label className="field-block">
                 <span className="field-label">Line total</span>
-                <input className="input" value={`${currencyCode} ${(item.quantity * item.unitPrice).toFixed(2)}`} readOnly />
+                <input className="input" value={item.pricingMatchStatus === "needs_review" && item.unitPrice === 0 ? "Needs price" : `${currencyCode} ${(item.quantity * item.unitPrice).toFixed(2)}`} readOnly />
               </label>
               <label className="field-block quote-description-field">
                 <span className="field-label">Internal / scope notes</span>

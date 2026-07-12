@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { StatusBadge } from "@/frontend/components/dashboard/status-badge";
+import { AppointmentDialog, type AppointmentEvent } from "@/frontend/components/dashboard/appointment-dialog";
 import {
   APP_LOCALE,
   APP_TIME_ZONE,
@@ -18,17 +19,15 @@ import {
   slugifyStatus,
 } from "@/frontend/lib/format";
 
-type ScheduleEvent = {
-  id: string;
-  title: string;
-  status: string | null;
-  scheduledStartAt: string | null;
-  scheduledEndAt: string | null;
-};
+type ScheduleEvent = AppointmentEvent;
 
 type ScheduleCalendarProps = {
   baseDate: string;
   events: ScheduleEvent[];
+  projects: Array<{ id: string; title: string | null }>;
+  leads: Array<{ id: string; title: string | null }>;
+  workers: Array<{ id: string; display_name: string; availability_status: string }>;
+  appointmentTypes: Array<{ code: string; label: string }>;
 };
 
 function moveMonth(date: Date, amount: number) {
@@ -67,6 +66,10 @@ function formatEventTimeRange(startAt?: string | null, endAt?: string | null) {
 export function ScheduleCalendar({
   baseDate,
   events,
+  projects,
+  leads,
+  workers,
+  appointmentTypes,
 }: ScheduleCalendarProps) {
   const initialMonth = useMemo(() => {
     const parsed = getCalendarDate(baseDate);
@@ -78,6 +81,8 @@ export function ScheduleCalendar({
   const [isMonthPickerOpen, setIsMonthPickerOpen] = useState(false);
   const [pickerYear, setPickerYear] = useState(initialMonth.getFullYear());
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+  const [editingEvent, setEditingEvent] = useState<ScheduleEvent | null>(null);
+  const [isCreating, setIsCreating] = useState(false);
   const pickerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -232,6 +237,17 @@ export function ScheduleCalendar({
         <div className="calendar-toolbar-actions">
           <button
             type="button"
+            className="button button-primary"
+            onClick={() => {
+              setSelectedDate(new Date());
+              setEditingEvent(null);
+              setIsCreating(true);
+            }}
+          >
+            + Appointment
+          </button>
+          <button
+            type="button"
             className="button button-secondary calendar-arrow-button"
             aria-label="Previous month"
             onClick={() => {
@@ -367,19 +383,33 @@ export function ScheduleCalendar({
                     </div>
                     <div className="calendar-modal-item-side">
                       <StatusBadge status={event.status} />
-                      <Link
-                        href={`/projects/${event.id}`}
-                        className="button button-secondary"
-                      >
-                        Open Project
-                      </Link>
+                      <button type="button" className="button button-secondary" onClick={() => { setEditingEvent(event); setIsCreating(false); }}>Edit</button>
+                      {event.projectId ? <Link href={`/projects/${event.projectId}`} className="button button-secondary">Open Project</Link> : event.leadId ? <Link href={`/leads/${event.leadId}`} className="button button-secondary">Open Lead</Link> : null}
                     </div>
                   </article>
                 ))}
               </div>
             )}
+            <div className="inline-actions">
+              <button type="button" className="button button-primary" onClick={() => { setEditingEvent(null); setIsCreating(true); }}>+ Appointment</button>
+            </div>
           </div>
         </div>
+      ) : null}
+
+      {selectedDate && (editingEvent || isCreating) ? (
+        <AppointmentDialog
+          event={editingEvent}
+          selectedDate={selectedDate}
+          projects={projects}
+          leads={leads}
+          workers={workers}
+          appointmentTypes={appointmentTypes}
+          onClose={() => {
+            setEditingEvent(null);
+            setIsCreating(false);
+          }}
+        />
       ) : null}
     </>
   );

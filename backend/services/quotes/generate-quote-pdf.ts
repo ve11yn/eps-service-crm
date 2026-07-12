@@ -19,6 +19,7 @@ export type QuotePdfData = {
   status: string;
   currencyCode: string;
   createdAt: string;
+  validUntil?: string | null;
   customerName: string;
   customerPhone?: string | null;
   customerEmail?: string | null;
@@ -33,12 +34,11 @@ export type QuotePdfData = {
 };
 
 const A4: [number, number] = [595.28, 841.89];
-const margin = 48;
-const blue = rgb(0.08, 0.25, 0.45);
-const lightBlue = rgb(0.92, 0.96, 0.99);
-const slate = rgb(0.24, 0.29, 0.36);
-const muted = rgb(0.43, 0.48, 0.55);
-const border = rgb(0.84, 0.87, 0.9);
+const margin = 44;
+const ink = rgb(0.08, 0.09, 0.1);
+const muted = rgb(0.42, 0.44, 0.46);
+const line = rgb(0.87, 0.87, 0.87);
+const orange = rgb(0.95, 0.48, 0.08);
 
 function money(value: number, currency: string) {
   return `${currency} ${Number(value).toFixed(2)}`;
@@ -56,17 +56,14 @@ function dateLabel(value: string) {
       }).format(date);
 }
 
-function wrapText(text: string, font: PDFFont, size: number, width: number): string[] {
-  const paragraphs = text.replace(/\r/g, "").split("\n");
+function wrapText(text: string, font: PDFFont, size: number, width: number) {
   const lines: string[] = [];
-
-  for (const paragraph of paragraphs) {
+  for (const paragraph of text.replace(/\r/g, "").split("\n")) {
     const words = paragraph.split(/\s+/).filter(Boolean);
     if (!words.length) {
       lines.push("");
       continue;
     }
-
     let current = words[0];
     for (const word of words.slice(1)) {
       const candidate = `${current} ${word}`;
@@ -78,180 +75,138 @@ function wrapText(text: string, font: PDFFont, size: number, width: number): str
     }
     lines.push(current);
   }
-
   return lines;
 }
 
-function drawTextLines(
-  page: PDFPage,
-  lines: string[],
-  options: { x: number; y: number; font: PDFFont; size: number; color?: ReturnType<typeof rgb>; lineHeight?: number },
-) {
-  const lineHeight = options.lineHeight ?? options.size * 1.35;
-  lines.forEach((line, index) => {
-    page.drawText(line, {
-      x: options.x,
-      y: options.y - index * lineHeight,
-      font: options.font,
-      size: options.size,
-      color: options.color ?? slate,
-    });
-  });
-  return options.y - lines.length * lineHeight;
+function drawLines(page: PDFPage, lines: string[], input: { x: number; y: number; font: PDFFont; size: number; color?: ReturnType<typeof rgb>; lineHeight?: number }) {
+  const lineHeight = input.lineHeight ?? input.size * 1.35;
+  lines.forEach((text, index) => page.drawText(text, {
+    x: input.x,
+    y: input.y - index * lineHeight,
+    font: input.font,
+    size: input.size,
+    color: input.color ?? ink,
+  }));
+  return input.y - lines.length * lineHeight;
+}
+
+function drawRight(page: PDFPage, text: string, right: number, y: number, font: PDFFont, size: number, color = ink) {
+  page.drawText(text, { x: right - font.widthOfTextAtSize(text, size), y, font, size, color });
 }
 
 export async function generateQuotePdf(data: QuotePdfData): Promise<Uint8Array> {
   const pdf = await PDFDocument.create();
   const regular = await pdf.embedFont(StandardFonts.Helvetica);
   const bold = await pdf.embedFont(StandardFonts.HelveticaBold);
-  let pageNumber = 0;
+  const title = data.documentTitle ?? "QUOTATION";
+  const displayTitle = title.toLowerCase().replace(/(^|\s)\S/g, (letter) => letter.toUpperCase());
   let page: PDFPage;
+  let pageNumber = 0;
   let y = 0;
 
   const addPage = () => {
     page = pdf.addPage(A4);
     pageNumber += 1;
     const { width, height } = page.getSize();
-
     page.drawRectangle({ x: 0, y: 0, width, height, color: rgb(1, 1, 1) });
-    page.drawRectangle({ x: 0, y: height - 92, width, height: 92, color: blue });
-    page.drawText("GAGE'S", { x: margin, y: height - 48, font: bold, size: 22, color: rgb(1, 1, 1) });
-    page.drawText("HANDYMAN & CLEANING SERVICE", {
+    page.drawText(displayTitle, { x: margin, y: height - 58, font: regular, size: 24, color: ink });
+    page.drawText(`${data.quoteNumber}${title === "QUOTATION" ? `  |  Version ${data.versionNumber}` : ""}`, {
       x: margin,
-      y: height - 68,
-      font: regular,
-      size: 9,
-      color: rgb(0.88, 0.93, 0.98),
-    });
-    const documentTitle = data.documentTitle ?? "QUOTATION";
-    page.drawText(documentTitle, {
-      x: width - margin - bold.widthOfTextAtSize(documentTitle, 18),
-      y: height - 54,
-      font: bold,
-      size: 18,
-      color: rgb(1, 1, 1),
-    });
-
-    page.drawText(`Page ${pageNumber}`, {
-      x: width - margin - 35,
-      y: 24,
+      y: height - 78,
       font: regular,
       size: 8,
       color: muted,
     });
-    page.drawLine({ start: { x: margin, y: 36 }, end: { x: width - margin, y: 36 }, thickness: 0.5, color: border });
-    y = height - 122;
-  };
-
-  const ensureSpace = (needed: number) => {
-    if (y - needed < 54) addPage();
+    drawRight(page, `Date: ${dateLabel(data.createdAt)}`, width - margin, height - 58, regular, 8, muted);
+    if (data.validUntil) drawRight(page, `Valid until: ${dateLabel(data.validUntil)}`, width - margin, height - 73, regular, 8, muted);
+    page.drawLine({ start: { x: margin, y: height - 94 }, end: { x: width - margin, y: height - 94 }, thickness: 1.2, color: orange });
+    page.drawLine({ start: { x: margin, y: 35 }, end: { x: width - margin, y: 35 }, thickness: 0.5, color: line });
+    drawRight(page, `Page ${pageNumber}`, width - margin, 22, regular, 7, muted);
+    y = height - 120;
   };
 
   addPage();
-  const { width } = page!.getSize();
+  const pageWidth = page!.getWidth();
 
-  page!.drawText(`${data.quoteNumber} / v${data.versionNumber}`, {
-    x: margin,
-    y,
-    font: bold,
-    size: 13,
-    color: blue,
-  });
-  page!.drawText(dateLabel(data.createdAt), {
-    x: width - margin - regular.widthOfTextAtSize(dateLabel(data.createdAt), 10),
-    y,
-    font: regular,
-    size: 10,
-    color: muted,
-  });
-  y -= 32;
-
-  page!.drawRectangle({ x: margin, y: y - 94, width: width - margin * 2, height: 94, color: lightBlue });
-  page!.drawText("PREPARED FOR", { x: margin + 16, y: y - 20, font: bold, size: 8, color: muted });
-  page!.drawText(data.customerName || "Customer", { x: margin + 16, y: y - 40, font: bold, size: 12, color: slate });
+  page!.drawText("CUSTOMER", { x: margin, y, font: bold, size: 7, color: muted });
+  y -= 19;
+  page!.drawText(data.customerName || "Customer", { x: margin, y, font: bold, size: 11, color: ink });
+  y -= 15;
   const customerLines = [data.customerPhone, data.customerEmail, data.propertyAddress].filter(Boolean) as string[];
-  drawTextLines(page!, customerLines.slice(0, 3), {
-    x: margin + 16,
-    y: y - 57,
-    font: regular,
-    size: 9,
-    color: muted,
-    lineHeight: 12,
-  });
-  y -= 120;
+  if (customerLines.length) {
+    y = drawLines(page!, customerLines.flatMap((value) => wrapText(value, regular, 8, pageWidth - margin * 2)), {
+      x: margin,
+      y,
+      font: regular,
+      size: 8,
+      color: muted,
+      lineHeight: 11,
+    });
+  }
+  y -= 16;
 
-  const columns = { item: margin, qty: 360, price: 414, total: 490 };
+  const columns = { item: margin, qty: 355, unit: 405, total: pageWidth - margin };
   const drawTableHeader = () => {
-    page!.drawRectangle({ x: margin, y: y - 24, width: width - margin * 2, height: 24, color: blue });
-    page!.drawText("SCOPE ITEM", { x: columns.item + 8, y: y - 16, font: bold, size: 8, color: rgb(1, 1, 1) });
-    page!.drawText("QTY", { x: columns.qty, y: y - 16, font: bold, size: 8, color: rgb(1, 1, 1) });
-    page!.drawText("UNIT", { x: columns.price, y: y - 16, font: bold, size: 8, color: rgb(1, 1, 1) });
-    page!.drawText("TOTAL", { x: columns.total, y: y - 16, font: bold, size: 8, color: rgb(1, 1, 1) });
-    y -= 24;
+    page!.drawText("Description", { x: columns.item, y, font: regular, size: 8, color: muted });
+    page!.drawText("Qty", { x: columns.qty, y, font: regular, size: 8, color: muted });
+    page!.drawText("Unit price", { x: columns.unit, y, font: regular, size: 8, color: muted });
+    drawRight(page!, "Amount", columns.total, y, regular, 8, muted);
+    y -= 10;
+    page!.drawLine({ start: { x: margin, y }, end: { x: pageWidth - margin, y }, thickness: 1, color: orange });
+    y -= 13;
   };
 
   drawTableHeader();
-  for (const item of [...data.items].sort((a, b) => a.lineNo - b.lineNo)) {
-    const titleLines = wrapText(`${item.lineNo}. ${item.title}`, bold, 9, 292);
-    const detailText = [item.description, item.decisionStatus !== "proposed" ? `Decision: ${item.decisionStatus}` : null, item.decisionNotes]
-      .filter(Boolean)
-      .join(" - ");
-    const detailLines = detailText ? wrapText(detailText, regular, 8, 292) : [];
-    const rowHeight = Math.max(44, 16 + titleLines.length * 12 + detailLines.length * 10);
-    ensureSpace(rowHeight + 28);
-    if (y > page!.getHeight() - 130) drawTableHeader();
-
-    page!.drawRectangle({ x: margin, y: y - rowHeight, width: width - margin * 2, height: rowHeight, borderColor: border, borderWidth: 0.5 });
-    drawTextLines(page!, titleLines, { x: columns.item + 8, y: y - 15, font: bold, size: 9, lineHeight: 12 });
-    if (detailLines.length) {
-      drawTextLines(page!, detailLines, {
-        x: columns.item + 8,
-        y: y - 17 - titleLines.length * 12,
-        font: regular,
-        size: 8,
-        color: muted,
-        lineHeight: 10,
-      });
+  for (const item of [...data.items].sort((left, right) => left.lineNo - right.lineNo)) {
+    const titleLines = wrapText(`${item.lineNo}. ${item.title}`, bold, 8.5, 286);
+    const details = [
+      item.description,
+      !["proposed", "included", "approved"].includes(item.decisionStatus) ? `Status: ${item.decisionStatus}` : null,
+      item.decisionNotes,
+    ].filter(Boolean).join(" - ");
+    const detailLines = details ? wrapText(details, regular, 7.5, 286) : [];
+    const rowHeight = Math.max(37, 12 + titleLines.length * 11 + detailLines.length * 9);
+    if (y - rowHeight < 70) {
+      addPage();
+      drawTableHeader();
     }
-    page!.drawText(`${item.quantity} ${item.unitLabel ?? "item"}`, { x: columns.qty, y: y - 18, font: regular, size: 8, color: slate });
-    page!.drawText(money(item.unitPrice, data.currencyCode), { x: columns.price, y: y - 18, font: regular, size: 8, color: slate });
-    page!.drawText(money(item.totalPrice, data.currencyCode), { x: columns.total, y: y - 18, font: bold, size: 8, color: slate });
+    drawLines(page!, titleLines, { x: columns.item, y: y - 2, font: bold, size: 8.5, lineHeight: 11 });
+    if (detailLines.length) drawLines(page!, detailLines, { x: columns.item, y: y - 4 - titleLines.length * 11, font: regular, size: 7.5, color: muted, lineHeight: 9 });
+    page!.drawText(`${item.quantity} ${item.unitLabel ?? "item"}`, { x: columns.qty, y: y - 2, font: regular, size: 8, color: ink });
+    page!.drawText(money(item.unitPrice, data.currencyCode), { x: columns.unit, y: y - 2, font: regular, size: 8, color: ink });
+    drawRight(page!, money(item.totalPrice, data.currencyCode), columns.total, y - 2, regular, 8, ink);
     y -= rowHeight;
+    page!.drawLine({ start: { x: margin, y }, end: { x: pageWidth - margin, y }, thickness: 0.45, color: line });
+    y -= 10;
   }
 
-  ensureSpace(120);
-  y -= 18;
-  const totalsX = 365;
-  const totalValueX = width - margin;
+  if (y < 165) addPage();
+  const totalsLabelX = 365;
+  const totalRight = pageWidth - margin;
   const drawTotal = (label: string, value: number, emphasized = false) => {
     const font = emphasized ? bold : regular;
-    const size = emphasized ? 12 : 9;
-    page!.drawText(label, { x: totalsX, y, font, size, color: emphasized ? blue : muted });
-    const valueText = money(value, data.currencyCode);
-    page!.drawText(valueText, {
-      x: totalValueX - font.widthOfTextAtSize(valueText, size),
-      y,
-      font,
-      size,
-      color: emphasized ? blue : slate,
-    });
-    y -= emphasized ? 24 : 18;
+    const size = emphasized ? 10 : 8;
+    page!.drawText(label, { x: totalsLabelX, y, font, size, color: emphasized ? ink : muted });
+    drawRight(page!, money(value, data.currencyCode), totalRight, y, font, size, emphasized ? ink : muted);
+    y -= emphasized ? 22 : 17;
   };
   drawTotal("Subtotal", data.subtotalAmount);
   drawTotal(data.adjustmentLabel ?? "Discount", data.adjustmentAmount ?? data.discountAmount);
-  page!.drawLine({ start: { x: totalsX, y: y + 8 }, end: { x: totalValueX, y: y + 8 }, thickness: 1, color: blue });
-  drawTotal("TOTAL", data.totalAmount, true);
+  page!.drawLine({ start: { x: totalsLabelX, y: y + 8 }, end: { x: totalRight, y: y + 8 }, thickness: 1, color: orange });
+  drawTotal("Total", data.totalAmount, true);
 
   if (data.notes) {
-    const noteLines = wrapText(data.notes, regular, 9, width - margin * 2 - 20);
-    ensureSpace(38 + noteLines.length * 12);
-    page!.drawRectangle({ x: margin, y: y - 18 - noteLines.length * 12, width: width - margin * 2, height: 28 + noteLines.length * 12, color: rgb(0.97, 0.97, 0.97) });
-    page!.drawText("NOTES", { x: margin + 10, y: y, font: bold, size: 8, color: muted });
-    drawTextLines(page!, noteLines, { x: margin + 10, y: y - 16, font: regular, size: 9, lineHeight: 12 });
+    const noteLines = wrapText(data.notes, regular, 8, pageWidth - margin * 2);
+    if (y - noteLines.length * 11 < 60) addPage();
+    y -= 8;
+    page!.drawLine({ start: { x: margin, y }, end: { x: pageWidth - margin, y }, thickness: 1, color: orange });
+    y -= 18;
+    page!.drawText("NOTES", { x: margin, y, font: bold, size: 7, color: muted });
+    y -= 15;
+    drawLines(page!, noteLines, { x: margin, y, font: regular, size: 8, color: ink, lineHeight: 11 });
   }
 
-  pdf.setTitle(`${data.quoteNumber} v${data.versionNumber}`);
-  pdf.setAuthor("Gage's Handyman & Cleaning Service");
-  pdf.setSubject("Customer quotation");
+  pdf.setTitle(`${data.quoteNumber}${title === "QUOTATION" ? ` v${data.versionNumber}` : ""}`);
+  pdf.setSubject(title === "INVOICE" ? "Customer invoice" : "Customer quotation");
   return pdf.save();
 }

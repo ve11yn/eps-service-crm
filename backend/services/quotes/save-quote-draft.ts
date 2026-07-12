@@ -6,6 +6,7 @@ import { invalidateCachedTags } from "@/lib/cache/query-cache";
 import { CACHE_TAGS } from "@/lib/cache/cache-tags";
 import { createAdminSupabaseClient } from "@/lib/supabase/admin";
 import type { Json } from "@/types/database";
+import { refreshSecondBrain } from "@/backend/services/ai/second-brain";
 
 export type QuoteDraftItemInput = {
   id?: string | null;
@@ -19,6 +20,10 @@ export type QuoteDraftItemInput = {
   pricingItemId?: string | null;
   decisionStatus: "proposed" | "approved" | "rejected" | "deferred";
   decisionNotes?: string | null;
+  pricingMatchStatus?: "matched" | "needs_review" | "manual";
+  pricingMatchConfidence?: number | null;
+  pricingMatchMethod?: string | null;
+  pricingMatchNotes?: string | null;
 };
 
 export type SaveQuoteDraftInput = {
@@ -43,6 +48,9 @@ function validateInput(input: SaveQuoteDraftInput) {
     if (!Number.isFinite(item.unitPrice) || item.unitPrice < 0) {
       throw new Error(`Item ${index + 1} price cannot be negative.`);
     }
+    if (["proposed", "approved"].includes(item.decisionStatus) && item.unitPrice <= 0) {
+      throw new Error(`Item ${index + 1} needs a price before it can be included.`);
+    }
   });
 }
 
@@ -63,6 +71,25 @@ export async function saveQuoteDraft(input: SaveQuoteDraftInput) {
   });
 
   if (error) throw error;
+
+  const { data: savedItems, error: savedItemsError } = await supabase
+    .from("quote_items")
+    .select("id, line_no")
+    .eq("quote_id", input.quoteId);
+  if (savedItemsError) throw savedItemsError;
+  await Promise.all((savedItems ?? []).map((savedItem) => {
+    const submitted = input.items.find((item) => item.lineNo === savedItem.line_no);
+    if (!submitted) return Promise.resolve();
+    const manuallyPriced = submitted.unitPrice > 0 && submitted.pricingMatchStatus === "needs_review";
+    return supabase.from("quote_items").update({
+      pricing_match_status: manuallyPriced ? "manual" : submitted.pricingMatchStatus ?? (submitted.pricingItemId ? "matched" : "manual"),
+      pricing_match_confidence: manuallyPriced ? null : submitted.pricingMatchConfidence ?? null,
+      pricing_match_method: manuallyPriced ? "human" : submitted.pricingMatchMethod ?? null,
+      pricing_match_notes: manuallyPriced ? "Price confirmed manually by an administrator." : submitted.pricingMatchNotes ?? null,
+    }).eq("id", savedItem.id).then(({ error: updateError }) => {
+      if (updateError) throw updateError;
+    });
+  }));
 
   invalidateCachedTags([
     CACHE_TAGS.leads,
@@ -90,6 +117,8 @@ export async function saveQuoteDraft(input: SaveQuoteDraftInput) {
       item_count: input.items.length,
     },
   });
+
+  await refreshSecondBrain("quote", input.quoteId, input.performedByProfileId);
 
   return getQuoteDetail(input.quoteId);
 }

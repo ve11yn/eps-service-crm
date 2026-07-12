@@ -19,8 +19,12 @@ export function QuoteActions({
   const [isPending, setIsPending] = useState(false);
   const [scheduledStartAt, setScheduledStartAt] = useState("");
   const [scheduledEndAt, setScheduledEndAt] = useState("");
+  const [showDelivery, setShowDelivery] = useState(false);
+  const [deliveryMethod, setDeliveryMethod] = useState("manual");
+  const [deliveryReference, setDeliveryReference] = useState("");
+  const [deliveryNotes, setDeliveryNotes] = useState("");
 
-  async function updateStatus(nextStatus: string) {
+  async function updateStatus(nextStatus: string, extra?: Record<string, unknown>) {
     setIsPending(true);
     setMessage(null);
 
@@ -30,7 +34,7 @@ export function QuoteActions({
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ status: nextStatus }),
+        body: JSON.stringify({ status: nextStatus, ...extra }),
       });
       const payload = (await response.json()) as {
         success?: boolean;
@@ -42,6 +46,7 @@ export function QuoteActions({
       }
 
       router.refresh();
+      if (nextStatus === "sent") setShowDelivery(false);
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "Failed to update quote.");
     } finally {
@@ -126,7 +131,7 @@ export function QuoteActions({
           type="button"
           className="button button-secondary"
           disabled={isPending}
-          onClick={() => updateStatus("sent")}
+          onClick={() => setShowDelivery(true)}
         >
           Mark Delivered
         </button>
@@ -188,6 +193,18 @@ export function QuoteActions({
         </button>
       ) : null}
       {message ? <p className="helper-text">{message}</p> : null}
+      {showDelivery ? (
+        <div className="modal-backdrop" role="presentation" onMouseDown={(event) => event.target === event.currentTarget && setShowDelivery(false)}>
+          <section className="modal-panel" role="dialog" aria-modal="true" aria-labelledby="quote-delivery-title">
+            <div className="panel-header"><div><p className="eyebrow">Delivery evidence</p><h2 id="quote-delivery-title">Confirm quote delivery</h2></div><button type="button" className="button button-secondary" onClick={() => setShowDelivery(false)}>Close</button></div>
+            <p className="helper-text">Record how the customer received the quote. A status change alone is not delivery proof.</p>
+            <label className="field-block"><span className="field-label">Delivery method</span><select className="select" value={deliveryMethod} onChange={(event) => setDeliveryMethod(event.target.value)}><option value="manual">Manual / in person</option><option value="email">Email</option><option value="whatsapp">WhatsApp</option><option value="other">Other</option></select></label>
+            <label className="field-block"><span className="field-label">Proof or reference</span><input className="input" value={deliveryReference} onChange={(event) => setDeliveryReference(event.target.value)} placeholder="Message ID, email subject, recipient confirmation, or document reference" /></label>
+            <label className="field-block"><span className="field-label">Delivery notes</span><textarea className="textarea" value={deliveryNotes} onChange={(event) => setDeliveryNotes(event.target.value)} /></label>
+            <div className="inline-actions"><button type="button" className="button button-secondary" onClick={() => setShowDelivery(false)}>Cancel</button><button type="button" className="button button-primary" disabled={isPending || !deliveryReference.trim()} onClick={() => updateStatus("sent", { deliveryMethod, deliveryReference, deliveryNotes })}>{isPending ? "Saving…" : "Confirm delivery"}</button></div>
+          </section>
+        </div>
+      ) : null}
     </div>
   );
 }

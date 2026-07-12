@@ -8,6 +8,8 @@ import { StatusBadge } from "@/frontend/components/dashboard/status-badge";
 import { BackButton } from "@/frontend/components/navigation/back-button";
 import { formatDateTime, formatMoney } from "@/frontend/lib/format";
 import { requireAppSession } from "@/lib/auth/session";
+import { listSecondBrainSummaries } from "@/backend/services/ai/second-brain";
+import { SecondBrainPanel } from "@/frontend/components/dashboard/second-brain-panel";
 
 type QuoteDetailPageProps = {
   params: Promise<{
@@ -23,7 +25,7 @@ function firstRelation<T>(value: T | T[] | null | undefined): T | null {
 export default async function QuoteDetailPage({ params }: QuoteDetailPageProps) {
   await requireAppSession(["owner", "admin"]);
   const { id } = await params;
-  const quote = await getQuoteDetail(id);
+  const [quote, secondBrain] = await Promise.all([getQuoteDetail(id), listSecondBrainSummaries("quote", id)]);
 
   if (!quote) {
     notFound();
@@ -34,7 +36,7 @@ export default async function QuoteDetailPage({ params }: QuoteDetailPageProps) 
   const quoteItems = Array.isArray(quote.quote_items) ? quote.quote_items : [];
 
   return (
-    <div className="page-stack">
+    <div className="page-stack quote-page">
       <section className="page-header">
         <div className="page-header-title-row">
           <BackButton fallbackHref="/quotes" label="Back to Quotes" className="back-icon-button" iconOnly />
@@ -80,6 +82,14 @@ export default async function QuoteDetailPage({ params }: QuoteDetailPageProps) 
             <span className="summary-label">Approved</span>
             <p>{formatDateTime(quote.approved_at)}</p>
           </div>
+          <div>
+            <span className="summary-label">Valid until</span>
+            <p>{formatDateTime(quote.valid_until)}</p>
+          </div>
+          <div>
+            <span className="summary-label">Delivery evidence</span>
+            <p>{quote.delivery_method ? `${quote.delivery_method} · ${quote.delivery_reference ?? "No reference"}` : "Not delivered"}</p>
+          </div>
         </div>
 
         <QuoteActions
@@ -88,6 +98,8 @@ export default async function QuoteDetailPage({ params }: QuoteDetailPageProps) 
           projectId={quote.project_id}
         />
       </section>
+
+      <SecondBrainPanel entityType="quote" entityId={quote.id} summaries={secondBrain} expectedTypes={["negotiation", "approved_scope", "decision_needed"]} />
 
       {quote.status_code === "draft" ? (
         <QuoteEditor
@@ -110,6 +122,10 @@ export default async function QuoteDetailPage({ params }: QuoteDetailPageProps) 
               decisionStatus: item.decision_status as "proposed" | "approved" | "rejected" | "deferred",
               decisionNotes: item.decision_notes ?? "",
               catalogLabel: catalog?.name ?? null,
+              pricingMatchStatus: item.pricing_match_status as "matched" | "needs_review" | "manual",
+              pricingMatchConfidence: item.pricing_match_confidence,
+              pricingMatchMethod: item.pricing_match_method,
+              pricingMatchNotes: item.pricing_match_notes,
             };
           })}
         />

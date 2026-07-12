@@ -38,6 +38,7 @@ export async function GET(_request: Request, context: RouteContext) {
       status: quote.status_code,
       currencyCode: quote.currency_code,
       createdAt: quote.created_at,
+      validUntil: quote.valid_until,
       customerName: contact?.full_name ?? lead?.title ?? "Customer",
       customerPhone: contact?.whatsapp_number ?? contact?.primary_phone ?? null,
       customerEmail: contact?.email ?? null,

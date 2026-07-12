@@ -8,6 +8,7 @@ import {
   updateQuote,
 } from "@/backend/repositories";
 import { logAuditEvent } from "@/backend/observability/audit";
+import { createQuoteValidUntil } from "@/backend/services/quotes/quote-validity";
 
 export async function createQuoteRevision(input: {
   quoteId: string;
@@ -45,6 +46,7 @@ export async function createQuoteRevision(input: {
     discount_amount: source.discount_amount,
     total_amount: source.total_amount,
     notes: source.notes,
+    valid_until: await createQuoteValidUntil(),
   });
 
   const sourceItems = Array.isArray(source.quote_items)
@@ -69,6 +71,10 @@ export async function createQuoteRevision(input: {
             ? item.decision_status
             : "proposed",
         decision_notes: item.decision_notes,
+        pricing_match_status: item.pricing_match_status,
+        pricing_match_confidence: item.pricing_match_confidence,
+        pricing_match_method: item.pricing_match_method,
+        pricing_match_notes: item.pricing_match_notes,
       }),
     ),
   );

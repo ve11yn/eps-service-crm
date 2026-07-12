@@ -18,6 +18,10 @@ export default async function SchedulePage() {
         <ScheduleCalendar
           baseDate={schedule.baseDate.toISOString()}
           events={schedule.events}
+          projects={schedule.projects}
+          leads={schedule.leads}
+          workers={schedule.workers}
+          appointmentTypes={schedule.appointmentTypes}
         />
       </section>
     </div>

@@ -615,6 +615,28 @@ textarea {
   overflow: visible;
 }
 
+/* Quote list and detail pages contain several full-height sections. Keep one
+   predictable page scrollbar instead of trapping scroll inside the last card. */
+.dashboard-main > .page-stack.quote-page {
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+.dashboard-main > .page-stack.quote-page > * {
+  flex: 0 0 auto;
+}
+
+.dashboard-main > .page-stack.quote-page > :last-child {
+  min-height: auto;
+  overflow: visible;
+}
+
+.quote-page .quote-workflow-list {
+  max-height: none;
+  overflow-x: auto;
+  overflow-y: visible;
+}
+
 .page-header {
   display: flex;
   justify-content: space-between;
@@ -2415,15 +2437,27 @@ textarea {
 }
 
 .approval-panel {
-  border-color: color-mix(in srgb, var(--accent) 22%, var(--line));
-  background: linear-gradient(180deg, var(--surface), var(--surface-hover));
+  border-color: var(--line-strong);
+  background: var(--surface);
+}
+
+.approval-panel-header {
+  align-items: flex-start;
+  padding-bottom: var(--space-4);
+  border-bottom: 1px solid var(--line);
+}
+
+.approval-panel-copy {
+  margin: var(--space-1) 0 0;
+  color: var(--text-muted);
+  font-size: var(--text-sm);
 }
 
 .approval-layout {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) 300px;
-  gap: var(--component-gap);
-  align-items: start;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  padding-top: var(--space-5);
 }
 
 .approval-main,
@@ -2431,13 +2465,18 @@ textarea {
   display: flex;
   flex-direction: column;
   gap: var(--space-4);
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
 }
 
 .approval-side {
-  padding: var(--space-4);
-  border: 1px solid var(--line);
-  border-radius: var(--component-radius);
-  background: var(--surface);
+  margin-top: var(--space-5);
+  padding-top: var(--space-5);
+  border-top: 1px solid var(--line);
+  background: transparent;
 }
 
 .approval-status {
@@ -2454,7 +2493,19 @@ textarea {
   display: flex;
   flex-direction: column;
   gap: var(--space-3);
-  margin-top: var(--space-5);
+}
+
+.approval-section-copy strong,
+.approval-section-copy p {
+  display: block;
+  margin: 0;
+}
+
+.approval-section-copy p {
+  margin-top: 3px;
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+  line-height: 1.45;
 }
 
 .approval-option {
@@ -2471,8 +2522,8 @@ textarea {
 
 .approval-option:hover,
 .approval-option.is-selected {
-  border-color: color-mix(in srgb, var(--accent) 28%, var(--line));
-  background: var(--surface-hover);
+  border-color: var(--accent);
+  background: var(--accent-soft);
 }
 
 .approval-option input {
@@ -2491,10 +2542,11 @@ textarea {
 }
 
 .approval-summary {
-  margin-top: var(--space-5);
-  padding: var(--space-4);
-  border-radius: var(--component-radius);
-  background: var(--accent-soft);
+  padding: var(--space-3) var(--space-4);
+  border: 0;
+  border-left: 3px solid var(--accent);
+  border-radius: 0;
+  background: var(--surface-hover);
 }
 
 .approval-summary p {
@@ -2502,20 +2554,47 @@ textarea {
   line-height: 1.5;
 }
 
+.approval-notes-field {
+  flex: 1;
+}
+
+.approval-notes-field .composer-textarea {
+  min-height: 120px;
+  resize: vertical;
+  background: var(--surface);
+}
+
+.approval-notes-field small {
+  color: var(--text-muted);
+  font-size: var(--text-xs);
+}
+
 .approval-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-3);
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: var(--space-4);
   margin-top: var(--space-5);
   align-items: center;
-  padding-top: var(--space-1);
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--line);
 }
 
 .approval-actions .button {
   white-space: nowrap;
 }
 
+.approval-action-secondary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.approval-primary-action {
+  min-width: 220px;
+}
+
 .approval-status-message {
+  grid-column: 1 / -1;
   flex-basis: 100%;
   margin: 0;
 }
@@ -3451,6 +3530,44 @@ button.back-link {
   flex-direction: column;
   align-items: flex-end;
   gap: var(--space-3);
+}
+
+.appointment-modal {
+  width: min(760px, calc(100vw - 32px));
+  max-height: calc(100vh - 40px);
+  overflow-y: auto;
+}
+
+.second-brain-grid {
+  display: grid;
+  gap: 12px;
+}
+
+.second-brain-card {
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 14px;
+  display: grid;
+  gap: 10px;
+}
+
+.second-brain-card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.second-brain-card > p,
+.second-brain-editor {
+  margin: 0;
+}
+
+.second-brain-editor {
+  display: grid;
+  gap: 10px;
+  padding-top: 10px;
+  border-top: 1px solid var(--border-color);
 }
 
 .whatsapp-settings-panel {
@@ -4659,6 +4776,21 @@ button.back-link {
   .review-summary-grid,
   .approval-layout {
     grid-template-columns: 1fr;
+  }
+
+  .approval-actions {
+    grid-template-columns: 1fr;
+  }
+
+  .approval-action-secondary,
+  .approval-action-secondary .button,
+  .approval-primary-action {
+    width: 100%;
+  }
+
+  .approval-primary-action {
+    grid-row: 1;
+    min-width: 0;
   }
 
   .workflow-list-head {

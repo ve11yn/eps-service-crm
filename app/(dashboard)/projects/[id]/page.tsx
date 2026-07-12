@@ -19,6 +19,8 @@ import { ProjectDetailsEditor, ProjectTeamManager, ScopeChangeManager, WorkItemM
 import { BackButton } from "@/frontend/components/navigation/back-button";
 import { formatDate, formatDateTime, formatMoney } from "@/frontend/lib/format";
 import { requireAppSession } from "@/lib/auth/session";
+import { listSecondBrainSummaries } from "@/backend/services/ai/second-brain";
+import { SecondBrainPanel } from "@/frontend/components/dashboard/second-brain-panel";
 
 type ProjectDetailPageProps = {
   params: Promise<{
@@ -31,7 +33,7 @@ export default async function ProjectDetailPage({
 }: ProjectDetailPageProps) {
   await requireAppSession(["owner", "admin", "coordinator"]);
   const { id } = await params;
-  const [project, staff, contacts, properties] = await Promise.all([getProjectDetail(id), listStaffAccounts(), listContacts(), listProperties()]);
+  const [project, staff, contacts, properties, secondBrain] = await Promise.all([getProjectDetail(id), listStaffAccounts(), listContacts(), listProperties(), listSecondBrainSummaries("project", id)]);
 
   if (!project) {
     notFound();
@@ -163,6 +165,8 @@ export default async function ProjectDetailPage({
 
         <div className="page-stack">
           <section className="panel media-hero" />
+
+          <SecondBrainPanel entityType="project" entityId={project.id} summaries={secondBrain} expectedTypes={["worker_update", "completion"]} />
 
           <section className="panel" id="details">
             <div className="panel-header">

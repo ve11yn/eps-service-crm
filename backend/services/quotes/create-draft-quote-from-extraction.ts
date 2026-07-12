@@ -10,6 +10,7 @@ import {
   updateQuoteItem,
 } from "@/backend/repositories";
 import { matchWorkItemToPricing } from "@/backend/services/pricing/match-work-item-to-pricing";
+import { createQuoteValidUntil } from "@/backend/services/quotes/quote-validity";
 import { createAdminSupabaseClient } from "@/lib/supabase/admin";
 import type { AiLeadExtraction } from "@/types/integration";
 
@@ -53,8 +54,18 @@ export async function ensureDraftQuoteFromExtraction(input: {
 
         const extractedItem = input.extraction.workItems[index];
         if (!extractedItem) return;
-        const pricingItem = await matchWorkItemToPricing(extractedItem);
-        if (!pricingItem) return;
+        const match = await matchWorkItemToPricing(extractedItem);
+        const pricingItem = match.pricingItem;
+        if (!pricingItem) {
+          await updateQuoteItem(quoteItem.id, {
+            decision_status: "deferred",
+            pricing_match_status: "needs_review",
+            pricing_match_confidence: match.confidence,
+            pricing_match_method: match.method,
+            pricing_match_notes: match.notes,
+          });
+          return;
+        }
 
         const unitPrice = Number(pricingItem.recommended_price);
         subtotal += unitPrice;
@@ -63,6 +74,10 @@ export async function ensureDraftQuoteFromExtraction(input: {
           unit_label: pricingItem.unit_label ?? "item",
           unit_price: unitPrice,
           total_price: unitPrice,
+          pricing_match_status: "matched",
+          pricing_match_confidence: match.confidence,
+          pricing_match_method: match.method,
+          pricing_match_notes: match.notes,
         });
       }),
     );
@@ -80,11 +95,11 @@ export async function ensureDraftQuoteFromExtraction(input: {
   const pricedItems = await Promise.all(
     input.extraction.workItems.map(async (item) => ({
       item,
-      pricingItem: await matchWorkItemToPricing(item),
+      match: await matchWorkItemToPricing(item),
     })),
   );
   const subtotal = pricedItems.reduce(
-    (sum, entry) => sum + Number(entry.pricingItem?.recommended_price ?? 0),
+    (sum, entry) => sum + Number(entry.match.pricingItem?.recommended_price ?? 0),
     0,
   );
 
@@ -98,11 +113,14 @@ export async function ensureDraftQuoteFromExtraction(input: {
     subtotal_amount: subtotal,
     discount_amount: 0,
     total_amount: subtotal,
+    valid_until: await createQuoteValidUntil(),
   });
 
   await Promise.all(
-    pricedItems.map(({ item, pricingItem }, index) =>
-      createQuoteItem({
+    pricedItems.map(({ item, match }, index) => {
+      const pricingItem = match.pricingItem;
+      const isMatched = Boolean(pricingItem);
+      return createQuoteItem({
         quote_id: quote.id,
         line_no: index + 1,
         title: item.title || "Work item",
@@ -112,10 +130,14 @@ export async function ensureDraftQuoteFromExtraction(input: {
         unit_label: pricingItem?.unit_label ?? "item",
         unit_price: Number(pricingItem?.recommended_price ?? 0),
         total_price: Number(pricingItem?.recommended_price ?? 0),
-        decision_status: "proposed",
+        decision_status: isMatched ? "proposed" : "deferred",
         notes: item.areaName ?? item.itemType ?? null,
-      }),
-    ),
+        pricing_match_status: isMatched ? "matched" : "needs_review",
+        pricing_match_confidence: match.confidence,
+        pricing_match_method: match.method,
+        pricing_match_notes: match.notes,
+      });
+    }),
   );
 
   const mediaIds = input.extraction.workItems.flatMap((item) =>

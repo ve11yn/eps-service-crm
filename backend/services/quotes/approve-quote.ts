@@ -10,6 +10,8 @@ import {
 } from "@/backend/repositories";
 import { createAdminSupabaseClient } from "@/lib/supabase/admin";
 import { logAuditEvent } from "@/backend/observability/audit";
+import { createAppointment } from "@/backend/services/schedule/appointment-operations";
+import { refreshSecondBrain } from "@/backend/services/ai/second-brain";
 
 function buildProjectCode() {
   return `PROJ-${Date.now()}-${randomUUID().slice(0, 8).toUpperCase()}`;
@@ -38,6 +40,12 @@ export async function approveQuoteAndCreateProject(input: {
 
   if (quote.status_code === "expired_rejected") {
     throw new Error("Rejected or expired quotes cannot create projects.");
+  }
+  if (!["sent", "negotiating"].includes(quote.status_code) || !quote.delivered_at || !quote.delivery_reference) {
+    throw new Error("Record verified quote delivery before approval.");
+  }
+  if (quote.valid_until && new Date(quote.valid_until).getTime() < Date.now()) {
+    throw new Error("This quote has expired. Create a revision with a new validity period.");
   }
 
   if (quote.project_id) {
@@ -139,6 +147,20 @@ export async function approveQuoteAndCreateProject(input: {
     project_id: project.id,
   });
 
+  const appointmentEnd = input.scheduledEndAt
+    ? input.scheduledEndAt
+    : new Date(new Date(input.scheduledStartAt).getTime() + 60 * 60 * 1000).toISOString();
+  await createAppointment({
+    appointmentTypeCode: "work_execution",
+    projectId: project.id,
+    assignedProfileId: null,
+    scheduledStartAt: input.scheduledStartAt,
+    scheduledEndAt: appointmentEnd,
+    statusCode: "scheduled",
+    notes: `Created from approved ${quote.quote_number}.`,
+    performedByProfileId: input.approvedByProfileId as string,
+  });
+
   await logAuditEvent({
     action: "quotes.approve",
     entityType: "quote",
@@ -164,6 +186,9 @@ export async function approveQuoteAndCreateProject(input: {
       .eq("lead_id", lead.id)
       .is("project_id", null);
   }
+
+  await refreshSecondBrain("quote", quote.id, input.approvedByProfileId);
+  await refreshSecondBrain("project", project.id, input.approvedByProfileId);
 
   return {
     quoteId: quote.id,

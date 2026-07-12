@@ -5,6 +5,7 @@ import { logAuditEvent } from "@/backend/observability/audit";
 import { createContact, createLead } from "@/backend/repositories";
 import { createAdminSupabaseClient } from "@/lib/supabase/admin";
 import { normalizePhone } from "@/lib/utils/phone";
+import { refreshSecondBrain } from "@/backend/services/ai/second-brain";
 
 type ManualLeadInput = {
   customerName: string;
@@ -71,6 +72,8 @@ export async function createManualLead(input: ManualLeadInput) {
     performedByProfileId: input.profileId,
     newValue: { lead_code: lead.lead_code, title: lead.title, source_channel_code: "manual", primary_contact_id: contact.id },
   });
+
+  await refreshSecondBrain("lead", lead.id, input.profileId);
 
   return lead;
 }

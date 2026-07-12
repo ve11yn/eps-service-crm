@@ -51,7 +51,7 @@ export default async function QuotesPage() {
     );
 
   return (
-    <div className="page-stack">
+    <div className="page-stack quote-page">
       <section className="page-header">
         <div>
           <h1>Quotes</h1>

@@ -246,47 +246,65 @@ export type Database = {
         Row: {
           appointment_type_code: string
           assigned_profile_id: string | null
+          cancellation_reason: string | null
           completed_at: string | null
           created_at: string
           created_by_profile_id: string | null
+          customer_confirmation_status: string
+          customer_confirmed_at: string | null
           id: string
           lead_id: string | null
           notes: string | null
           project_id: string | null
+          reschedule_reason: string | null
           scheduled_end_at: string | null
           scheduled_start_at: string
           status_code: string
           updated_at: string
+          worker_confirmation_status: string
+          worker_confirmed_at: string | null
         }
         Insert: {
           appointment_type_code: string
           assigned_profile_id?: string | null
+          cancellation_reason?: string | null
           completed_at?: string | null
           created_at?: string
           created_by_profile_id?: string | null
+          customer_confirmation_status?: string
+          customer_confirmed_at?: string | null
           id?: string
           lead_id?: string | null
           notes?: string | null
           project_id?: string | null
+          reschedule_reason?: string | null
           scheduled_end_at?: string | null
           scheduled_start_at: string
           status_code?: string
           updated_at?: string
+          worker_confirmation_status?: string
+          worker_confirmed_at?: string | null
         }
         Update: {
           appointment_type_code?: string
           assigned_profile_id?: string | null
+          cancellation_reason?: string | null
           completed_at?: string | null
           created_at?: string
           created_by_profile_id?: string | null
+          customer_confirmation_status?: string
+          customer_confirmed_at?: string | null
           id?: string
           lead_id?: string | null
           notes?: string | null
           project_id?: string | null
+          reschedule_reason?: string | null
           scheduled_end_at?: string | null
           scheduled_start_at?: string
           status_code?: string
           updated_at?: string
+          worker_confirmation_status?: string
+          worker_confirmed_at?: string | null
         }
         Relationships: [
           {
@@ -2727,6 +2745,10 @@ export type Database = {
           line_no: number
           notes: string | null
           pricing_item_id: string | null
+          pricing_match_confidence: number | null
+          pricing_match_method: string | null
+          pricing_match_notes: string | null
+          pricing_match_status: string
           quantity: number
           quote_id: string
           source_project_item_id: string | null
@@ -2745,6 +2767,10 @@ export type Database = {
           line_no?: number
           notes?: string | null
           pricing_item_id?: string | null
+          pricing_match_confidence?: number | null
+          pricing_match_method?: string | null
+          pricing_match_notes?: string | null
+          pricing_match_status?: string
           quantity?: number
           quote_id: string
           source_project_item_id?: string | null
@@ -2763,6 +2789,10 @@ export type Database = {
           line_no?: number
           notes?: string | null
           pricing_item_id?: string | null
+          pricing_match_confidence?: number | null
+          pricing_match_method?: string | null
+          pricing_match_notes?: string | null
+          pricing_match_status?: string
           quantity?: number
           quote_id?: string
           source_project_item_id?: string | null
@@ -2831,6 +2861,11 @@ export type Database = {
           created_by_profile_id: string | null
           currency_code: string
           decision_needed_summary: string | null
+          delivered_at: string | null
+          delivered_by_profile_id: string | null
+          delivery_method: string | null
+          delivery_notes: string | null
+          delivery_reference: string | null
           discount_amount: number
           expired_at: string | null
           id: string
@@ -2846,6 +2881,7 @@ export type Database = {
           subtotal_amount: number
           total_amount: number
           updated_at: string
+          valid_until: string | null
           version_number: number
         }
         Insert: {
@@ -2855,6 +2891,11 @@ export type Database = {
           created_by_profile_id?: string | null
           currency_code?: string
           decision_needed_summary?: string | null
+          delivered_at?: string | null
+          delivered_by_profile_id?: string | null
+          delivery_method?: string | null
+          delivery_notes?: string | null
+          delivery_reference?: string | null
           discount_amount?: number
           expired_at?: string | null
           id?: string
@@ -2870,6 +2911,7 @@ export type Database = {
           subtotal_amount?: number
           total_amount?: number
           updated_at?: string
+          valid_until?: string | null
           version_number?: number
         }
         Update: {
@@ -2879,6 +2921,11 @@ export type Database = {
           created_by_profile_id?: string | null
           currency_code?: string
           decision_needed_summary?: string | null
+          delivered_at?: string | null
+          delivered_by_profile_id?: string | null
+          delivery_method?: string | null
+          delivery_notes?: string | null
+          delivery_reference?: string | null
           discount_amount?: number
           expired_at?: string | null
           id?: string
@@ -2894,6 +2941,7 @@ export type Database = {
           subtotal_amount?: number
           total_amount?: number
           updated_at?: string
+          valid_until?: string | null
           version_number?: number
         }
         Relationships: [
@@ -3240,6 +3288,66 @@ export type Database = {
           sort_order?: number
         }
         Relationships: []
+      }
+      second_brain_summaries: {
+        Row: {
+          content: string
+          created_at: string
+          created_by_profile_id: string | null
+          entity_id: string
+          entity_type: string
+          id: string
+          is_current: boolean
+          is_locked: boolean
+          model_name: string | null
+          source_type: string
+          summary_type: string
+          supersedes_id: string | null
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          created_by_profile_id?: string | null
+          entity_id: string
+          entity_type: string
+          id?: string
+          is_current?: boolean
+          is_locked?: boolean
+          model_name?: string | null
+          source_type?: string
+          summary_type: string
+          supersedes_id?: string | null
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          created_by_profile_id?: string | null
+          entity_id?: string
+          entity_type?: string
+          id?: string
+          is_current?: boolean
+          is_locked?: boolean
+          model_name?: string | null
+          source_type?: string
+          summary_type?: string
+          supersedes_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "second_brain_summaries_created_by_profile_id_fkey"
+            columns: ["created_by_profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "second_brain_summaries_supersedes_id_fkey"
+            columns: ["supersedes_id"]
+            isOneToOne: false
+            referencedRelation: "second_brain_summaries"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       whatsapp_connections: {
         Row: {

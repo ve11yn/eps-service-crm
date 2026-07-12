@@ -9,6 +9,8 @@ import { StatusBadge } from "@/frontend/components/dashboard/status-badge";
 import { BackButton } from "@/frontend/components/navigation/back-button";
 import { formatDateTime, formatMoney } from "@/frontend/lib/format";
 import { requireAppSession } from "@/lib/auth/session";
+import { listSecondBrainSummaries } from "@/backend/services/ai/second-brain";
+import { SecondBrainPanel } from "@/frontend/components/dashboard/second-brain-panel";
 
 type LeadDetailPageProps = {
   params: Promise<{
@@ -19,9 +21,10 @@ type LeadDetailPageProps = {
 export default async function LeadDetailPage({ params }: LeadDetailPageProps) {
   await requireAppSession(["owner", "admin"]);
   const { id } = await params;
-  const [lead, quotes] = await Promise.all([
+  const [lead, quotes, secondBrain] = await Promise.all([
     getLeadDetail(id),
     listQuotesByLeadId(id),
+    listSecondBrainSummaries("lead", id),
   ]);
 
   if (!lead) {
@@ -85,6 +88,8 @@ export default async function LeadDetailPage({ params }: LeadDetailPageProps) {
         </dl>
         <LeadActions leadId={lead.id} status={lead.status_code} />
       </section>
+
+      <SecondBrainPanel entityType="lead" entityId={lead.id} summaries={secondBrain} expectedTypes={["lead", "decision_needed"]} />
 
       <section className="panel table-panel">
         <div className="panel-header">

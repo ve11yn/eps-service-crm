@@ -3,6 +3,8 @@ import "server-only";
 import { randomUUID } from "node:crypto";
 import { createProject } from "@/backend/repositories";
 import { getLeadDetail } from "@/backend/services/leads/get-lead-detail";
+import { createAppointment } from "@/backend/services/schedule/appointment-operations";
+import { refreshSecondBrain } from "@/backend/services/ai/second-brain";
 
 function buildProjectCode() {
   return `PROJ-${Date.now()}-${randomUUID().slice(0, 8).toUpperCase()}`;
@@ -30,7 +32,7 @@ export async function confirmSiteVisitProject(input: {
 
   const now = new Date().toISOString();
 
-  return createProject({
+  const project = await createProject({
     project_code: buildProjectCode(),
     title: lead.title ?? "Site visit project",
     source_lead_id: lead.id,
@@ -45,4 +47,16 @@ export async function confirmSiteVisitProject(input: {
     scheduled_start_at: input.scheduledStartAt,
     scheduled_end_at: input.scheduledEndAt ?? null,
   });
+  const endAt = input.scheduledEndAt ?? new Date(new Date(input.scheduledStartAt).getTime() + 60 * 60 * 1000).toISOString();
+  await createAppointment({
+    appointmentTypeCode: "site_visit",
+    projectId: project.id,
+    scheduledStartAt: input.scheduledStartAt,
+    scheduledEndAt: endAt,
+    statusCode: "scheduled",
+    notes: "Site visit confirmed from lead qualification.",
+    performedByProfileId: input.confirmedByProfileId as string,
+  });
+  await refreshSecondBrain("lead", lead.id, input.confirmedByProfileId);
+  return project;
 }

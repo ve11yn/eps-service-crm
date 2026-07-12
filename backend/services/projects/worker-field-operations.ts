@@ -6,6 +6,7 @@ import { CACHE_TAGS } from "@/lib/cache/cache-tags";
 import { invalidateCachedTags } from "@/lib/cache/query-cache";
 import { createAdminSupabaseClient } from "@/lib/supabase/admin";
 import type { AppRole } from "@/lib/auth/roles";
+import { refreshSecondBrain } from "@/backend/services/ai/second-brain";
 
 export type WorkerUpdateType =
   | "on_the_way"
@@ -202,6 +203,8 @@ export async function recordWorkerFieldUpdate(input: {
     },
   });
 
+  await refreshSecondBrain("project", item.project_id, input.profileId);
+
   return fieldUpdate;
 }
 
@@ -250,5 +253,6 @@ export async function resolveFieldUpdate(input: {
     oldValue: existing,
     newValue: data,
   });
+  await refreshSecondBrain("project", input.projectId, input.resolvedByProfileId);
   return data;
 }

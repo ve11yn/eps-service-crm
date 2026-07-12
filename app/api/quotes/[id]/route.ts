@@ -3,6 +3,8 @@ import { routeErrorResponse } from "@/backend/observability/errors";
 import { logAuditEvent } from "@/backend/observability/audit";
 import { getQuoteDetail, updateQuote } from "@/backend/repositories";
 import { requireApiSession } from "@/lib/auth/api";
+import { createQuoteValidUntil } from "@/backend/services/quotes/quote-validity";
+import { refreshSecondBrain } from "@/backend/services/ai/second-brain";
 
 type RouteContext = {
   params: Promise<{
@@ -59,7 +61,12 @@ export async function PATCH(request: Request, context: RouteContext) {
 
   try {
     const { id } = await context.params;
-    const payload = (await request.json()) as { status?: string };
+    const payload = (await request.json()) as {
+      status?: string;
+      deliveryMethod?: "manual" | "email" | "whatsapp" | "other";
+      deliveryReference?: string;
+      deliveryNotes?: string;
+    };
     const nextStatus = payload.status;
 
     if (!nextStatus) {
@@ -114,12 +121,31 @@ export async function PATCH(request: Request, context: RouteContext) {
           { status: 400 },
         );
       }
+      if (!payload.deliveryMethod || !payload.deliveryReference?.trim()) {
+        return NextResponse.json(
+          { success: false, error: "Delivery method and proof/reference are required." },
+          { status: 400 },
+        );
+      }
+      const unpricedIncluded = includedItems.some((item) => Number(item.unit_price) <= 0 || item.pricing_match_status === "needs_review");
+      if (unpricedIncluded) {
+        return NextResponse.json(
+          { success: false, error: "Resolve every included item's price before delivery." },
+          { status: 400 },
+        );
+      }
     }
 
     const now = new Date().toISOString();
     const updatedQuote = await updateQuote(id, {
       status_code: nextStatus,
       sent_at: nextStatus === "sent" ? now : quote.sent_at,
+      delivered_at: nextStatus === "sent" ? now : quote.delivered_at,
+      delivered_by_profile_id: nextStatus === "sent" ? auth.session.profile.id : quote.delivered_by_profile_id,
+      delivery_method: nextStatus === "sent" ? payload.deliveryMethod : quote.delivery_method,
+      delivery_reference: nextStatus === "sent" ? payload.deliveryReference?.trim() : quote.delivery_reference,
+      delivery_notes: nextStatus === "sent" ? payload.deliveryNotes?.trim() || null : quote.delivery_notes,
+      valid_until: quote.valid_until ?? await createQuoteValidUntil(),
       expired_at: nextStatus === "expired_rejected" ? now : quote.expired_at,
       rejected_at: nextStatus === "expired_rejected" ? now : quote.rejected_at,
     });
@@ -130,8 +156,16 @@ export async function PATCH(request: Request, context: RouteContext) {
       entityId: id,
       performedByProfileId: auth.session.profile.id,
       oldValue: { status_code: quote.status_code },
-      newValue: { status_code: nextStatus },
+      newValue: {
+        status_code: nextStatus,
+        ...(nextStatus === "sent" ? {
+          delivered_at: now,
+          delivery_method: payload.deliveryMethod,
+          delivery_reference: payload.deliveryReference?.trim(),
+        } : {}),
+      },
     });
+    await refreshSecondBrain("quote", id, auth.session.profile.id);
 
     return NextResponse.json({
       success: true,
