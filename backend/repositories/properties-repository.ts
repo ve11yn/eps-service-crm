@@ -18,7 +18,7 @@ const getPropertyByIdCached = cachedQuery(
     const { data, error } = await supabase
       .from("properties")
       .select(
-        "id, property_name, address_line_1, address_line_2, unit_no, postal_code, country_code, landmark_notes, access_notes, created_at, updated_at",
+        "id, property_name, address_line_1, address_line_2, unit_no, postal_code, country_code, landmark_notes, access_notes, is_archived, archived_at, created_at, updated_at",
       )
       .eq("id", propertyId)
       .maybeSingle();
@@ -38,7 +38,7 @@ const listPropertiesCached = cachedQuery(
     const { data, error } = await supabase
       .from("properties")
       .select(
-        "id, property_name, address_line_1, address_line_2, unit_no, postal_code, country_code, landmark_notes, access_notes, created_at, updated_at",
+        "id, property_name, address_line_1, address_line_2, unit_no, postal_code, country_code, landmark_notes, access_notes, is_archived, archived_at, created_at, updated_at",
       )
       .order("updated_at", { ascending: false });
 

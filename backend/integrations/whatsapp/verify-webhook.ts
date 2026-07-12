@@ -27,7 +27,8 @@ export function verifyWhatsAppWebhookSignature(
   rawBody: string,
   signatureHeader: string | null,
 ): boolean {
-  const secret = serverEnv.whatsappWebhookSignatureSecret;
+  const secret =
+    serverEnv.whatsappWebhookSignatureSecret ?? serverEnv.metaAppSecret;
 
   if (!secret) {
     return true;

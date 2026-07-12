@@ -20,4 +20,8 @@ export const clientEnv = {
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
     "NEXT_PUBLIC_SUPABASE_ANON_KEY",
   ),
+  metaAppId: process.env.NEXT_PUBLIC_META_APP_ID ?? null,
+  whatsappEmbeddedSignupConfigId:
+    process.env.NEXT_PUBLIC_WHATSAPP_EMBEDDED_SIGNUP_CONFIG_ID ?? null,
+  whatsappApiVersion: process.env.NEXT_PUBLIC_WHATSAPP_API_VERSION ?? "v25.0",
 };

@@ -1,0 +1,1 @@
+import{NextResponse}from"next/server";import{createAdminSupabaseClient}from"@/lib/supabase/admin";export async function GET(){const s=createAdminSupabaseClient();const{error}=await s.from("project_statuses").select("code",{head:true,count:"exact"});return NextResponse.json({status:error?"degraded":"ok",database:!error},{status:error?503:200})}

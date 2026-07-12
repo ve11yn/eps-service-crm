@@ -13,7 +13,7 @@ import {
   ListChecks,
   LogOut,
   ReceiptText,
-  Users,
+  Settings,
 } from "lucide-react";
 import { LogoutButton } from "@/frontend/components/auth/logout-button";
 import type { LucideIcon } from "lucide-react";
@@ -31,7 +31,6 @@ const items: Array<{
   { href: "/quotes", label: "Quotes", icon: ReceiptText, roles: ["owner", "admin"] },
   { href: "/projects", label: "Jobs / Projects", icon: FolderKanban, roles: ["owner", "admin", "coordinator"] },
   { href: "/schedule", label: "Calendar", icon: CalendarDays, roles: ["owner", "admin", "coordinator"] },
-  { href: "/customers", label: "Customers & Properties", icon: Users, roles: ["owner", "admin"] },
   { href: "/finance", label: "Finance", icon: CircleDollarSign, roles: ["owner", "admin"] },
   { href: "/reports", label: "Reports", icon: BarChart3, roles: ["owner"] },
 ];
@@ -42,12 +41,16 @@ const footerItems: Array<{
   icon: LucideIcon;
   roles: AppRole[];
 }> = [
-  { href: "/team", label: "Team", icon: Users, roles: ["owner", "admin", "coordinator"] },
+  { href: "/settings", label: "Configuration", icon: Settings, roles: ["owner", "admin"] },
 ];
 
 function isActive(pathname: string, href: string): boolean {
   if (href === "/") {
     return pathname === "/";
+  }
+
+  if (href === "/settings" && ["/team", "/audit"].some((path) => pathname === path || pathname.startsWith(`${path}/`))) {
+    return true;
   }
 
   return pathname === href || pathname.startsWith(`${href}/`);

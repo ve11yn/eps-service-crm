@@ -9,6 +9,7 @@ import {
   updateQuoteItem,
 } from "@/backend/repositories";
 import { createAdminSupabaseClient } from "@/lib/supabase/admin";
+import { logAuditEvent } from "@/backend/observability/audit";
 
 function buildProjectCode() {
   return `PROJ-${Date.now()}-${randomUUID().slice(0, 8).toUpperCase()}`;
@@ -81,10 +82,18 @@ export async function approveQuoteAndCreateProject(input: {
     throw new Error("Quote must be linked to a lead before approval.");
   }
 
-  const quoteItems = Array.isArray(quote.quote_items) ? quote.quote_items : [];
+  const quoteItems = Array.isArray(quote.quote_items)
+    ? quote.quote_items.filter((item) =>
+        ["proposed", "approved"].includes(item.decision_status),
+      )
+    : [];
 
   if (quoteItems.length === 0) {
-    throw new Error("Quote must contain at least one quote item before approval.");
+    throw new Error("Quote must contain at least one included quote item before approval.");
+  }
+
+  if (quoteItems.some((item) => Number(item.total_price) <= 0)) {
+    throw new Error("Every included quote item must have a price before approval.");
   }
 
   const now = new Date().toISOString();
@@ -128,6 +137,21 @@ export async function approveQuoteAndCreateProject(input: {
 
   await updateQuote(quote.id, {
     project_id: project.id,
+  });
+
+  await logAuditEvent({
+    action: "quotes.approve",
+    entityType: "quote",
+    entityId: quote.id,
+    performedByProfileId: input.approvedByProfileId ?? null,
+    oldValue: { status_code: quote.status_code, project_id: quote.project_id },
+    newValue: { status_code: "approved", project_id: project.id },
+    metadata: {
+      included_item_ids: quoteItems.map((item) => item.id),
+      excluded_item_ids: (Array.isArray(quote.quote_items) ? quote.quote_items : [])
+        .filter((item) => ["rejected", "deferred"].includes(item.decision_status))
+        .map((item) => item.id),
+    },
   });
 
   if (lead.whatsapp_thread_id) {

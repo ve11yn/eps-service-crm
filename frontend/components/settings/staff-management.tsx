@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import { useMemo, useState } from "react";
+import { Plus, X } from "lucide-react";
 
 type StaffAccount = {
   id: string;
@@ -39,6 +40,7 @@ export function StaffManagement({
   const [roleCode, setRoleCode] = useState("field_worker");
   const [status, setStatus] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [editingStaff, setEditingStaff] = useState<StaffEditForm | null>(null);
   const [isUpdating, setIsUpdating] = useState(false);
 
@@ -98,6 +100,7 @@ export function StaffManagement({
       setRoleCode("field_worker");
       setStatus("Staff account created.");
       await reloadStaff();
+      setIsCreateOpen(false);
     } catch (error) {
       setStatus(
         error instanceof Error ? error.message : "Failed to create staff account.",
@@ -166,15 +169,30 @@ export function StaffManagement({
   }
 
   return (
-    <div className="page-stack">
-      <section className="panel">
-        <div className="panel-header">
+    <div className="page-stack team-management">
+      <section className="panel team-accounts-panel">
+        <div className="panel-header panel-header-no-wrap">
           <div>
             <p className="eyebrow">Access</p>
             <h2>Team Accounts</h2>
           </div>
-          <span className="helper-text">{activeStaffCount} active users</span>
+          <div className="inline-actions">
+            <span className="helper-text">{activeStaffCount} active users</span>
+            <button
+              type="button"
+              className="button button-primary"
+              onClick={() => {
+                setStatus(null);
+                setIsCreateOpen(true);
+              }}
+            >
+              <Plus size={17} aria-hidden="true" />
+              Add staff
+            </button>
+          </div>
         </div>
+
+        {status && !isCreateOpen && !editingStaff ? <p className="helper-text">{status}</p> : null}
 
         <div className="table-wrap">
           <table className="data-table">
@@ -221,81 +239,41 @@ export function StaffManagement({
         </div>
       </section>
 
-      <section className="panel">
-        <div className="panel-header">
-          <div>
-            <p className="eyebrow">Create User</p>
-            <h2>Add Staff Member</h2>
-          </div>
+      {isCreateOpen ? (
+        <div
+          className="modal-backdrop"
+          role="presentation"
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget && !isSubmitting) setIsCreateOpen(false);
+          }}
+        >
+          <section className="modal-panel" role="dialog" aria-modal="true" aria-labelledby="staff-create-title">
+            <div className="panel-header">
+              <div>
+                <p className="eyebrow">Create user</p>
+                <h2 id="staff-create-title">Add Staff Member</h2>
+                <p className="helper-text">Create their login and choose what they can access.</p>
+              </div>
+              <button type="button" className="icon-button" onClick={() => setIsCreateOpen(false)} disabled={isSubmitting} aria-label="Close add staff form">
+                <X size={18} aria-hidden="true" />
+              </button>
+            </div>
+
+            <form className="form-grid" onSubmit={handleSubmit}>
+              <label className="field-block"><span className="field-label">Display Name</span><input className="input" value={displayName} onChange={(event) => setDisplayName(event.target.value)} required autoFocus /></label>
+              <label className="field-block"><span className="field-label">Role</span><select className="input input-select" value={roleCode} onChange={(event) => setRoleCode(event.target.value)}><option value="admin">Admin</option><option value="coordinator">Coordinator</option><option value="field_worker">Field Worker</option></select></label>
+              <label className="field-block"><span className="field-label">Username</span><input className="input" autoComplete="username" value={username} onChange={(event) => setUsername(event.target.value)} required /></label>
+              <label className="field-block"><span className="field-label">Email Address</span><input className="input" type="email" autoComplete="email" value={email} onChange={(event) => setEmail(event.target.value)} required /></label>
+              <label className="field-block field-block-wide"><span className="field-label">Temporary Password</span><input className="input" type="password" autoComplete="new-password" value={password} onChange={(event) => setPassword(event.target.value)} required minLength={8} /><span className="helper-text">Use at least 8 characters. The staff member can use it for their first login.</span></label>
+              {status ? <p className="form-error field-block-wide" role="alert">{status}</p> : null}
+              <div className="staff-form-button-row field-block-wide">
+                <button type="button" className="button button-secondary" onClick={() => setIsCreateOpen(false)} disabled={isSubmitting}>Cancel</button>
+                <button type="submit" className="button button-primary" disabled={isSubmitting}>{isSubmitting ? "Creating..." : "Create Staff Account"}</button>
+              </div>
+            </form>
+          </section>
         </div>
-
-        <form className="form-grid" onSubmit={handleSubmit}>
-          <label className="field-block">
-            <span className="field-label">Display Name</span>
-            <input
-              className="input"
-              value={displayName}
-              onChange={(event) => setDisplayName(event.target.value)}
-              required
-            />
-          </label>
-
-          <label className="field-block">
-            <span className="field-label">Role</span>
-            <select
-              className="input input-select"
-              value={roleCode}
-              onChange={(event) => setRoleCode(event.target.value)}
-            >
-              <option value="admin">Admin</option>
-              <option value="coordinator">Coordinator</option>
-              <option value="field_worker">Field Worker</option>
-            </select>
-          </label>
-
-          <label className="field-block">
-            <span className="field-label">Username</span>
-            <input
-              className="input"
-              autoComplete="username"
-              value={username}
-              onChange={(event) => setUsername(event.target.value)}
-              required
-            />
-          </label>
-
-          <label className="field-block">
-            <span className="field-label">Email Address</span>
-            <input
-              className="input"
-              type="email"
-              autoComplete="email"
-              value={email}
-              onChange={(event) => setEmail(event.target.value)}
-              required
-            />
-          </label>
-
-          <label className="field-block field-block-wide">
-            <span className="field-label">Temporary Password</span>
-            <input
-              className="input"
-              type="password"
-              value={password}
-              onChange={(event) => setPassword(event.target.value)}
-              required
-              minLength={8}
-            />
-          </label>
-
-          <div className="field-block field-block-wide">
-            <button type="submit" className="button button-primary" disabled={isSubmitting}>
-              {isSubmitting ? "Creating..." : "Create Staff Account"}
-            </button>
-            {status ? <p className="helper-text">{status}</p> : null}
-          </div>
-        </form>
-      </section>
+      ) : null}
 
       {editingStaff ? (
         <div

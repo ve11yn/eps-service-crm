@@ -4,10 +4,13 @@ import { StatusBadge } from "@/frontend/components/dashboard/status-badge";
 import { formatDate, formatMoney } from "@/frontend/lib/format";
 import { requireAppSession } from "@/lib/auth/session";
 import { createAdminSupabaseClient } from "@/lib/supabase/admin";
+import { CreateInvoice } from "@/frontend/components/finance/create-invoice";
+import { refreshOverdueInvoices } from "@/backend/services/finance/invoice-operations";
 
 async function getFinanceRows() {
   const supabase = createAdminSupabaseClient();
-  const [invoicesResult, paymentsResult] = await Promise.all([
+  await refreshOverdueInvoices();
+  const [invoicesResult, paymentsResult, projectsResult] = await Promise.all([
     supabase
       .from("invoices")
       .select("id, project_id, quote_id, invoice_number, status_code, total_amount, balance_due_amount, issued_at, due_at, paid_at, quickbooks_sync_id, projects:project_id (id, title, project_code)")
@@ -16,14 +19,17 @@ async function getFinanceRows() {
       .from("payments")
       .select("id, project_id, invoice_id, status_code, amount, payment_method, reference_number, reported_at, verified_at, projects:project_id (id, title, project_code)")
       .order("created_at", { ascending: false }),
+    supabase.from("projects").select("id,title").eq("status_code","qa_review").order("created_at",{ascending:false}),
   ]);
 
   if (invoicesResult.error) throw invoicesResult.error;
   if (paymentsResult.error) throw paymentsResult.error;
+  if (projectsResult.error) throw projectsResult.error;
 
   return {
     invoices: invoicesResult.data ?? [],
     payments: paymentsResult.data ?? [],
+    qaProjects: projectsResult.data ?? [],
   };
 }
 
@@ -38,6 +44,7 @@ export default async function FinancePage() {
           <h1>Finance</h1>
         </div>
       </section>
+      <section className="panel"><div className="panel-header"><div><p className="eyebrow">Actions</p><h2>Finance Operations</h2></div><div className="inline-actions"><a className="button button-secondary" href="/api/finance/export">Export CSV</a><a className="button button-secondary" href="/api/finance/export?format=quickbooks">QuickBooks CSV</a></div></div><CreateInvoice projects={finance.qaProjects} /></section>
 
       <section className="panel table-panel">
         <div className="panel-header">
@@ -68,7 +75,7 @@ export default async function FinancePage() {
               return (
                 <Link
                   key={invoice.id}
-                  href={project ? `/projects/${project.id}` : "/finance"}
+                  href={`/finance/invoices/${invoice.id}`}
                   className="review-draft-row"
                 >
                   <div className="review-draft-meta-group">

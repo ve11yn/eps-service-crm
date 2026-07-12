@@ -84,6 +84,10 @@ async function findOrCreateLead(
   const existingLead = await getLatestLeadByThreadId(thread.id);
 
   if (existingLead) {
+    if (message.direction === "outbound") {
+      return existingLead;
+    }
+
     return updateLead(existingLead.id, {
       primary_contact_id: contactId,
       last_activity_at: message.sentAt,
@@ -99,8 +103,9 @@ async function findOrCreateLead(
       `WhatsApp enquiry from ${message.fromName ?? normalizePhone(message.fromPhone)}`,
     primary_contact_id: contactId,
     whatsapp_thread_id: thread.id,
-    summary: message.text ?? null,
-    customer_request: message.text ?? null,
+    summary: message.direction === "inbound" ? (message.text ?? null) : null,
+    customer_request:
+      message.direction === "inbound" ? (message.text ?? null) : null,
     received_at: message.sentAt,
     last_activity_at: message.sentAt,
   });
@@ -142,7 +147,7 @@ export async function ingestWhatsAppEvent(
 
   const savedMessage = await createMessage({
     thread_id: thread.id,
-    direction_code: "inbound",
+    direction_code: message.direction,
     message_type_code: message.messageType === "unknown" ? "text" : message.messageType,
     external_message_id: message.externalMessageId,
     sender_name: message.fromName ?? null,

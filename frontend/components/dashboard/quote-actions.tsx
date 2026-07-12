@@ -88,12 +88,39 @@ export function QuoteActions({
     }
   }
 
+  async function createRevision() {
+    setIsPending(true);
+    setMessage(null);
+    try {
+      const response = await fetch(`/api/quotes/${quoteId}/revisions`, { method: "POST" });
+      const payload = (await response.json()) as { success?: boolean; error?: string; quoteId?: string | null };
+      if (!response.ok || !payload.success || !payload.quoteId) {
+        throw new Error(payload.error ?? "Failed to create quote revision.");
+      }
+      router.push(`/quotes/${payload.quoteId}`);
+      router.refresh();
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : "Failed to create quote revision.");
+    } finally {
+      setIsPending(false);
+    }
+  }
+
   if (projectId) {
-    return null;
+    return (
+      <div className="inline-actions">
+        <a className="button button-secondary" href={`/api/quotes/${quoteId}/pdf`}>
+          Download PDF
+        </a>
+      </div>
+    );
   }
 
   return (
     <div className="inline-actions">
+      <a className="button button-secondary" href={`/api/quotes/${quoteId}/pdf`}>
+        Download PDF
+      </a>
       {status === "draft" ? (
         <button
           type="button"
@@ -101,7 +128,7 @@ export function QuoteActions({
           disabled={isPending}
           onClick={() => updateStatus("sent")}
         >
-          Mark Sent
+          Mark Delivered
         </button>
       ) : null}
       {status === "sent" ? (
@@ -114,17 +141,12 @@ export function QuoteActions({
           Mark Negotiating
         </button>
       ) : null}
-      {status === "negotiating" ? (
-        <button
-          type="button"
-          className="button button-secondary"
-          disabled={isPending}
-          onClick={() => updateStatus("revised")}
-        >
-          Mark Revised
+      {["sent", "negotiating", "revised", "expired_rejected"].includes(status) ? (
+        <button type="button" className="button button-primary" disabled={isPending} onClick={createRevision}>
+          Create Revision
         </button>
       ) : null}
-      {["sent", "negotiating", "revised"].includes(status) ? (
+      {["sent", "negotiating"].includes(status) ? (
         <div className="schedule-create-controls">
           <label className="field-block">
             <span className="field-label">Project Start</span>
@@ -155,7 +177,7 @@ export function QuoteActions({
           </button>
         </div>
       ) : null}
-      {["sent", "negotiating", "revised"].includes(status) ? (
+      {["sent", "negotiating"].includes(status) ? (
         <button
           type="button"
           className="button button-secondary"

@@ -83,7 +83,7 @@ export default async function QuotesPage() {
             {quoteGroups.map(({ key, latestQuote, quotes: groupQuotes }) => (
               <Link
                 key={key}
-                href={latestQuote.lead_id ? `/leads/${latestQuote.lead_id}` : `/quotes/${latestQuote.id}`}
+                href={`/quotes/${latestQuote.id}`}
                 className="workflow-list-row"
               >
                 <div className="workflow-list-main">

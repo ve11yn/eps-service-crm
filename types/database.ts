@@ -12,6 +12,31 @@ export type Database = {
   __InternalSupabase: {
     PostgrestVersion: "14.5"
   }
+  graphql_public: {
+    Tables: {
+      [_ in never]: never
+    }
+    Views: {
+      [_ in never]: never
+    }
+    Functions: {
+      graphql: {
+        Args: {
+          extensions?: Json
+          operationName?: string
+          query?: string
+          variables?: Json
+        }
+        Returns: Json
+      }
+    }
+    Enums: {
+      [_ in never]: never
+    }
+    CompositeTypes: {
+      [_ in never]: never
+    }
+  }
   public: {
     Tables: {
       ai_run_statuses: {
@@ -119,6 +144,44 @@ export type Database = {
           {
             foreignKeyName: "ai_runs_triggered_by_profile_id_fkey"
             columns: ["triggered_by_profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      app_settings: {
+        Row: {
+          category: string
+          description: string | null
+          label: string
+          setting_key: string
+          updated_at: string
+          updated_by_profile_id: string | null
+          value: Json
+        }
+        Insert: {
+          category: string
+          description?: string | null
+          label: string
+          setting_key: string
+          updated_at?: string
+          updated_by_profile_id?: string | null
+          value?: Json
+        }
+        Update: {
+          category?: string
+          description?: string | null
+          label?: string
+          setting_key?: string
+          updated_at?: string
+          updated_by_profile_id?: string | null
+          value?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "app_settings_updated_by_profile_id_fkey"
+            columns: ["updated_by_profile_id"]
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
@@ -343,36 +406,53 @@ export type Database = {
       }
       contacts: {
         Row: {
+          archived_at: string | null
           created_at: string
           email: string | null
           full_name: string
           id: string
+          is_archived: boolean
+          merged_into_contact_id: string | null
           notes: string | null
           primary_phone: string | null
           updated_at: string
           whatsapp_number: string | null
         }
         Insert: {
+          archived_at?: string | null
           created_at?: string
           email?: string | null
           full_name: string
           id?: string
+          is_archived?: boolean
+          merged_into_contact_id?: string | null
           notes?: string | null
           primary_phone?: string | null
           updated_at?: string
           whatsapp_number?: string | null
         }
         Update: {
+          archived_at?: string | null
           created_at?: string
           email?: string | null
           full_name?: string
           id?: string
+          is_archived?: boolean
+          merged_into_contact_id?: string | null
           notes?: string | null
           primary_phone?: string | null
           updated_at?: string
           whatsapp_number?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "contacts_merged_into_contact_id_fkey"
+            columns: ["merged_into_contact_id"]
+            isOneToOne: false
+            referencedRelation: "contacts"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       document_types: {
         Row: {
@@ -528,6 +608,69 @@ export type Database = {
           },
         ]
       }
+      invoice_items: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          invoice_id: string
+          line_no: number
+          notes: string | null
+          project_item_id: string | null
+          quantity: number
+          title: string
+          total_price: number
+          unit_label: string | null
+          unit_price: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          invoice_id: string
+          line_no?: number
+          notes?: string | null
+          project_item_id?: string | null
+          quantity?: number
+          title: string
+          total_price?: number
+          unit_label?: string | null
+          unit_price?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          invoice_id?: string
+          line_no?: number
+          notes?: string | null
+          project_item_id?: string | null
+          quantity?: number
+          title?: string
+          total_price?: number
+          unit_label?: string | null
+          unit_price?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invoice_items_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
+            referencedRelation: "invoices"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invoice_items_project_item_id_fkey"
+            columns: ["project_item_id"]
+            isOneToOne: false
+            referencedRelation: "project_items"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       invoice_statuses: {
         Row: {
           code: string
@@ -562,18 +705,21 @@ export type Database = {
           created_at: string
           created_by_profile_id: string | null
           currency_code: string
+          customer_notes: string | null
           due_at: string | null
           id: string
           invoice_number: string
           issued_at: string | null
           notes: string | null
           paid_at: string | null
+          payment_terms_days: number
           project_id: string
           quickbooks_sync_id: string | null
           quote_id: string | null
           status_code: string
           subtotal_amount: number
           tax_amount: number
+          tax_rate: number
           total_amount: number
           updated_at: string
         }
@@ -583,18 +729,21 @@ export type Database = {
           created_at?: string
           created_by_profile_id?: string | null
           currency_code?: string
+          customer_notes?: string | null
           due_at?: string | null
           id?: string
           invoice_number: string
           issued_at?: string | null
           notes?: string | null
           paid_at?: string | null
+          payment_terms_days?: number
           project_id: string
           quickbooks_sync_id?: string | null
           quote_id?: string | null
           status_code?: string
           subtotal_amount?: number
           tax_amount?: number
+          tax_rate?: number
           total_amount?: number
           updated_at?: string
         }
@@ -604,18 +753,21 @@ export type Database = {
           created_at?: string
           created_by_profile_id?: string | null
           currency_code?: string
+          customer_notes?: string | null
           due_at?: string | null
           id?: string
           invoice_number?: string
           issued_at?: string | null
           notes?: string | null
           paid_at?: string | null
+          payment_terms_days?: number
           project_id?: string
           quickbooks_sync_id?: string | null
           quote_id?: string | null
           status_code?: string
           subtotal_amount?: number
           tax_amount?: number
+          tax_rate?: number
           total_amount?: number
           updated_at?: string
         }
@@ -798,9 +950,11 @@ export type Database = {
           assigned_to_profile_id: string | null
           created_at: string
           customer_request: string | null
+          decision_needed_summary: string | null
           id: string
           last_activity_at: string | null
           lead_code: string
+          lead_summary: string | null
           lost_reason: string | null
           primary_contact_id: string | null
           primary_property_id: string | null
@@ -819,9 +973,11 @@ export type Database = {
           assigned_to_profile_id?: string | null
           created_at?: string
           customer_request?: string | null
+          decision_needed_summary?: string | null
           id?: string
           last_activity_at?: string | null
           lead_code: string
+          lead_summary?: string | null
           lost_reason?: string | null
           primary_contact_id?: string | null
           primary_property_id?: string | null
@@ -840,9 +996,11 @@ export type Database = {
           assigned_to_profile_id?: string | null
           created_at?: string
           customer_request?: string | null
+          decision_needed_summary?: string | null
           id?: string
           last_activity_at?: string | null
           lead_code?: string
+          lead_summary?: string | null
           lost_reason?: string | null
           primary_contact_id?: string | null
           primary_property_id?: string | null
@@ -1112,6 +1270,227 @@ export type Database = {
           },
         ]
       }
+      notion_migration_attachments: {
+        Row: {
+          created_at: string
+          file_size: number | null
+          id: string
+          mime_type: string | null
+          original_file_name: string
+          run_id: string
+          storage_bucket: string
+          storage_path: string
+          target_entity_id: string | null
+          target_entity_type: string
+          uploaded_by_profile_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          file_size?: number | null
+          id?: string
+          mime_type?: string | null
+          original_file_name: string
+          run_id: string
+          storage_bucket?: string
+          storage_path: string
+          target_entity_id?: string | null
+          target_entity_type: string
+          uploaded_by_profile_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          file_size?: number | null
+          id?: string
+          mime_type?: string | null
+          original_file_name?: string
+          run_id?: string
+          storage_bucket?: string
+          storage_path?: string
+          target_entity_id?: string | null
+          target_entity_type?: string
+          uploaded_by_profile_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notion_migration_attachments_run_id_fkey"
+            columns: ["run_id"]
+            isOneToOne: false
+            referencedRelation: "notion_migration_runs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "notion_migration_attachments_uploaded_by_profile_id_fkey"
+            columns: ["uploaded_by_profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      notion_migration_rows: {
+        Row: {
+          created_at: string
+          duplicate_target_id: string | null
+          entity_type: string
+          id: string
+          resolved_at: string | null
+          resolved_by_profile_id: string | null
+          run_id: string
+          source_data: Json
+          source_id: string | null
+          source_row_number: number | null
+          status: string
+          target_id: string | null
+          validation_errors: Json
+        }
+        Insert: {
+          created_at?: string
+          duplicate_target_id?: string | null
+          entity_type: string
+          id?: string
+          resolved_at?: string | null
+          resolved_by_profile_id?: string | null
+          run_id: string
+          source_data?: Json
+          source_id?: string | null
+          source_row_number?: number | null
+          status: string
+          target_id?: string | null
+          validation_errors?: Json
+        }
+        Update: {
+          created_at?: string
+          duplicate_target_id?: string | null
+          entity_type?: string
+          id?: string
+          resolved_at?: string | null
+          resolved_by_profile_id?: string | null
+          run_id?: string
+          source_data?: Json
+          source_id?: string | null
+          source_row_number?: number | null
+          status?: string
+          target_id?: string | null
+          validation_errors?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notion_migration_rows_resolved_by_profile_id_fkey"
+            columns: ["resolved_by_profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "notion_migration_rows_run_id_fkey"
+            columns: ["run_id"]
+            isOneToOne: false
+            referencedRelation: "notion_migration_runs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      notion_migration_runs: {
+        Row: {
+          created_at: string
+          created_by_profile_id: string | null
+          id: string
+          mapping_config: Json
+          notion_shutdown_approved_at: string | null
+          notion_shutdown_approved_by_name: string | null
+          parallel_ends_at: string | null
+          parallel_started_at: string | null
+          signoff_notes: string | null
+          source_export_name: string
+          status: string
+          updated_at: string
+          validation_report: Json
+        }
+        Insert: {
+          created_at?: string
+          created_by_profile_id?: string | null
+          id?: string
+          mapping_config?: Json
+          notion_shutdown_approved_at?: string | null
+          notion_shutdown_approved_by_name?: string | null
+          parallel_ends_at?: string | null
+          parallel_started_at?: string | null
+          signoff_notes?: string | null
+          source_export_name: string
+          status?: string
+          updated_at?: string
+          validation_report?: Json
+        }
+        Update: {
+          created_at?: string
+          created_by_profile_id?: string | null
+          id?: string
+          mapping_config?: Json
+          notion_shutdown_approved_at?: string | null
+          notion_shutdown_approved_by_name?: string | null
+          parallel_ends_at?: string | null
+          parallel_started_at?: string | null
+          signoff_notes?: string | null
+          source_export_name?: string
+          status?: string
+          updated_at?: string
+          validation_report?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notion_migration_runs_created_by_profile_id_fkey"
+            columns: ["created_by_profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      notion_parity_checks: {
+        Row: {
+          check_code: string
+          is_complete: boolean
+          label: string
+          notes: string | null
+          run_id: string
+          verified_at: string | null
+          verified_by_profile_id: string | null
+        }
+        Insert: {
+          check_code: string
+          is_complete?: boolean
+          label: string
+          notes?: string | null
+          run_id: string
+          verified_at?: string | null
+          verified_by_profile_id?: string | null
+        }
+        Update: {
+          check_code?: string
+          is_complete?: boolean
+          label?: string
+          notes?: string | null
+          run_id?: string
+          verified_at?: string | null
+          verified_by_profile_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notion_parity_checks_run_id_fkey"
+            columns: ["run_id"]
+            isOneToOne: false
+            referencedRelation: "notion_migration_runs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "notion_parity_checks_verified_by_profile_id_fkey"
+            columns: ["verified_by_profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       payment_statuses: {
         Row: {
           code: string
@@ -1367,12 +1746,12 @@ export type Database = {
       }
       profiles: {
         Row: {
+          availability_note: string | null
+          availability_status: string
           avatar_url: string | null
           created_at: string
           display_name: string
           email: string | null
-          availability_note: string | null
-          availability_status: string
           id: string
           is_active: boolean
           phone: string | null
@@ -1381,12 +1760,12 @@ export type Database = {
           username: string | null
         }
         Insert: {
+          availability_note?: string | null
+          availability_status?: string
           avatar_url?: string | null
           created_at?: string
           display_name: string
           email?: string | null
-          availability_note?: string | null
-          availability_status?: string
           id: string
           is_active?: boolean
           phone?: string | null
@@ -1395,12 +1774,12 @@ export type Database = {
           username?: string | null
         }
         Update: {
+          availability_note?: string | null
+          availability_status?: string
           avatar_url?: string | null
           created_at?: string
           display_name?: string
           email?: string | null
-          availability_note?: string | null
-          availability_status?: string
           id?: string
           is_active?: boolean
           phone?: string | null
@@ -1467,13 +1846,147 @@ export type Database = {
           },
         ]
       }
+      project_field_updates: {
+        Row: {
+          created_at: string
+          id: string
+          issue_type: string | null
+          notes: string | null
+          project_id: string
+          project_item_id: string | null
+          requires_attention: boolean
+          resolution_notes: string | null
+          resolved_at: string | null
+          resolved_by_profile_id: string | null
+          update_type: string
+          worker_profile_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          issue_type?: string | null
+          notes?: string | null
+          project_id: string
+          project_item_id?: string | null
+          requires_attention?: boolean
+          resolution_notes?: string | null
+          resolved_at?: string | null
+          resolved_by_profile_id?: string | null
+          update_type: string
+          worker_profile_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          issue_type?: string | null
+          notes?: string | null
+          project_id?: string
+          project_item_id?: string | null
+          requires_attention?: boolean
+          resolution_notes?: string | null
+          resolved_at?: string | null
+          resolved_by_profile_id?: string | null
+          update_type?: string
+          worker_profile_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_field_updates_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "project_field_updates_project_item_id_fkey"
+            columns: ["project_item_id"]
+            isOneToOne: false
+            referencedRelation: "project_items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "project_field_updates_resolved_by_profile_id_fkey"
+            columns: ["resolved_by_profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "project_field_updates_worker_profile_id_fkey"
+            columns: ["worker_profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      project_item_events: {
+        Row: {
+          created_at: string
+          created_by_profile_id: string | null
+          event_type: string
+          id: string
+          new_value: Json | null
+          old_value: Json | null
+          project_id: string
+          project_item_id: string
+          reason: string | null
+        }
+        Insert: {
+          created_at?: string
+          created_by_profile_id?: string | null
+          event_type: string
+          id?: string
+          new_value?: Json | null
+          old_value?: Json | null
+          project_id: string
+          project_item_id: string
+          reason?: string | null
+        }
+        Update: {
+          created_at?: string
+          created_by_profile_id?: string | null
+          event_type?: string
+          id?: string
+          new_value?: Json | null
+          old_value?: Json | null
+          project_id?: string
+          project_item_id?: string
+          reason?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_item_events_created_by_profile_id_fkey"
+            columns: ["created_by_profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "project_item_events_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "project_item_events_project_item_id_fkey"
+            columns: ["project_item_id"]
+            isOneToOne: false
+            referencedRelation: "project_items"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       project_items: {
         Row: {
           action_summary: string | null
           actual_cost: number
+          add_on_status: string
           area_name: string | null
           assigned_profile_id: string | null
           before_after_required: boolean
+          checklist_requirements: string | null
           completed_at: string | null
           created_at: string
           customer_note: string | null
@@ -1487,6 +2000,8 @@ export type Database = {
           is_pi: boolean
           item_group: string | null
           item_type: string | null
+          labour_cost: number
+          material_cost: number
           priority_code: string
           project_id: string
           quoted_amount: number
@@ -1501,9 +2016,11 @@ export type Database = {
         Insert: {
           action_summary?: string | null
           actual_cost?: number
+          add_on_status?: string
           area_name?: string | null
           assigned_profile_id?: string | null
           before_after_required?: boolean
+          checklist_requirements?: string | null
           completed_at?: string | null
           created_at?: string
           customer_note?: string | null
@@ -1517,6 +2034,8 @@ export type Database = {
           is_pi?: boolean
           item_group?: string | null
           item_type?: string | null
+          labour_cost?: number
+          material_cost?: number
           priority_code?: string
           project_id: string
           quoted_amount?: number
@@ -1531,9 +2050,11 @@ export type Database = {
         Update: {
           action_summary?: string | null
           actual_cost?: number
+          add_on_status?: string
           area_name?: string | null
           assigned_profile_id?: string | null
           before_after_required?: boolean
+          checklist_requirements?: string | null
           completed_at?: string | null
           created_at?: string
           customer_note?: string | null
@@ -1547,6 +2068,8 @@ export type Database = {
           is_pi?: boolean
           item_group?: string | null
           item_type?: string | null
+          labour_cost?: number
+          material_cost?: number
           priority_code?: string
           project_id?: string
           quoted_amount?: number
@@ -1622,6 +2145,80 @@ export type Database = {
           },
         ]
       }
+      project_scope_changes: {
+        Row: {
+          amount_delta: number
+          change_type: string
+          created_at: string
+          created_by_profile_id: string | null
+          decided_at: string | null
+          decided_by_profile_id: string | null
+          description: string
+          id: string
+          project_id: string
+          project_item_id: string | null
+          requested_by: string | null
+          status: string
+        }
+        Insert: {
+          amount_delta?: number
+          change_type: string
+          created_at?: string
+          created_by_profile_id?: string | null
+          decided_at?: string | null
+          decided_by_profile_id?: string | null
+          description: string
+          id?: string
+          project_id: string
+          project_item_id?: string | null
+          requested_by?: string | null
+          status?: string
+        }
+        Update: {
+          amount_delta?: number
+          change_type?: string
+          created_at?: string
+          created_by_profile_id?: string | null
+          decided_at?: string | null
+          decided_by_profile_id?: string | null
+          description?: string
+          id?: string
+          project_id?: string
+          project_item_id?: string | null
+          requested_by?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_scope_changes_created_by_profile_id_fkey"
+            columns: ["created_by_profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "project_scope_changes_decided_by_profile_id_fkey"
+            columns: ["decided_by_profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "project_scope_changes_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "project_scope_changes_project_item_id_fkey"
+            columns: ["project_item_id"]
+            isOneToOne: false
+            referencedRelation: "project_items"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       project_statuses: {
         Row: {
           code: string
@@ -1649,11 +2246,99 @@ export type Database = {
         }
         Relationships: []
       }
+      project_team_members: {
+        Row: {
+          created_at: string
+          is_lead: boolean
+          profile_id: string
+          project_id: string
+          team_role: string
+        }
+        Insert: {
+          created_at?: string
+          is_lead?: boolean
+          profile_id: string
+          project_id: string
+          team_role?: string
+        }
+        Update: {
+          created_at?: string
+          is_lead?: boolean
+          profile_id?: string
+          project_id?: string
+          team_role?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_team_members_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "project_team_members_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      project_timeline_events: {
+        Row: {
+          created_at: string
+          created_by_profile_id: string | null
+          description: string | null
+          event_type: string
+          id: string
+          project_id: string
+          title: string
+        }
+        Insert: {
+          created_at?: string
+          created_by_profile_id?: string | null
+          description?: string | null
+          event_type: string
+          id?: string
+          project_id: string
+          title: string
+        }
+        Update: {
+          created_at?: string
+          created_by_profile_id?: string | null
+          description?: string | null
+          event_type?: string
+          id?: string
+          project_id?: string
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_timeline_events_created_by_profile_id_fkey"
+            columns: ["created_by_profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "project_timeline_events_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       projects: {
         Row: {
           completed_at: string | null
+          completion_summary: string | null
           coordinator_profile_id: string | null
           created_at: string
+          customer_signed_at: string | null
+          customer_signed_by_name: string | null
+          customer_signoff_status: string
           enquiry_at: string | null
           handover_at: string | null
           id: string
@@ -1663,8 +2348,13 @@ export type Database = {
           primary_contact_id: string | null
           primary_property_id: string | null
           project_code: string
+          qa_notes: string | null
+          qa_reviewed_at: string | null
+          qa_reviewed_by_profile_id: string | null
+          qa_status: string
           quickbooks_customer_id: string | null
           remarks: string | null
+          review_request_generated_at: string | null
           scheduled_end_at: string | null
           scheduled_start_at: string | null
           scope_summary: string | null
@@ -1674,12 +2364,18 @@ export type Database = {
           title: string
           updated_at: string
           warranty_expires_at: string | null
+          warranty_starts_at: string | null
           whatsapp_thread_id: string | null
+          worker_update_summary: string | null
         }
         Insert: {
           completed_at?: string | null
+          completion_summary?: string | null
           coordinator_profile_id?: string | null
           created_at?: string
+          customer_signed_at?: string | null
+          customer_signed_by_name?: string | null
+          customer_signoff_status?: string
           enquiry_at?: string | null
           handover_at?: string | null
           id?: string
@@ -1689,8 +2385,13 @@ export type Database = {
           primary_contact_id?: string | null
           primary_property_id?: string | null
           project_code: string
+          qa_notes?: string | null
+          qa_reviewed_at?: string | null
+          qa_reviewed_by_profile_id?: string | null
+          qa_status?: string
           quickbooks_customer_id?: string | null
           remarks?: string | null
+          review_request_generated_at?: string | null
           scheduled_end_at?: string | null
           scheduled_start_at?: string | null
           scope_summary?: string | null
@@ -1700,12 +2401,18 @@ export type Database = {
           title: string
           updated_at?: string
           warranty_expires_at?: string | null
+          warranty_starts_at?: string | null
           whatsapp_thread_id?: string | null
+          worker_update_summary?: string | null
         }
         Update: {
           completed_at?: string | null
+          completion_summary?: string | null
           coordinator_profile_id?: string | null
           created_at?: string
+          customer_signed_at?: string | null
+          customer_signed_by_name?: string | null
+          customer_signoff_status?: string
           enquiry_at?: string | null
           handover_at?: string | null
           id?: string
@@ -1715,8 +2422,13 @@ export type Database = {
           primary_contact_id?: string | null
           primary_property_id?: string | null
           project_code?: string
+          qa_notes?: string | null
+          qa_reviewed_at?: string | null
+          qa_reviewed_by_profile_id?: string | null
+          qa_status?: string
           quickbooks_customer_id?: string | null
           remarks?: string | null
+          review_request_generated_at?: string | null
           scheduled_end_at?: string | null
           scheduled_start_at?: string | null
           scope_summary?: string | null
@@ -1726,7 +2438,9 @@ export type Database = {
           title?: string
           updated_at?: string
           warranty_expires_at?: string | null
+          warranty_starts_at?: string | null
           whatsapp_thread_id?: string | null
+          worker_update_summary?: string | null
         }
         Relationships: [
           {
@@ -1748,6 +2462,13 @@ export type Database = {
             columns: ["primary_property_id"]
             isOneToOne: false
             referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "projects_qa_reviewed_by_profile_id_fkey"
+            columns: ["qa_reviewed_by_profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
           {
@@ -1785,9 +2506,11 @@ export type Database = {
           access_notes: string | null
           address_line_1: string
           address_line_2: string | null
+          archived_at: string | null
           country_code: string
           created_at: string
           id: string
+          is_archived: boolean
           landmark_notes: string | null
           postal_code: string | null
           property_name: string | null
@@ -1798,9 +2521,11 @@ export type Database = {
           access_notes?: string | null
           address_line_1: string
           address_line_2?: string | null
+          archived_at?: string | null
           country_code?: string
           created_at?: string
           id?: string
+          is_archived?: boolean
           landmark_notes?: string | null
           postal_code?: string | null
           property_name?: string | null
@@ -1811,9 +2536,11 @@ export type Database = {
           access_notes?: string | null
           address_line_1?: string
           address_line_2?: string | null
+          archived_at?: string | null
           country_code?: string
           created_at?: string
           id?: string
+          is_archived?: boolean
           landmark_notes?: string | null
           postal_code?: string | null
           property_name?: string | null
@@ -1821,6 +2548,58 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      property_contacts: {
+        Row: {
+          contact_id: string
+          created_at: string
+          is_primary: boolean
+          notes: string | null
+          property_id: string
+          role_code: string
+          updated_at: string
+        }
+        Insert: {
+          contact_id: string
+          created_at?: string
+          is_primary?: boolean
+          notes?: string | null
+          property_id: string
+          role_code: string
+          updated_at?: string
+        }
+        Update: {
+          contact_id?: string
+          created_at?: string
+          is_primary?: boolean
+          notes?: string | null
+          property_id?: string
+          role_code?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "property_contacts_contact_id_fkey"
+            columns: ["contact_id"]
+            isOneToOne: false
+            referencedRelation: "contacts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "property_contacts_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "property_contacts_role_code_fkey"
+            columns: ["role_code"]
+            isOneToOne: false
+            referencedRelation: "contact_roles"
+            referencedColumns: ["code"]
+          },
+        ]
       }
       purchase_statuses: {
         Row: {
@@ -1941,10 +2720,13 @@ export type Database = {
       quote_items: {
         Row: {
           created_at: string
+          decision_notes: string | null
+          decision_status: string
           description: string | null
           id: string
           line_no: number
           notes: string | null
+          pricing_item_id: string | null
           quantity: number
           quote_id: string
           source_project_item_id: string | null
@@ -1956,10 +2738,13 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          decision_notes?: string | null
+          decision_status?: string
           description?: string | null
           id?: string
           line_no?: number
           notes?: string | null
+          pricing_item_id?: string | null
           quantity?: number
           quote_id: string
           source_project_item_id?: string | null
@@ -1971,10 +2756,13 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          decision_notes?: string | null
+          decision_status?: string
           description?: string | null
           id?: string
           line_no?: number
           notes?: string | null
+          pricing_item_id?: string | null
           quantity?: number
           quote_id?: string
           source_project_item_id?: string | null
@@ -1985,6 +2773,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "quote_items_pricing_item_id_fkey"
+            columns: ["pricing_item_id"]
+            isOneToOne: false
+            referencedRelation: "pricing_items"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "quote_items_quote_id_fkey"
             columns: ["quote_id"]
@@ -2031,17 +2826,21 @@ export type Database = {
       quotes: {
         Row: {
           approved_at: string | null
+          approved_scope_summary: string | null
           created_at: string
           created_by_profile_id: string | null
           currency_code: string
+          decision_needed_summary: string | null
           discount_amount: number
           expired_at: string | null
           id: string
           lead_id: string | null
+          negotiation_summary: string | null
           notes: string | null
           project_id: string | null
           quote_number: string
           rejected_at: string | null
+          revision_of_quote_id: string | null
           sent_at: string | null
           status_code: string
           subtotal_amount: number
@@ -2051,17 +2850,21 @@ export type Database = {
         }
         Insert: {
           approved_at?: string | null
+          approved_scope_summary?: string | null
           created_at?: string
           created_by_profile_id?: string | null
           currency_code?: string
+          decision_needed_summary?: string | null
           discount_amount?: number
           expired_at?: string | null
           id?: string
           lead_id?: string | null
+          negotiation_summary?: string | null
           notes?: string | null
           project_id?: string | null
           quote_number: string
           rejected_at?: string | null
+          revision_of_quote_id?: string | null
           sent_at?: string | null
           status_code?: string
           subtotal_amount?: number
@@ -2071,17 +2874,21 @@ export type Database = {
         }
         Update: {
           approved_at?: string | null
+          approved_scope_summary?: string | null
           created_at?: string
           created_by_profile_id?: string | null
           currency_code?: string
+          decision_needed_summary?: string | null
           discount_amount?: number
           expired_at?: string | null
           id?: string
           lead_id?: string | null
+          negotiation_summary?: string | null
           notes?: string | null
           project_id?: string | null
           quote_number?: string
           rejected_at?: string | null
+          revision_of_quote_id?: string | null
           sent_at?: string | null
           status_code?: string
           subtotal_amount?: number
@@ -2109,6 +2916,13 @@ export type Database = {
             columns: ["project_id"]
             isOneToOne: false
             referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "quotes_revision_of_quote_id_fkey"
+            columns: ["revision_of_quote_id"]
+            isOneToOne: false
+            referencedRelation: "quotes"
             referencedColumns: ["id"]
           },
           {
@@ -2233,6 +3047,53 @@ export type Database = {
           },
         ]
       }
+      service_photo_requirements: {
+        Row: {
+          instructions: string | null
+          minimum_customer_photos: number
+          require_after: boolean
+          require_before: boolean
+          require_customer_photo: boolean
+          require_during: boolean
+          service_key: string
+          service_label: string
+          updated_at: string
+          updated_by_profile_id: string | null
+        }
+        Insert: {
+          instructions?: string | null
+          minimum_customer_photos?: number
+          require_after?: boolean
+          require_before?: boolean
+          require_customer_photo?: boolean
+          require_during?: boolean
+          service_key: string
+          service_label: string
+          updated_at?: string
+          updated_by_profile_id?: string | null
+        }
+        Update: {
+          instructions?: string | null
+          minimum_customer_photos?: number
+          require_after?: boolean
+          require_before?: boolean
+          require_customer_photo?: boolean
+          require_during?: boolean
+          service_key?: string
+          service_label?: string
+          updated_at?: string
+          updated_by_profile_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "service_photo_requirements_updated_by_profile_id_fkey"
+            columns: ["updated_by_profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       source_channels: {
         Row: {
           code: string
@@ -2296,6 +3157,63 @@ export type Database = {
         }
         Relationships: []
       }
+      user_acceptance_records: {
+        Row: {
+          accepted_at: string | null
+          accepted_by_profile_id: string | null
+          created_at: string
+          id: string
+          notes: string | null
+          outcome: string
+          run_id: string | null
+          scenario_code: string
+          scenario_title: string
+          tester_name: string | null
+          updated_at: string
+        }
+        Insert: {
+          accepted_at?: string | null
+          accepted_by_profile_id?: string | null
+          created_at?: string
+          id?: string
+          notes?: string | null
+          outcome: string
+          run_id?: string | null
+          scenario_code: string
+          scenario_title: string
+          tester_name?: string | null
+          updated_at?: string
+        }
+        Update: {
+          accepted_at?: string | null
+          accepted_by_profile_id?: string | null
+          created_at?: string
+          id?: string
+          notes?: string | null
+          outcome?: string
+          run_id?: string | null
+          scenario_code?: string
+          scenario_title?: string
+          tester_name?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_acceptance_records_accepted_by_profile_id_fkey"
+            columns: ["accepted_by_profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_acceptance_records_run_id_fkey"
+            columns: ["run_id"]
+            isOneToOne: false
+            referencedRelation: "notion_migration_runs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           code: string
@@ -2322,6 +3240,77 @@ export type Database = {
           sort_order?: number
         }
         Relationships: []
+      }
+      whatsapp_connections: {
+        Row: {
+          access_token_ciphertext: string
+          business_id: string | null
+          contacts_sync_requested_at: string | null
+          created_at: string
+          created_by_profile_id: string | null
+          display_phone_number: string | null
+          history_sync_requested_at: string | null
+          id: string
+          is_active: boolean
+          last_error: string | null
+          onboarding_type: string
+          phone_number_id: string
+          registered_at: string | null
+          status: string
+          subscribed_at: string | null
+          updated_at: string
+          verified_name: string | null
+          waba_id: string
+        }
+        Insert: {
+          access_token_ciphertext: string
+          business_id?: string | null
+          contacts_sync_requested_at?: string | null
+          created_at?: string
+          created_by_profile_id?: string | null
+          display_phone_number?: string | null
+          history_sync_requested_at?: string | null
+          id?: string
+          is_active?: boolean
+          last_error?: string | null
+          onboarding_type?: string
+          phone_number_id: string
+          registered_at?: string | null
+          status?: string
+          subscribed_at?: string | null
+          updated_at?: string
+          verified_name?: string | null
+          waba_id: string
+        }
+        Update: {
+          access_token_ciphertext?: string
+          business_id?: string | null
+          contacts_sync_requested_at?: string | null
+          created_at?: string
+          created_by_profile_id?: string | null
+          display_phone_number?: string | null
+          history_sync_requested_at?: string | null
+          id?: string
+          is_active?: boolean
+          last_error?: string | null
+          onboarding_type?: string
+          phone_number_id?: string
+          registered_at?: string | null
+          status?: string
+          subscribed_at?: string | null
+          updated_at?: string
+          verified_name?: string | null
+          waba_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "whatsapp_connections_created_by_profile_id_fkey"
+            columns: ["created_by_profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       whatsapp_threads: {
         Row: {
@@ -2414,22 +3403,105 @@ export type Database = {
     Functions: {
       approve_review_draft_atomic: {
         Args: {
-          p_create_project?: boolean | null
+          p_create_project?: boolean
           p_extraction: Json
           p_review_draft_id: string
-          p_reviewed_by_profile_id?: string | null
+          p_reviewed_by_profile_id: string
         }
         Returns: {
-          contact_id: string | null
-          lead_id: string | null
-          project_id: string | null
-          property_id: string | null
-          review_draft_id: string | null
-          status: string | null
+          contact_id: string
+          lead_id: string
+          project_id: string
+          property_id: string
+          review_draft_id: string
+          status: string
         }[]
       }
       current_user_role: { Args: never; Returns: string }
       is_owner_or_admin: { Args: never; Returns: boolean }
+      merge_contacts_atomic: {
+        Args: { p_source_id: string; p_target_id: string }
+        Returns: string
+      }
+      save_invoice_draft_atomic: {
+        Args: {
+          p_customer_notes: string
+          p_due_at: string
+          p_invoice_id: string
+          p_items: Json
+          p_notes: string
+          p_payment_terms_days: number
+          p_tax_rate: number
+        }
+        Returns: {
+          balance_due_amount: number
+          cancelled_at: string | null
+          created_at: string
+          created_by_profile_id: string | null
+          currency_code: string
+          customer_notes: string | null
+          due_at: string | null
+          id: string
+          invoice_number: string
+          issued_at: string | null
+          notes: string | null
+          paid_at: string | null
+          payment_terms_days: number
+          project_id: string
+          quickbooks_sync_id: string | null
+          quote_id: string | null
+          status_code: string
+          subtotal_amount: number
+          tax_amount: number
+          tax_rate: number
+          total_amount: number
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "invoices"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      save_quote_draft_atomic: {
+        Args: {
+          p_discount_amount: number
+          p_items: Json
+          p_notes: string
+          p_quote_id: string
+        }
+        Returns: {
+          approved_at: string | null
+          approved_scope_summary: string | null
+          created_at: string
+          created_by_profile_id: string | null
+          currency_code: string
+          decision_needed_summary: string | null
+          discount_amount: number
+          expired_at: string | null
+          id: string
+          lead_id: string | null
+          negotiation_summary: string | null
+          notes: string | null
+          project_id: string | null
+          quote_number: string
+          rejected_at: string | null
+          revision_of_quote_id: string | null
+          sent_at: string | null
+          status_code: string
+          subtotal_amount: number
+          total_amount: number
+          updated_at: string
+          version_number: number
+        }
+        SetofOptions: {
+          from: "*"
+          to: "quotes"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
     }
     Enums: {
       [_ in never]: never
@@ -2558,6 +3630,9 @@ export type CompositeTypes<
     : never
 
 export const Constants = {
+  graphql_public: {
+    Enums: {},
+  },
   public: {
     Enums: {},
   },

@@ -183,10 +183,13 @@ export async function getSettingsOverview() {
     },
     whatsapp: {
       configured:
-        Boolean(serverEnv.whatsappApiBaseUrl) &&
-        Boolean(serverEnv.whatsappApiKey) &&
+        ((Boolean(serverEnv.whatsappAccessToken) &&
+          Boolean(serverEnv.whatsappPhoneNumberId)) ||
+          Boolean(serverEnv.whatsappTokenEncryptionKey)) &&
         Boolean(serverEnv.whatsappWebhookVerifyToken),
-      hasSignatureSecret: Boolean(serverEnv.whatsappWebhookSignatureSecret),
+      hasSignatureSecret: Boolean(
+        serverEnv.whatsappWebhookSignatureSecret || serverEnv.metaAppSecret,
+      ),
       threadCount: threadCount.data ?? 0,
       messageCount: messageCount.data ?? 0,
     },

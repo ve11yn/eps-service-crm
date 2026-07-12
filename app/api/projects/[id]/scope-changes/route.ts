@@ -1,0 +1,7 @@
+import { NextResponse } from "next/server";
+import { routeErrorResponse } from "@/backend/observability/errors";
+import { createScopeChange, decideScopeChange } from "@/backend/services/projects/project-management";
+import { requireApiSession } from "@/lib/auth/api";
+type Context = { params: Promise<{ id: string }> };
+export async function POST(request: Request, { params }: Context) { const auth = await requireApiSession(["owner", "admin", "coordinator"]); if (!auth.ok) return auth.response; try { const { id } = await params; return NextResponse.json({ success: true, change: await createScopeChange(id, await request.json(), auth.session.profile.id) }); } catch (error) { return routeErrorResponse({ scope: "api.scope_changes.create", error, details: { performedByProfileId: auth.session.profile.id } }); } }
+export async function PATCH(request: Request) { const auth = await requireApiSession(["owner", "admin"]); if (!auth.ok) return auth.response; try { const body = await request.json() as { changeId?: string; status?: string }; if (!body.changeId || !body.status) return NextResponse.json({ success: false, error: "changeId and status are required" }, { status: 400 }); return NextResponse.json({ success: true, change: await decideScopeChange(body.changeId, body.status, auth.session.profile.id) }); } catch (error) { return routeErrorResponse({ scope: "api.scope_changes.decide", error, details: { performedByProfileId: auth.session.profile.id } }); } }

@@ -10,3 +10,4 @@ export * from "./media-assets-repository";
 export * from "./review-drafts-repository";
 export * from "./pricing-items-repository";
 export * from "./quotes-repository";
+export * from "./whatsapp-connections-repository";

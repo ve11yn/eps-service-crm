@@ -46,28 +46,7 @@ type LeadDetailRow = Pick<
   | "created_at"
   | "updated_at"
 >;
-type LatestLeadRow = Pick<
-  LeadRow,
-  | "id"
-  | "lead_code"
-  | "title"
-  | "status_code"
-  | "source_channel_code"
-  | "received_at"
-  | "last_activity_at"
-  | "assigned_to_profile_id"
-  | "primary_contact_id"
-  | "primary_property_id"
-  | "summary"
-  | "customer_request"
-  | "ai_summary"
-  | "site_visit_required"
-  | "qualification_notes"
-  | "lost_reason"
-  | "whatsapp_thread_id"
-  | "created_at"
-  | "updated_at"
->;
+type LatestLeadRow = LeadRow;
 
 const listLeadsCached = cachedQuery(
   ["leads", "list"],
@@ -95,9 +74,7 @@ const getLeadByIdCached = cachedQuery(
 
     const { data, error } = await supabase
       .from("leads")
-      .select(
-        "id, lead_code, title, status_code, source_channel_code, received_at, last_activity_at, assigned_to_profile_id, primary_contact_id, primary_property_id, summary, customer_request, ai_summary, site_visit_required, qualification_notes, lost_reason, whatsapp_thread_id, created_at, updated_at",
-      )
+      .select("*")
       .eq("id", leadId)
       .maybeSingle();
 
@@ -115,9 +92,7 @@ const getLatestLeadByThreadIdCached = cachedQuery(
 
     const { data, error } = await supabase
       .from("leads")
-      .select(
-        "id, lead_code, title, status_code, source_channel_code, received_at, last_activity_at, assigned_to_profile_id, primary_contact_id, primary_property_id, summary, customer_request, ai_summary, site_visit_required, qualification_notes, lost_reason, whatsapp_thread_id, created_at, updated_at",
-      )
+      .select("*")
       .eq("whatsapp_thread_id", threadId)
       .order("created_at", { ascending: false })
       .limit(1)

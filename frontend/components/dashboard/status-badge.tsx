@@ -15,6 +15,7 @@ const labelMap: Record<string, string> = {
   sent: "Sent",
   negotiating: "Negotiating",
   approved: "Approved",
+  proposed: "Proposed",
   revised: "Revised",
   expired_rejected: "Expired/Rejected",
   scheduled: "Scheduled",

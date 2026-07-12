@@ -17,7 +17,7 @@ const getContactByIdCached = cachedQuery(
 
     const { data, error } = await supabase
       .from("contacts")
-      .select("id, full_name, whatsapp_number, primary_phone, email, notes, created_at, updated_at")
+      .select("id, full_name, whatsapp_number, primary_phone, email, notes, is_archived, archived_at, merged_into_contact_id, created_at, updated_at")
       .eq("id", contactId)
       .maybeSingle();
 
@@ -35,7 +35,7 @@ const listContactsCached = cachedQuery(
 
     const { data, error } = await supabase
       .from("contacts")
-      .select("id, full_name, whatsapp_number, primary_phone, email, notes, created_at, updated_at")
+      .select("id, full_name, whatsapp_number, primary_phone, email, notes, is_archived, archived_at, merged_into_contact_id, created_at, updated_at")
       .order("updated_at", { ascending: false });
 
     if (error) throw error;
@@ -52,7 +52,7 @@ const getContactByWhatsAppNumberCached = cachedQuery(
 
     const { data, error } = await supabase
       .from("contacts")
-      .select("id, full_name, whatsapp_number, primary_phone, email, notes, created_at, updated_at")
+      .select("id, full_name, whatsapp_number, primary_phone, email, notes, is_archived, archived_at, merged_into_contact_id, created_at, updated_at")
       .eq("whatsapp_number", whatsappNumber)
       .maybeSingle();
 

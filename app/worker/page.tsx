@@ -1,7 +1,6 @@
 import { getWorkerWorkspace } from "@/backend/services/projects/get-worker-workspace";
 import { EmptyState } from "@/frontend/components/dashboard/empty-state";
-import { StatusBadge } from "@/frontend/components/dashboard/status-badge";
-import { formatDateTime } from "@/frontend/lib/format";
+import { WorkerFieldCard } from "@/frontend/components/worker/worker-field-card";
 import { requireAppSession } from "@/lib/auth/session";
 
 export default async function WorkerPage() {
@@ -27,26 +26,8 @@ export default async function WorkerPage() {
               description="Once jobs are assigned to this profile, they will appear here."
             />
           ) : (
-            <div className="todo-list">
-              {items.map((item) => (
-                <article key={item.id} className="todo-card">
-                  <div className="todo-card-header">
-                    <div>
-                      <h3>{item.title}</h3>
-                      <p>{item.actionSummary ?? item.areaName ?? "Assigned task"}</p>
-                    </div>
-                    <StatusBadge status={item.statusCode} />
-                  </div>
-
-                  <div className="todo-card-meta">
-                    <span>{item.project?.title ?? "Unlinked project"}</span>
-                    <span>{item.project?.projectCode ?? "No project code"}</span>
-                    <span>
-                      Due {item.scheduledDueAt ? formatDateTime(item.scheduledDueAt) : "not scheduled"}
-                    </span>
-                  </div>
-                </article>
-              ))}
+            <div className="worker-job-list">
+              {items.map((item) => <WorkerFieldCard key={item.id} item={item} />)}
             </div>
           )}
         </div>

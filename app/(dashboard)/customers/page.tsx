@@ -2,6 +2,8 @@ import { listContacts, listProperties } from "@/backend/repositories";
 import { EmptyState } from "@/frontend/components/dashboard/empty-state";
 import { formatDateTime } from "@/frontend/lib/format";
 import { requireAppSession } from "@/lib/auth/session";
+import Link from "next/link";
+import { CustomerForm, PropertyForm } from "@/frontend/components/customers/customer-property-forms";
 
 export default async function CustomersPage() {
   await requireAppSession(["owner", "admin"]);
@@ -17,6 +19,7 @@ export default async function CustomersPage() {
           <h1>Customers &amp; Properties</h1>
         </div>
       </section>
+      <section className="report-two-column"><article className="panel"><div className="panel-header"><h2>Create customer</h2></div><CustomerForm /></article><article className="panel"><div className="panel-header"><h2>Create property</h2></div><PropertyForm /></article></section>
 
       <section className="report-two-column">
         <article className="panel table-panel">
@@ -34,7 +37,7 @@ export default async function CustomersPage() {
           ) : (
             <div className="review-draft-list customer-record-list">
               {contacts.map((contact) => (
-                <div key={contact.id} className="customer-record-row">
+                <Link key={contact.id} href={`/customers/${contact.id}`} className="customer-record-row">
                   <div className="customer-record-main">
                     <strong>{contact.full_name}</strong>
                     <span>{contact.email ?? "No email"}</span>
@@ -43,7 +46,7 @@ export default async function CustomersPage() {
                     {contact.whatsapp_number ?? contact.primary_phone ?? "No phone"}
                   </span>
                   <span className="customer-record-date">{formatDateTime(contact.updated_at)}</span>
-                </div>
+                </Link>
               ))}
             </div>
           )}
@@ -64,14 +67,14 @@ export default async function CustomersPage() {
           ) : (
             <div className="review-draft-list customer-record-list">
               {properties.map((property) => (
-                <div key={property.id} className="customer-record-row property-record-row">
+                <Link key={property.id} href={`/properties/${property.id}`} className="customer-record-row property-record-row">
                   <div className="customer-record-main">
                     <strong>{property.property_name ?? property.address_line_1}</strong>
                     <span>{property.access_notes ?? "No access notes"}</span>
                   </div>
                   <span className="customer-record-phone">{property.unit_no ?? "No unit"}</span>
                   <span className="customer-record-date">{property.postal_code ?? property.country_code}</span>
-                </div>
+                </Link>
               ))}
             </div>
           )}

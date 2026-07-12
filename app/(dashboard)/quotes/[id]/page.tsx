@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { getQuoteDetail } from "@/backend/repositories";
 import { EmptyState } from "@/frontend/components/dashboard/empty-state";
 import { QuoteActions } from "@/frontend/components/dashboard/quote-actions";
+import { QuoteEditor } from "@/frontend/components/dashboard/quote-editor";
 import { StatusBadge } from "@/frontend/components/dashboard/status-badge";
 import { BackButton } from "@/frontend/components/navigation/back-button";
 import { formatDateTime, formatMoney } from "@/frontend/lib/format";
@@ -46,7 +47,7 @@ export default async function QuoteDetailPage({ params }: QuoteDetailPageProps) 
         <div className="panel-header">
           <div>
             <p className="eyebrow">Approval Gate</p>
-            <h2>Quote Decision</h2>
+            <h2>{quote.quote_number} / Version {quote.version_number}</h2>
           </div>
           <div className="inline-actions">
             {lead ? (
@@ -88,6 +89,31 @@ export default async function QuoteDetailPage({ params }: QuoteDetailPageProps) 
         />
       </section>
 
+      {quote.status_code === "draft" ? (
+        <QuoteEditor
+          quoteId={quote.id}
+          currencyCode={quote.currency_code}
+          initialNotes={quote.notes}
+          initialDiscount={Number(quote.discount_amount)}
+          initialItems={quoteItems.map((item) => {
+            const pricingItem = firstRelation(item.pricing_items);
+            const catalog = firstRelation(pricingItem?.pricing_catalogs);
+            return {
+              id: item.id,
+              pricingItemId: item.pricing_item_id,
+              title: item.title,
+              description: item.description ?? "",
+              quantity: Number(item.quantity),
+              unitLabel: item.unit_label ?? "item",
+              unitPrice: Number(item.unit_price),
+              notes: item.notes ?? "",
+              decisionStatus: item.decision_status as "proposed" | "approved" | "rejected" | "deferred",
+              decisionNotes: item.decision_notes ?? "",
+              catalogLabel: catalog?.name ?? null,
+            };
+          })}
+        />
+      ) : (
       <section className="panel table-panel">
         <div className="panel-header">
           <div>
@@ -109,7 +135,7 @@ export default async function QuoteDetailPage({ params }: QuoteDetailPageProps) 
               <span>Qty</span>
               <span>Unit</span>
               <span>Total</span>
-              <span>Project Link</span>
+              <span>Decision</span>
             </div>
             {quoteItems.map((item) => (
               <div key={item.id} className="review-draft-row">
@@ -120,12 +146,16 @@ export default async function QuoteDetailPage({ params }: QuoteDetailPageProps) 
                 <span>{item.quantity}</span>
                 <span>{formatMoney(item.unit_price)}</span>
                 <span>{formatMoney(item.total_price)}</span>
-                <span>{item.source_project_item_id ? "Work item created" : "Pending approval"}</span>
+                <div>
+                  <StatusBadge status={item.decision_status} />
+                  {item.decision_notes ? <span className="review-draft-meta">{item.decision_notes}</span> : null}
+                </div>
               </div>
             ))}
           </div>
         )}
       </section>
+      )}
     </div>
   );
 }

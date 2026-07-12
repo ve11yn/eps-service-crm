@@ -5,6 +5,7 @@ export const CACHE_TAGS = {
   requests: "requests",
   projects: "projects",
   projectItems: "project-items",
+  fieldUpdates: "field-updates",
   reviewDrafts: "review-drafts",
   leads: "leads",
   messages: "messages",

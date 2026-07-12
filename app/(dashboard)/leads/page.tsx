@@ -2,6 +2,7 @@ import Link from "next/link";
 import { listLeads } from "@/backend/repositories";
 import { EmptyState } from "@/frontend/components/dashboard/empty-state";
 import { StatusBadge } from "@/frontend/components/dashboard/status-badge";
+import { ManualLeadDialog } from "@/frontend/components/leads/manual-lead-dialog";
 import { formatDateTime } from "@/frontend/lib/format";
 import { requireAppSession } from "@/lib/auth/session";
 
@@ -15,6 +16,7 @@ export default async function LeadsPage() {
         <div>
           <h1>Leads</h1>
         </div>
+        <ManualLeadDialog />
       </section>
 
       <section className="panel table-panel">

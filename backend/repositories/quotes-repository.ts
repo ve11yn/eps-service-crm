@@ -14,9 +14,24 @@ type QuoteItemUpdate = Database["public"]["Tables"]["quote_items"]["Update"];
 
 const quoteSelect = `
   *,
-  leads:lead_id (*),
+  leads:lead_id (
+    *,
+    contacts:primary_contact_id (*),
+    properties:primary_property_id (*)
+  ),
   projects:project_id (*),
-  quote_items (*)
+  quote_items (
+    *,
+    pricing_items:pricing_item_id (
+      id,
+      service_title,
+      category,
+      description,
+      recommended_price,
+      unit_label,
+      pricing_catalogs:catalog_id (id, code, name, service_domain)
+    )
+  )
 `;
 
 export async function listQuotes() {

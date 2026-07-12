@@ -14,6 +14,8 @@ type ProjectItemListRow = Pick<
   | "id"
   | "project_id"
   | "title"
+  | "assigned_profile_id"
+  | "before_after_required"
   | "description"
   | "area_name"
   | "action_summary"
@@ -26,6 +28,8 @@ type ProjectItemListRow = Pick<
   | "is_checklist_item"
   | "sort_order"
   | "status_code"
+  | "scheduled_start_at"
+  | "scheduled_due_at"
   | "created_at"
   | "updated_at"
   | "completed_at"
@@ -39,7 +43,7 @@ const getProjectItemByIdCached = cachedQuery(
     const { data, error } = await supabase
       .from("project_items")
       .select(
-        "id, project_id, title, description, area_name, action_summary, quoted_amount, priority_code, item_group, item_type, is_add_on, is_pi, is_checklist_item, sort_order, status_code, created_at, updated_at, completed_at",
+        "id, project_id, title, description, area_name, action_summary, quoted_amount, priority_code, assigned_profile_id, before_after_required, scheduled_start_at, scheduled_due_at, item_group, item_type, is_add_on, is_pi, is_checklist_item, sort_order, status_code, created_at, updated_at, completed_at",
       )
       .eq("id", itemId)
       .maybeSingle();
@@ -59,7 +63,7 @@ const listProjectItemsByProjectIdCached = cachedQuery(
     const { data, error } = await supabase
       .from("project_items")
       .select(
-        "id, project_id, title, description, area_name, action_summary, quoted_amount, priority_code, item_group, item_type, is_add_on, is_pi, is_checklist_item, sort_order, status_code, created_at, updated_at, completed_at",
+        "id, project_id, title, description, area_name, action_summary, quoted_amount, priority_code, assigned_profile_id, before_after_required, scheduled_start_at, scheduled_due_at, item_group, item_type, is_add_on, is_pi, is_checklist_item, sort_order, status_code, created_at, updated_at, completed_at",
       )
       .eq("project_id", projectId)
       .order("sort_order", { ascending: true })

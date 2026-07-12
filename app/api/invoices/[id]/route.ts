@@ -1,0 +1,7 @@
+import { NextResponse } from "next/server";
+import { issueInvoice, saveInvoiceDraft } from "@/backend/services/finance/invoice-operations";
+import { routeErrorResponse } from "@/backend/observability/errors";
+import { requireApiSession } from "@/lib/auth/api";
+type Ctx={params:Promise<{id:string}>};
+export async function PUT(request:Request,ctx:Ctx){const auth=await requireApiSession(["owner","admin"]);if(!auth.ok)return auth.response;try{const{id}=await ctx.params;const p=await request.json();const invoice=await saveInvoiceDraft({invoiceId:id,profileId:auth.session.profile.id,dueAt:p.dueAt??null,taxRate:Number(p.taxRate??0),paymentTermsDays:Number(p.paymentTermsDays??14),notes:p.notes??null,customerNotes:p.customerNotes??null,items:Array.isArray(p.items)?p.items:[]});return NextResponse.json({success:true,invoice});}catch(error){return routeErrorResponse({scope:"api.invoices.update",error,status:400,details:{performedByProfileId:auth.session.profile.id}})}}
+export async function PATCH(_request:Request,ctx:Ctx){const auth=await requireApiSession(["owner","admin"]);if(!auth.ok)return auth.response;try{const{id}=await ctx.params;const invoice=await issueInvoice({invoiceId:id,profileId:auth.session.profile.id});return NextResponse.json({success:true,invoice});}catch(error){return routeErrorResponse({scope:"api.invoices.issue",error,status:400,details:{performedByProfileId:auth.session.profile.id}})}}

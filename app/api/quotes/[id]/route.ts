@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { routeErrorResponse } from "@/backend/observability/errors";
+import { logAuditEvent } from "@/backend/observability/audit";
 import { getQuoteDetail, updateQuote } from "@/backend/repositories";
 import { requireApiSession } from "@/lib/auth/api";
 
@@ -12,8 +13,8 @@ type RouteContext = {
 const allowedTransitions: Record<string, string[]> = {
   draft: ["sent"],
   sent: ["negotiating", "approved", "expired_rejected"],
-  negotiating: ["revised", "approved", "expired_rejected"],
-  revised: ["sent", "approved", "expired_rejected"],
+  negotiating: ["approved", "expired_rejected"],
+  revised: [],
   approved: [],
   expired_rejected: [],
 };
@@ -98,12 +99,38 @@ export async function PATCH(request: Request, context: RouteContext) {
       );
     }
 
+    if (nextStatus === "sent") {
+      const items = Array.isArray(quote.quote_items) ? quote.quote_items : [];
+      const includedItems = items.filter((item) =>
+        ["proposed", "approved"].includes(item.decision_status),
+      );
+
+      if (includedItems.length === 0 || Number(quote.total_amount) <= 0) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: "Add at least one included, priced item before marking the quote delivered.",
+          },
+          { status: 400 },
+        );
+      }
+    }
+
     const now = new Date().toISOString();
     const updatedQuote = await updateQuote(id, {
       status_code: nextStatus,
       sent_at: nextStatus === "sent" ? now : quote.sent_at,
       expired_at: nextStatus === "expired_rejected" ? now : quote.expired_at,
       rejected_at: nextStatus === "expired_rejected" ? now : quote.rejected_at,
+    });
+
+    await logAuditEvent({
+      action: `quotes.status.${nextStatus}`,
+      entityType: "quote",
+      entityId: id,
+      performedByProfileId: auth.session.profile.id,
+      oldValue: { status_code: quote.status_code },
+      newValue: { status_code: nextStatus },
     });
 
     return NextResponse.json({

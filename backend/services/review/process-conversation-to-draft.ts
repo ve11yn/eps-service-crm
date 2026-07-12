@@ -11,7 +11,7 @@ async function loadConversationMessages(
 ): Promise<AiConversationMessage[]> {
   const savedMessages = await listMessagesByThreadId(threadId);
 
-  return savedMessages.map((message) => ({
+  return savedMessages.slice(-200).map((message) => ({
     direction: message.direction_code === "outbound" ? "outbound" : "inbound",
     senderName: message.sender_name ?? undefined,
     senderPhone: message.sender_phone ?? undefined,

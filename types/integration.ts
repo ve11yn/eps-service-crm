@@ -47,6 +47,7 @@ export type WhatsAppMetaWebhookPayload = {
         messages?: Array<{
           id?: string;
           from?: string;
+          to?: string;
           timestamp?: string;
           type?: string;
           text?: {
@@ -91,6 +92,69 @@ export type WhatsAppMetaWebhookPayload = {
               description?: string;
             };
           };
+          history_context?: {
+            status?: string;
+          };
+        }>;
+        message_echoes?: Array<{
+          id?: string;
+          from?: string;
+          to?: string;
+          timestamp?: string;
+          type?: string;
+          text?: { body?: string };
+          image?: { id?: string; mime_type?: string; caption?: string };
+          video?: { id?: string; mime_type?: string; caption?: string };
+          audio?: { id?: string; mime_type?: string };
+          document?: {
+            id?: string;
+            mime_type?: string;
+            caption?: string;
+            filename?: string;
+          };
+        }>;
+        history?: Array<{
+          metadata?: {
+            phase?: string;
+            chunk_order?: number;
+            progress?: string;
+          };
+          threads?: Array<{
+            id?: string;
+            messages?: Array<{
+              id?: string;
+              from?: string;
+              to?: string;
+              timestamp?: string;
+              type?: string;
+              text?: { body?: string };
+              image?: { id?: string; mime_type?: string; caption?: string };
+              video?: { id?: string; mime_type?: string; caption?: string };
+              audio?: { id?: string; mime_type?: string };
+              document?: {
+                id?: string;
+                mime_type?: string;
+                caption?: string;
+                filename?: string;
+              };
+              history_context?: { status?: string };
+            }>;
+          }>;
+          errors?: Array<{
+            code?: number;
+            title?: string;
+            message?: string;
+          }>;
+        }>;
+        state_sync?: Array<{
+          type?: string;
+          contact?: {
+            full_name?: string;
+            first_name?: string;
+            phone_number?: string;
+          };
+          action?: string;
+          metadata?: { timestamp?: string };
         }>;
         statuses?: Array<{
           id?: string;
@@ -119,6 +183,8 @@ export type WhatsAppInboundMessage = {
   externalThreadId: string;
   fromPhone: string;
   fromName?: string;
+  direction: "inbound" | "outbound";
+  isHistorical: boolean;
   messageType: WhatsAppMessageType;
   text?: string;
   mediaCaption?: string;
@@ -126,6 +192,12 @@ export type WhatsAppInboundMessage = {
   mimeType?: string;
   sentAt: string;
   providerPayload: Json;
+};
+
+export type WhatsAppSyncedContact = {
+  phone: string;
+  name?: string;
+  action: "add" | "remove";
 };
 
 export type WhatsAppSendMessageInput = {

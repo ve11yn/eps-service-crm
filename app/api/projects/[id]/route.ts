@@ -3,6 +3,8 @@ import { routeErrorResponse } from "@/backend/observability/errors";
 import { getProjectDetail } from "@/backend/services/projects/get-project-detail";
 import { updateProjectStatus } from "@/backend/repositories";
 import { requireApiSession } from "@/lib/auth/api";
+import { logAuditEvent } from "@/backend/observability/audit";
+import { canTransitionProject } from "@/lib/crm/lifecycle";
 
 type RouteContext = {
   params: Promise<{
@@ -41,14 +43,6 @@ export async function GET(_request: Request, context: RouteContext) {
   }
 }
 
-const allowedProjectTransitions: Record<string, string[]> = {
-  scheduled: ["in_progress"],
-  in_progress: ["qa_review"],
-  qa_review: ["invoiced"],
-  invoiced: ["completed"],
-  completed: [],
-};
-
 export async function PATCH(request: Request, context: RouteContext) {
   const auth = await requireApiSession(["owner", "admin", "coordinator"]);
 
@@ -77,8 +71,7 @@ export async function PATCH(request: Request, context: RouteContext) {
       );
     }
 
-    const allowed = allowedProjectTransitions[project.status_code] ?? [];
-    if (!allowed.includes(nextStatus)) {
+    if (!canTransitionProject(project.status_code, nextStatus)) {
       return NextResponse.json(
         {
           success: false,
@@ -88,7 +81,19 @@ export async function PATCH(request: Request, context: RouteContext) {
       );
     }
 
+    if (nextStatus === "completed") {
+      return NextResponse.json(
+        { success: false, error: "Use the closeout validation action to complete a project." },
+        { status: 400 },
+      );
+    }
+
     const updatedProject = await updateProjectStatus(id, nextStatus);
+    await logAuditEvent({
+      action: "projects.status_transition", entityType: "project", entityId: id,
+      performedByProfileId: auth.session.profile.id,
+      oldValue: { status_code: project.status_code }, newValue: { status_code: updatedProject.status_code },
+    });
 
     return NextResponse.json({
       success: true,

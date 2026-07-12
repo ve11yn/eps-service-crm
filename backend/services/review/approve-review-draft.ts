@@ -52,7 +52,7 @@ export async function approveReviewDraft(input: {
   const supabase = createAdminSupabaseClient();
   const { data, error } = await supabase.rpc("approve_review_draft_atomic", {
     p_review_draft_id: draft.id,
-    p_reviewed_by_profile_id: input.reviewedByProfileId ?? null,
+    p_reviewed_by_profile_id: input.reviewedByProfileId as string,
     p_extraction: stripTemporaryMediaUrls(extraction) as unknown as Json,
     p_create_project: false,
   });

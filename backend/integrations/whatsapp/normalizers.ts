@@ -6,6 +6,7 @@ import type {
   WhatsAppMessageType,
   WhatsAppMetaWebhookPayload,
   WhatsAppRawInboundPayload,
+  WhatsAppSyncedContact,
 } from "@/types/integration";
 
 function normalizeMessageType(input: string | null | undefined): WhatsAppMessageType {
@@ -66,6 +67,8 @@ function normalizeLegacyPayload(
     externalThreadId,
     fromPhone,
     fromName: payload.from?.name?.trim() || undefined,
+    direction: "inbound",
+    isHistorical: false,
     messageType: normalizeMessageType(payload.type),
     text: normalizedText,
     mediaCaption: payload.caption?.trim() || undefined,
@@ -140,6 +143,8 @@ function normalizeMetaPayload(
           externalThreadId,
           fromPhone,
           fromName: contactName,
+          direction: "inbound",
+          isHistorical: false,
           messageType: normalizeMessageType(message.type),
           text,
           mediaCaption:
@@ -165,10 +170,127 @@ function normalizeMetaPayload(
           },
         });
       }
+
+      for (const message of value.message_echoes ?? []) {
+        const externalMessageId = message.id?.trim();
+        const customerPhone = message.to?.trim();
+        if (!externalMessageId || !customerPhone) continue;
+
+        const image = message.image;
+        const video = message.video;
+        const audio = message.audio;
+        const document = message.document;
+
+        normalized.push({
+          externalMessageId,
+          externalThreadId: phoneNumberId
+            ? `${phoneNumberId}:${customerPhone}`
+            : customerPhone,
+          fromPhone: customerPhone,
+          direction: "outbound",
+          isHistorical: false,
+          messageType: normalizeMessageType(message.type),
+          text: getMetaMessageText(message),
+          mediaCaption:
+            image?.caption?.trim() ||
+            video?.caption?.trim() ||
+            document?.caption?.trim() ||
+            undefined,
+          mimeType:
+            image?.mime_type?.trim() ||
+            video?.mime_type?.trim() ||
+            audio?.mime_type?.trim() ||
+            document?.mime_type?.trim() ||
+            undefined,
+          sentAt: toIsoString(message.timestamp),
+          providerPayload: {
+            object: payload.object ?? null,
+            entry_id: entry.id ?? null,
+            field: change.field ?? null,
+            metadata: value.metadata ?? null,
+            message_echo: message,
+          },
+        });
+      }
+
+      for (const historyChunk of value.history ?? []) {
+        for (const thread of historyChunk.threads ?? []) {
+          const customerPhone = thread.id?.trim();
+          if (!customerPhone) continue;
+
+          for (const message of thread.messages ?? []) {
+            const externalMessageId = message.id?.trim();
+            if (!externalMessageId) continue;
+
+            const isInbound = message.from?.trim() === customerPhone;
+            const image = message.image;
+            const video = message.video;
+            const audio = message.audio;
+            const document = message.document;
+
+            normalized.push({
+              externalMessageId,
+              externalThreadId: phoneNumberId
+                ? `${phoneNumberId}:${customerPhone}`
+                : customerPhone,
+              fromPhone: customerPhone,
+              direction: isInbound ? "inbound" : "outbound",
+              isHistorical: true,
+              messageType: normalizeMessageType(message.type),
+              text: getMetaMessageText(message),
+              mediaCaption:
+                image?.caption?.trim() ||
+                video?.caption?.trim() ||
+                document?.caption?.trim() ||
+                undefined,
+              mimeType:
+                image?.mime_type?.trim() ||
+                video?.mime_type?.trim() ||
+                audio?.mime_type?.trim() ||
+                document?.mime_type?.trim() ||
+                undefined,
+              sentAt: toIsoString(message.timestamp),
+              providerPayload: {
+                object: payload.object ?? null,
+                entry_id: entry.id ?? null,
+                field: change.field ?? null,
+                metadata: value.metadata ?? null,
+                history_metadata: historyChunk.metadata ?? null,
+                history_message: message,
+              },
+            });
+          }
+        }
+      }
     }
   }
 
   return normalized;
+}
+
+export function normalizeWhatsAppContactSyncs(
+  payload: WhatsAppRawInboundPayload,
+): WhatsAppSyncedContact[] {
+  if (!isMetaWebhookPayload(payload)) return [];
+
+  const contacts: WhatsAppSyncedContact[] = [];
+  for (const entry of payload.entry ?? []) {
+    for (const change of entry.changes ?? []) {
+      for (const item of change.value?.state_sync ?? []) {
+        const phone = item.contact?.phone_number?.trim();
+        if (!phone || item.type !== "contact") continue;
+        contacts.push({
+          phone,
+          name:
+            item.contact?.full_name?.trim() ||
+            item.contact?.first_name?.trim() ||
+            undefined,
+          action: item.action === "remove" ? "remove" : "add",
+        });
+      }
+    }
+  }
+  return contacts;
 }
 
 export function normalizeWhatsAppInboundPayloads(
