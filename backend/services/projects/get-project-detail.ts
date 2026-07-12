@@ -113,18 +113,26 @@ const getProjectDetailCached = cachedQuery(
       threadDataPromise,
     ]);
 
-    const mediaAssetsWithUrls = await Promise.all(
-      mediaAssets.map(async (asset) => {
-        const { data: signedUrlData } = await supabase.storage
-          .from(asset.storage_bucket)
-          .createSignedUrl(asset.storage_path, 60 * 60);
-
-        return {
-          ...asset,
-          signed_url: signedUrlData?.signedUrl ?? null,
-        };
-      }),
-    );
+    const pathsByBucket = new Map<string, string[]>();
+    for (const asset of mediaAssets) {
+      const paths = pathsByBucket.get(asset.storage_bucket) ?? [];
+      paths.push(asset.storage_path);
+      pathsByBucket.set(asset.storage_bucket, paths);
+    }
+    const signedUrlByAsset = new Map<string, string>();
+    await Promise.all([...pathsByBucket].map(async ([bucket, paths]) => {
+      const { data: signedUrls, error: signedUrlError } = await supabase.storage
+        .from(bucket)
+        .createSignedUrls(paths, 60 * 60);
+      if (signedUrlError) return;
+      for (const entry of signedUrls ?? []) {
+        if (entry.signedUrl) signedUrlByAsset.set(`${bucket}:${entry.path}`, entry.signedUrl);
+      }
+    }));
+    const mediaAssetsWithUrls = mediaAssets.map((asset) => ({
+      ...asset,
+      signed_url: signedUrlByAsset.get(`${asset.storage_bucket}:${asset.storage_path}`) ?? null,
+    }));
 
     const projectItems = Array.isArray(data.project_items)
       ? [...data.project_items].sort((a, b) => a.sort_order - b.sort_order).map((item) => ({

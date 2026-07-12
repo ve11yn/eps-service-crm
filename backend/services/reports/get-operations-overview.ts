@@ -1,12 +1,14 @@
 import "server-only";
 import { createAdminSupabaseClient } from "@/lib/supabase/admin";
+import { cachedQuery } from "@/lib/cache/query-cache";
+import { CACHE_TAGS } from "@/lib/cache/cache-tags";
 
 export type ReportFilters = { from?: string; to?: string; workerId?: string; service?: string; source?: string };
 const rate=(part:number,total:number)=>total?part/total:0;
 const sum=<T,>(rows:T[],fn:(row:T)=>number)=>rows.reduce((total,row)=>total+fn(row),0);
 const category=(item:{item_group:string|null;item_type:string|null;title:string})=>item.item_group?.trim()||item.item_type?.trim()||item.title.split(/[-–:,]/)[0].trim()||"Uncategorised";
 
-export async function getOperationsOverview(filters:ReportFilters={}){
+async function getOperationsOverviewUncached(filters:ReportFilters={}){
  const s=createAdminSupabaseClient();const results=await Promise.all([
   s.from("leads").select("id,source_channel_code,received_at,whatsapp_thread_id,title,summary,customer_request"),
   s.from("source_channels").select("code,label"),s.from("quotes").select("id,lead_id,project_id,status_code,total_amount,created_at"),
@@ -46,4 +48,15 @@ export async function getOperationsOverview(filters:ReportFilters={}){
  const complaintPattern=/complaint|dispute|unhappy|unsatisfied|poor service/i;const complaintLeads=leads.filter(l=>complaintPattern.test(`${l.title??""} ${l.summary??""} ${l.customer_request??""}`));const complaintIssues=fieldUpdates.filter(u=>u.issue_type==="scope_question");const complaints=complaintLeads.length+complaintIssues.length;
  const threadStats=new Map<string,{inbound?:string;outbound?:string}>();for(const message of messageR.data??[]){const row=threadStats.get(message.thread_id)??{};if(message.direction_code==="inbound"&&(!row.inbound||message.sent_at<row.inbound))row.inbound=message.sent_at;if(message.direction_code==="outbound"&&(!row.outbound||message.sent_at<row.outbound))row.outbound=message.sent_at;threadStats.set(message.thread_id,row)}const responseMinutes=[...threadStats.values()].filter(r=>r.inbound&&r.outbound&&r.outbound>=r.inbound).map(r=>(new Date(r.outbound!).getTime()-new Date(r.inbound!).getTime())/60000);
  return{filters,filterOptions:{workers:(profileR.data??[]).filter(p=>p.role_code==="field_worker"&&p.is_active).map(p=>({id:p.id,label:p.display_name})),services:serviceValues,sources:(sourceR.data??[]).map(row=>({id:row.code,label:row.label}))},leadSourceBreakdown,conversion:{totalLeads:leads.length,leadsWithQuote:leadsWithQuote.size,leadToQuoteRate:rate(leadsWithQuote.size,leads.length),totalQuotes:quotes.length,quotesWithJob:quotesWithJob.size,quoteToJobRate:rate(quotesWithJob.size,quotes.length)},finance:{revenue,outstanding,totalCost,margin:revenue-totalCost,marginRate:rate(revenue-totalCost,revenue)},paymentAgeing:ageing,workerUtilisation,completion:{completedJobs:durations.length,averageHours:durations.length?sum(durations,v=>v)/durations.length:null},rework:{count:rework.length,rate:rate(rework.length,items.length),causes:[...causeMap].map(([label,count])=>({label,count})).sort((a,b)=>b.count-a.count)},complaints:{count:complaints,rate:rate(complaints,leads.length)},servicePerformance:[...serviceMap].map(([service,row])=>({service,jobs:row.jobs.size,items:row.items,completed:row.completed,rework:row.rework,revenue:row.revenue,cost:row.cost,margin:row.revenue-row.cost})).sort((a,b)=>b.jobs-a.jobs),response:{averageMinutes:responseMinutes.length?sum(responseMinutes,v=>v)/responseMinutes.length:null,samples:responseMinutes.length}};
+}
+
+const getOperationsOverviewCached = cachedQuery(
+ ["reports", "operations-overview"],
+ getOperationsOverviewUncached,
+ 30,
+ [CACHE_TAGS.reports],
+);
+
+export async function getOperationsOverview(filters: ReportFilters = {}) {
+ return getOperationsOverviewCached(filters);
 }

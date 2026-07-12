@@ -1,11 +1,14 @@
 import "server-only";
 
-import { createClient } from "@supabase/supabase-js";
+import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { serverEnv } from "@/lib/env/server";
 import type { Database } from "@/types/database";
 
+let adminClient: SupabaseClient<Database> | null = null;
+
 export function createAdminSupabaseClient() {
-  return createClient<Database>(
+  if (adminClient) return adminClient;
+  adminClient = createClient<Database>(
     serverEnv.supabaseUrl,
     serverEnv.supabaseServiceRoleKey,
     {
@@ -15,4 +18,5 @@ export function createAdminSupabaseClient() {
       },
     },
   );
+  return adminClient;
 }

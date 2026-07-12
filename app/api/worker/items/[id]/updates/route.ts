@@ -6,6 +6,7 @@ import {
   type WorkerUpdateType,
 } from "@/backend/services/projects/worker-field-operations";
 import { requireApiSession } from "@/lib/auth/api";
+import { scheduleSecondBrainRefresh } from "@/backend/services/ai/schedule-second-brain-refresh";
 
 type RouteContext = { params: Promise<{ id: string }> };
 
@@ -40,6 +41,7 @@ export async function POST(request: Request, context: RouteContext) {
       issueType: payload.issueType ?? null,
       notes: payload.notes ?? null,
     });
+    scheduleSecondBrainRefresh("project", fieldUpdate.project_id, auth.session.profile.id);
     return NextResponse.json({ success: true, fieldUpdate });
   } catch (error) {
     return routeErrorResponse({

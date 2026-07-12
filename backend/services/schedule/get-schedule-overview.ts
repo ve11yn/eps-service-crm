@@ -2,12 +2,16 @@ import "server-only";
 
 import { createAdminSupabaseClient } from "@/lib/supabase/admin";
 import { getCalendarMonthKey } from "@/lib/utils/dates";
+import { cachedQuery } from "@/lib/cache/query-cache";
+import { CACHE_TAGS } from "@/lib/cache/cache-tags";
 
 function one<T>(value: T | T[] | null): T | null {
   return Array.isArray(value) ? value[0] ?? null : value;
 }
 
-export async function getScheduleOverview() {
+const getScheduleOverviewCached = cachedQuery(
+  ["schedule", "overview"],
+  async () => {
   const supabase = createAdminSupabaseClient();
   const [appointmentsResult, projectsResult, leadsResult, workersResult, typesResult] = await Promise.all([
     supabase.from("appointments").select(`
@@ -98,4 +102,11 @@ export async function getScheduleOverview() {
     workers: workersResult.data ?? [],
     appointmentTypes: typesResult.data ?? [],
   };
+  },
+  15,
+  [CACHE_TAGS.schedule, CACHE_TAGS.projects, CACHE_TAGS.leads, CACHE_TAGS.profiles],
+);
+
+export async function getScheduleOverview() {
+  return getScheduleOverviewCached();
 }

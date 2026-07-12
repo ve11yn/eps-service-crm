@@ -4,7 +4,6 @@ import { updateProject, updateProjectItem } from "@/backend/repositories";
 import { createInvoiceFromProject } from "@/backend/services/finance/invoice-operations";
 import { logAuditEvent } from "@/backend/observability/audit";
 import type { Json } from "@/types/database";
-import { refreshSecondBrain } from "@/backend/services/ai/second-brain";
 
 async function load(projectId:string){const s=createAdminSupabaseClient();const{data,error}=await s.from("projects").select("*, project_items(*, media_assets(evidence_type)), invoices(id,status_code,balance_due_amount)").eq("id",projectId).maybeSingle();if(error)throw error;if(!data)throw new Error("Project not found.");return data;}
 export async function updateCloseout(input:{projectId:string;profileId:string;action:string;notes?:string|null;itemIds?:string[];customerName?:string|null;warrantyDays?:number;completionSummary?:string|null}){
@@ -15,5 +14,5 @@ export async function updateCloseout(input:{projectId:string;profileId:string;ac
  else if(input.action==="generate_review_request"){await updateProject(project.id,{review_request_generated_at:now.toISOString()});}
  else if(input.action==="complete"){const invoice=(project.invoices??[]).find((i)=>i.status_code==="paid"&&Number(i.balance_due_amount)===0);if(project.qa_status!=="approved"||project.customer_signoff_status!=="approved"||!invoice)throw new Error("QA approval, customer sign-off, and full payment are required before completion.");await updateProject(project.id,{status_code:"completed",completed_at:now.toISOString()});}
  else throw new Error("Unsupported closeout action.");
- const after=await load(project.id);await logAuditEvent({action:`projects.closeout.${input.action}`,entityType:"project",entityId:project.id,performedByProfileId:input.profileId,oldValue:project as unknown as Json,newValue:after as unknown as Json,metadata:{item_ids:input.itemIds??[],reason:input.notes??null}});await refreshSecondBrain("project",project.id,input.profileId);return after;
+ const after=await load(project.id);await logAuditEvent({action:`projects.closeout.${input.action}`,entityType:"project",entityId:project.id,performedByProfileId:input.profileId,oldValue:project as unknown as Json,newValue:after as unknown as Json,metadata:{item_ids:input.itemIds??[],reason:input.notes??null}});return after;
 }

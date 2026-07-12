@@ -3,6 +3,7 @@ import { routeErrorResponse } from "@/backend/observability/errors";
 import { listLeads } from "@/backend/repositories";
 import { createManualLead } from "@/backend/services/leads/create-manual-lead";
 import { requireApiSession } from "@/lib/auth/api";
+import { scheduleSecondBrainRefresh } from "@/backend/services/ai/schedule-second-brain-refresh";
 
 export async function GET() {
   const auth = await requireApiSession(["owner", "admin"]);
@@ -41,6 +42,7 @@ export async function POST(request: Request) {
       request: String(body.request ?? ""),
       profileId: auth.session.profile.id,
     });
+    scheduleSecondBrainRefresh("lead", lead.id, auth.session.profile.id);
     return NextResponse.json({ success: true, lead }, { status: 201 });
   } catch (error) {
     return routeErrorResponse({

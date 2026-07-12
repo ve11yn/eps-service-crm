@@ -4,7 +4,7 @@ import { logAuditEvent } from "@/backend/observability/audit";
 import { getQuoteDetail, updateQuote } from "@/backend/repositories";
 import { requireApiSession } from "@/lib/auth/api";
 import { createQuoteValidUntil } from "@/backend/services/quotes/quote-validity";
-import { refreshSecondBrain } from "@/backend/services/ai/second-brain";
+import { scheduleSecondBrainRefresh } from "@/backend/services/ai/schedule-second-brain-refresh";
 
 type RouteContext = {
   params: Promise<{
@@ -165,7 +165,7 @@ export async function PATCH(request: Request, context: RouteContext) {
         } : {}),
       },
     });
-    await refreshSecondBrain("quote", id, auth.session.profile.id);
+    scheduleSecondBrainRefresh("quote", id, auth.session.profile.id);
 
     return NextResponse.json({
       success: true,

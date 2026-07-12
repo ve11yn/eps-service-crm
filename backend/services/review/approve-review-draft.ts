@@ -6,7 +6,6 @@ import { ensureDraftQuoteFromExtraction } from "@/backend/services/quotes/create
 import { createAdminSupabaseClient } from "@/lib/supabase/admin";
 import type { Database, Json } from "@/types/database";
 import type { AiLeadExtraction } from "@/types/integration";
-import { refreshSecondBrain } from "@/backend/services/ai/second-brain";
 
 type ReviewDraftRow = Database["public"]["Tables"]["review_drafts"]["Row"];
 
@@ -89,7 +88,6 @@ export async function approveReviewDraft(input: {
       createdByProfileId: input.reviewedByProfileId ?? null,
       extraction,
     });
-    await refreshSecondBrain("lead", result.lead_id, input.reviewedByProfileId ?? null);
   }
 
   return {

@@ -2,6 +2,8 @@ import "server-only";
 
 import { logAuditEvent } from "@/backend/observability/audit";
 import { createAdminSupabaseClient } from "@/lib/supabase/admin";
+import { invalidateCachedTags } from "@/lib/cache/query-cache";
+import { CACHE_TAGS } from "@/lib/cache/cache-tags";
 
 export type ConfirmationStatus = "pending" | "confirmed" | "declined";
 
@@ -121,6 +123,7 @@ export async function createAppointment(input: AppointmentInput & { performedByP
     performedByProfileId: input.performedByProfileId,
     newValue: data,
   });
+  invalidateCachedTags([CACHE_TAGS.schedule, CACHE_TAGS.projects]);
   return data;
 }
 
@@ -159,5 +162,6 @@ export async function updateAppointment(id: string, input: AppointmentInput & { 
     oldValue: before,
     newValue: data,
   });
+  invalidateCachedTags([CACHE_TAGS.schedule, CACHE_TAGS.projects]);
   return data;
 }

@@ -57,6 +57,28 @@ const listMessagesByThreadIdCached = cachedQuery(
   [CACHE_TAGS.messages],
 );
 
+const listRecentMessagesByThreadIdCached = cachedQuery(
+  ["messages", "recent-by-thread"],
+  async (threadId: string, limit: number) => {
+    const supabase = createAdminSupabaseClient();
+    const safeLimit = Math.min(Math.max(limit, 20), 500);
+    const { data, error } = await supabase
+      .from("messages")
+      .select("id, thread_id, direction_code, sender_name, sender_phone, content, media_caption, sent_at, created_at")
+      .eq("thread_id", threadId)
+      .order("sent_at", { ascending: false })
+      .limit(safeLimit + 1);
+    if (error) throw error;
+    const rows = data ?? [];
+    return {
+      messages: rows.slice(0, safeLimit).reverse(),
+      hasOlderMessages: rows.length > safeLimit,
+    };
+  },
+  10,
+  [CACHE_TAGS.messages],
+);
+
 export async function getMessageByExternalMessageId(
   externalMessageId: string,
 ): Promise<MessageRow | null> {
@@ -67,6 +89,10 @@ export async function listMessagesByThreadId(
   threadId: string,
 ): Promise<MessageListRow[]> {
   return listMessagesByThreadIdCached(threadId);
+}
+
+export async function listRecentMessagesByThreadId(threadId: string, limit = 200) {
+  return listRecentMessagesByThreadIdCached(threadId, limit);
 }
 
 export async function createMessage(payload: MessageInsert): Promise<MessageRow> {

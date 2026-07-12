@@ -11,7 +11,6 @@ import {
 import { createAdminSupabaseClient } from "@/lib/supabase/admin";
 import { logAuditEvent } from "@/backend/observability/audit";
 import { createAppointment } from "@/backend/services/schedule/appointment-operations";
-import { refreshSecondBrain } from "@/backend/services/ai/second-brain";
 
 function buildProjectCode() {
   return `PROJ-${Date.now()}-${randomUUID().slice(0, 8).toUpperCase()}`;
@@ -187,8 +186,6 @@ export async function approveQuoteAndCreateProject(input: {
       .is("project_id", null);
   }
 
-  await refreshSecondBrain("quote", quote.id, input.approvedByProfileId);
-  await refreshSecondBrain("project", project.id, input.approvedByProfileId);
 
   return {
     quoteId: quote.id,

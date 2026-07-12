@@ -135,6 +135,7 @@ export async function createLead(payload: LeadInsert): Promise<LeadRow> {
     CACHE_TAGS.requests,
     CACHE_TAGS.reports,
     CACHE_TAGS.inbox,
+    CACHE_TAGS.schedule,
   ]);
   return data;
 }
@@ -162,6 +163,7 @@ export async function updateLead(
     CACHE_TAGS.requests,
     CACHE_TAGS.reports,
     CACHE_TAGS.inbox,
+    CACHE_TAGS.schedule,
   ]);
   return data;
 }

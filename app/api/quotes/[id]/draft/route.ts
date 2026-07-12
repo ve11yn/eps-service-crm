@@ -5,6 +5,7 @@ import {
   type QuoteDraftItemInput,
 } from "@/backend/services/quotes/save-quote-draft";
 import { requireApiSession } from "@/lib/auth/api";
+import { scheduleSecondBrainRefresh } from "@/backend/services/ai/schedule-second-brain-refresh";
 
 type RouteContext = { params: Promise<{ id: string }> };
 
@@ -27,6 +28,7 @@ export async function PUT(request: Request, context: RouteContext) {
       items: Array.isArray(payload.items) ? payload.items : [],
       performedByProfileId: auth.session.profile.id,
     });
+    scheduleSecondBrainRefresh("quote", id, auth.session.profile.id);
 
     return NextResponse.json({ success: true, quote });
   } catch (error) {

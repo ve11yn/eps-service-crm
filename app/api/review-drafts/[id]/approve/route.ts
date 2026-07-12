@@ -3,6 +3,7 @@ import { routeErrorResponse } from "@/backend/observability/errors";
 import { approveReviewDraft } from "@/backend/services/review/approve-review-draft";
 import { requireApiSession } from "@/lib/auth/api";
 import type { ApproveReviewDraftRequest } from "@/types/api";
+import { scheduleSecondBrainRefresh } from "@/backend/services/ai/schedule-second-brain-refresh";
 
 type RouteContext = {
   params: Promise<{
@@ -27,6 +28,7 @@ export async function POST(request: Request, context: RouteContext) {
       extractionOverride: payload.extraction,
       createProject: payload.createProject,
     });
+    scheduleSecondBrainRefresh("lead", result.lead.id, auth.session.profile.id);
 
     return NextResponse.json({
       success: true,

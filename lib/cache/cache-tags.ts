@@ -14,4 +14,5 @@ export const CACHE_TAGS = {
   properties: "properties",
   mediaAssets: "media-assets",
   profiles: "profiles",
+  schedule: "schedule",
 } as const;

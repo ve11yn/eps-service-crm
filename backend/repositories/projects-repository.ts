@@ -83,6 +83,7 @@ export async function createProject(payload: ProjectInsert): Promise<ProjectRow>
     CACHE_TAGS.requests,
     CACHE_TAGS.reports,
     CACHE_TAGS.inbox,
+    CACHE_TAGS.schedule,
   ]);
   return data;
 }
@@ -110,6 +111,7 @@ export async function updateProject(
     CACHE_TAGS.requests,
     CACHE_TAGS.reports,
     CACHE_TAGS.inbox,
+    CACHE_TAGS.schedule,
   ]);
   return data;
 }

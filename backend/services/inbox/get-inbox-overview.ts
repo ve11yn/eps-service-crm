@@ -2,7 +2,7 @@ import "server-only";
 
 import { CACHE_TAGS } from "@/lib/cache/cache-tags";
 import { cachedQuery } from "@/lib/cache/query-cache";
-import { getLatestActiveReviewDraftByThreadId, listMessagesByThreadId } from "@/backend/repositories";
+import { getLatestActiveReviewDraftByThreadId, listRecentMessagesByThreadId } from "@/backend/repositories";
 import { createAdminSupabaseClient } from "@/lib/supabase/admin";
 import type { Json } from "@/types/database";
 
@@ -47,20 +47,35 @@ function buildSuggestedReply(extractionPayload: Json): string {
 
 const getInboxOverviewCached = cachedQuery(
   ["inbox", "overview"],
-  async (selectedThreadId?: string) => {
+  async (selectedThreadId: string | undefined, page: number = 1, pageSize: number = 50) => {
     const supabase = createAdminSupabaseClient();
+    const safePage = Math.max(1, page);
+    const safePageSize = Math.min(Math.max(pageSize, 20), 100);
+    const rangeFrom = (safePage - 1) * safePageSize;
 
-    const { data: threads, error } = await supabase
+    const { data: threads, error, count } = await supabase
       .from("whatsapp_threads")
       .select(
         "id, contact_id, external_thread_id, thread_subject, last_message_at, is_archived, created_at, updated_at, contacts:contact_id(id, full_name, whatsapp_number, primary_phone, email)",
+        { count: "exact" },
       )
       .eq("is_archived", false)
-      .order("last_message_at", { ascending: false, nullsFirst: false });
+      .order("last_message_at", { ascending: false, nullsFirst: false })
+      .range(rangeFrom, rangeFrom + safePageSize - 1);
 
     if (error) throw error;
 
     const threadList = threads ?? [];
+    if (selectedThreadId && !threadList.some((thread) => thread.id === selectedThreadId)) {
+      const { data: selectedThread, error: selectedThreadError } = await supabase
+        .from("whatsapp_threads")
+        .select("id, contact_id, external_thread_id, thread_subject, last_message_at, is_archived, created_at, updated_at, contacts:contact_id(id, full_name, whatsapp_number, primary_phone, email)")
+        .eq("id", selectedThreadId)
+        .eq("is_archived", false)
+        .maybeSingle();
+      if (selectedThreadError) throw selectedThreadError;
+      if (selectedThread) threadList.unshift(selectedThread);
+    }
     const threadIds = threadList.map((thread) => thread.id);
     const { data: threadReviewDrafts, error: threadReviewDraftsError } =
       threadIds.length > 0
@@ -88,13 +103,15 @@ const getInboxOverviewCached = cachedQuery(
         reviewDraftsByThreadId: {},
         activeThread: null,
         messages: [],
+        hasOlderMessages: false,
         reviewDraft: null,
         suggestedReply: "",
+        pagination: { page: safePage, pageSize: safePageSize, total: count ?? 0, totalPages: Math.max(1, Math.ceil((count ?? 0) / safePageSize)) },
       };
     }
 
-    const [messages, reviewDraft] = await Promise.all([
-      listMessagesByThreadId(activeThread.id),
+    const [messageResult, reviewDraft] = await Promise.all([
+      listRecentMessagesByThreadId(activeThread.id, 200),
       getLatestActiveReviewDraftByThreadId(activeThread.id),
     ]);
 
@@ -102,17 +119,19 @@ const getInboxOverviewCached = cachedQuery(
       threads: threadList,
       reviewDraftsByThreadId: Object.fromEntries(reviewDraftsByThreadId),
       activeThread,
-      messages,
+      messages: messageResult.messages,
+      hasOlderMessages: messageResult.hasOlderMessages,
       reviewDraft,
       suggestedReply: reviewDraft
         ? buildSuggestedReply(reviewDraft.extraction_payload)
         : "",
+      pagination: { page: safePage, pageSize: safePageSize, total: count ?? 0, totalPages: Math.max(1, Math.ceil((count ?? 0) / safePageSize)) },
     };
   },
   8,
   [CACHE_TAGS.inbox, CACHE_TAGS.threads, CACHE_TAGS.messages, CACHE_TAGS.reviewDrafts],
 );
 
-export async function getInboxOverview(selectedThreadId?: string) {
-  return getInboxOverviewCached(selectedThreadId);
+export async function getInboxOverview(selectedThreadId?: string, page = 1) {
+  return getInboxOverviewCached(selectedThreadId, page, 50);
 }

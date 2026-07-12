@@ -10,13 +10,15 @@ import { requireAppSession } from "@/lib/auth/session";
 type InboxPageProps = {
   searchParams: Promise<{
     thread?: string;
+    page?: string;
   }>;
 };
 
 export default async function InboxPage({ searchParams }: InboxPageProps) {
   await requireAppSession(["owner", "admin"]);
   const params = await searchParams;
-  const inbox = await getInboxOverview(params.thread);
+  const requestedPage = Math.max(1, Number(params.page) || 1);
+  const inbox = await getInboxOverview(params.thread, requestedPage);
   const reviewDraftsByThreadId = inbox.reviewDraftsByThreadId as Record<
     string,
     { status: string; updated_at: string }
@@ -36,7 +38,7 @@ export default async function InboxPage({ searchParams }: InboxPageProps) {
           <div className="panel-header">
             <div>
               <p className="eyebrow">Threads</p>
-              <h2>{inbox.threads.length} active chats</h2>
+              <h2>{inbox.pagination.total} active chats</h2>
             </div>
           </div>
 
@@ -94,6 +96,13 @@ export default async function InboxPage({ searchParams }: InboxPageProps) {
               })}
             </div>
           )}
+          {inbox.pagination.totalPages > 1 ? (
+            <nav className="inbox-pagination" aria-label="Conversation pages">
+              {inbox.pagination.page > 1 ? <Link className="button button-secondary" href={`/inbox?page=${inbox.pagination.page - 1}`}>Previous</Link> : <span />}
+              <span className="helper-text">Page {inbox.pagination.page} of {inbox.pagination.totalPages}</span>
+              {inbox.pagination.page < inbox.pagination.totalPages ? <Link className="button button-secondary" href={`/inbox?page=${inbox.pagination.page + 1}`}>Next</Link> : <span />}
+            </nav>
+          ) : null}
         </aside>
 
         <div className="page-stack inbox-detail">
@@ -170,6 +179,7 @@ export default async function InboxPage({ searchParams }: InboxPageProps) {
                 </div>
 
                 <div className="message-list">
+                  {inbox.hasOlderMessages ? <p className="conversation-limit-note">Showing the latest 200 messages.</p> : null}
                   {inbox.messages.map((message) => (
                     <article
                       key={message.id}

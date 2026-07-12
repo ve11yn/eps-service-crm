@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { routeErrorResponse } from "@/backend/observability/errors";
 import { confirmSiteVisitProject } from "@/backend/services/leads/confirm-site-visit-project";
 import { requireApiSession } from "@/lib/auth/api";
+import { scheduleSecondBrainRefresh } from "@/backend/services/ai/schedule-second-brain-refresh";
 
 type RouteContext = {
   params: Promise<{
@@ -36,6 +37,7 @@ export async function POST(request: Request, context: RouteContext) {
       scheduledStartAt: payload.scheduledStartAt,
       scheduledEndAt: payload.scheduledEndAt ?? null,
     });
+    scheduleSecondBrainRefresh("lead", id, auth.session.profile.id);
 
     return NextResponse.json({
       success: true,

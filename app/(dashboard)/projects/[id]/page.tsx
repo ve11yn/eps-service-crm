@@ -8,8 +8,7 @@ import {
   TrendingUp,
 } from "lucide-react";
 import { getProjectDetail } from "@/backend/services/projects/get-project-detail";
-import { listStaffAccounts } from "@/backend/services/auth/user-management";
-import { listContacts, listProperties } from "@/backend/repositories";
+import { getProjectEditorOptions } from "@/backend/services/projects/get-project-editor-options";
 import { EmptyState } from "@/frontend/components/dashboard/empty-state";
 import { StatusBadge } from "@/frontend/components/dashboard/status-badge";
 import { ProjectItemAssignment } from "@/frontend/components/dashboard/project-item-assignment";
@@ -33,7 +32,7 @@ export default async function ProjectDetailPage({
 }: ProjectDetailPageProps) {
   await requireAppSession(["owner", "admin", "coordinator"]);
   const { id } = await params;
-  const [project, staff, contacts, properties, secondBrain] = await Promise.all([getProjectDetail(id), listStaffAccounts(), listContacts(), listProperties(), listSecondBrainSummaries("project", id)]);
+  const [project, editorOptions, secondBrain] = await Promise.all([getProjectDetail(id), getProjectEditorOptions(), listSecondBrainSummaries("project", id)]);
 
   if (!project) {
     notFound();
@@ -47,9 +46,9 @@ export default async function ProjectDetailPage({
   const inboxThread = inboxPreview?.thread ?? null;
   const inboxMessages = Array.isArray(inboxPreview?.messages) ? inboxPreview.messages : [];
   const inboxReviewDraft = inboxPreview?.review_draft ?? null;
-  const workers = staff
-    .filter((member) => member.roleCode === "field_worker" && member.isActive)
-    .map((member) => ({ id: member.id, displayName: member.displayName }));
+  const workers = editorOptions.staff
+    .filter((member) => member.role_code === "field_worker")
+    .map((member) => ({ id: member.id, displayName: member.display_name }));
   const fieldUpdates = Array.isArray(project.project_field_updates) ? project.project_field_updates : [];
   const projectInvoices = Array.isArray(project.invoices) ? project.invoices : [];
   const projectPayments = Array.isArray(project.payments) ? project.payments : [];
@@ -62,9 +61,9 @@ export default async function ProjectDetailPage({
     hasBefore: Array.isArray(item.media_assets) && item.media_assets.some((asset) => asset.evidence_type === "before"),
     hasAfter: Array.isArray(item.media_assets) && item.media_assets.some((asset) => asset.evidence_type === "after"),
   }));
-  const staffOptions = staff.filter((member) => member.isActive).map((member) => ({ id: member.id, label: `${member.displayName} (${member.roleCode.replaceAll("_", " ")})` }));
-  const contactOptions = contacts.filter((record) => !record.is_archived).map((record) => ({ id: record.id, label: record.full_name }));
-  const propertyOptions = properties.filter((record) => !record.is_archived).map((record) => ({ id: record.id, label: record.property_name ?? `${record.address_line_1}${record.unit_no ? ` ${record.unit_no}` : ""}` }));
+  const staffOptions = editorOptions.staff.map((member) => ({ id: member.id, label: `${member.display_name} (${member.role_code.replaceAll("_", " ")})` }));
+  const contactOptions = editorOptions.contacts.map((record) => ({ id: record.id, label: record.full_name }));
+  const propertyOptions = editorOptions.properties.map((record) => ({ id: record.id, label: record.property_name ?? `${record.address_line_1}${record.unit_no ? ` ${record.unit_no}` : ""}` }));
   const scopeChanges = Array.isArray(project.project_scope_changes) ? [...project.project_scope_changes].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()) : [];
   const teamMembers = Array.isArray(project.project_team_members) ? project.project_team_members : [];
 

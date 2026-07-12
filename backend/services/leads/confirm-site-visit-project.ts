@@ -4,7 +4,6 @@ import { randomUUID } from "node:crypto";
 import { createProject } from "@/backend/repositories";
 import { getLeadDetail } from "@/backend/services/leads/get-lead-detail";
 import { createAppointment } from "@/backend/services/schedule/appointment-operations";
-import { refreshSecondBrain } from "@/backend/services/ai/second-brain";
 
 function buildProjectCode() {
   return `PROJ-${Date.now()}-${randomUUID().slice(0, 8).toUpperCase()}`;
@@ -57,6 +56,5 @@ export async function confirmSiteVisitProject(input: {
     notes: "Site visit confirmed from lead qualification.",
     performedByProfileId: input.confirmedByProfileId as string,
   });
-  await refreshSecondBrain("lead", lead.id, input.confirmedByProfileId);
   return project;
 }

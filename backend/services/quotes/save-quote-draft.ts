@@ -6,7 +6,6 @@ import { invalidateCachedTags } from "@/lib/cache/query-cache";
 import { CACHE_TAGS } from "@/lib/cache/cache-tags";
 import { createAdminSupabaseClient } from "@/lib/supabase/admin";
 import type { Json } from "@/types/database";
-import { refreshSecondBrain } from "@/backend/services/ai/second-brain";
 
 export type QuoteDraftItemInput = {
   id?: string | null;
@@ -117,8 +116,6 @@ export async function saveQuoteDraft(input: SaveQuoteDraftInput) {
       item_count: input.items.length,
     },
   });
-
-  await refreshSecondBrain("quote", input.quoteId, input.performedByProfileId);
 
   return getQuoteDetail(input.quoteId);
 }
