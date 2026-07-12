@@ -95,7 +95,7 @@ const getScheduleOverviewCached = cachedQuery(
   const baseDate = currentMonth ? today : next ? new Date(next.scheduledStartAt) : today;
 
   return {
-    baseDate,
+    baseDate: baseDate.toISOString(),
     events,
     projects: projectsResult.data ?? [],
     leads: leadsResult.data ?? [],

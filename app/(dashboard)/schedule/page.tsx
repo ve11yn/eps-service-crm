@@ -16,7 +16,7 @@ export default async function SchedulePage() {
 
       <section className="panel schedule-panel">
         <ScheduleCalendar
-          baseDate={schedule.baseDate.toISOString()}
+          baseDate={schedule.baseDate}
           events={schedule.events}
           projects={schedule.projects}
           leads={schedule.leads}
