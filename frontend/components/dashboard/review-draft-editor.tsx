@@ -40,7 +40,7 @@ export function ReviewDraftEditor({ draft }: ReviewDraftEditorProps) {
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [isApproving, setIsApproving] = useState(false);
-  const [isRejecting, setIsRejecting] = useState(false);
+  const [rejectAction, setRejectAction] = useState<"more_info" | "reject" | null>(null);
   const [uploadingWorkItemIndex, setUploadingWorkItemIndex] = useState<number | null>(null);
   const [expandedWorkItemIndex, setExpandedWorkItemIndex] = useState<number | null>(() =>
     extraction.workItems.length > 0 ? 0 : null,
@@ -50,6 +50,7 @@ export function ReviewDraftEditor({ draft }: ReviewDraftEditorProps) {
     () => parseConversationMessages(draft.raw_conversation),
     [draft.raw_conversation],
   );
+  const isRejecting = rejectAction !== null;
 
   function patchExtraction(patch: Partial<AiLeadExtraction>) {
     setExtraction((current) => ({
@@ -141,7 +142,7 @@ export function ReviewDraftEditor({ draft }: ReviewDraftEditorProps) {
   }
 
   async function rejectDraft(markNeedsMoreInfo: boolean) {
-    setIsRejecting(true);
+    setRejectAction(markNeedsMoreInfo ? "more_info" : "reject");
     setStatusMessage(null);
 
     try {
@@ -178,7 +179,7 @@ export function ReviewDraftEditor({ draft }: ReviewDraftEditorProps) {
           : `Failed to ${markNeedsMoreInfo ? "request more info" : "reject"} draft.`,
       );
     } finally {
-      setIsRejecting(false);
+      setRejectAction(null);
     }
   }
 
@@ -971,10 +972,10 @@ export function ReviewDraftEditor({ draft }: ReviewDraftEditorProps) {
               {isSaving ? "Saving..." : "Save Draft"}
             </button>
             <button type="button" className="button button-secondary" onClick={() => rejectDraft(true)} disabled={isSaving || isApproving || isRejecting || !reviewNotes.trim()}>
-              {isRejecting ? "Updating..." : "More Info"}
+              {rejectAction === "more_info" ? "Updating..." : "More Info"}
             </button>
             <button type="button" className="button button-danger" onClick={() => rejectDraft(false)} disabled={isSaving || isApproving || isRejecting || !reviewNotes.trim()}>
-              {isRejecting ? "Rejecting..." : "Reject Draft"}
+              {rejectAction === "reject" ? "Rejecting..." : "Reject Draft"}
             </button>
           </div>
           <button type="button" className="button button-primary approval-primary-action" onClick={approveDraft} disabled={isSaving || isApproving || isRejecting}>

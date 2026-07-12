@@ -5,7 +5,7 @@ import { useState } from "react";
 import type { LucideIcon } from "lucide-react";
 import { createBrowserSupabaseClient } from "@/lib/supabase/client";
 
-export function LogoutButton({ icon: Icon }: { icon: LucideIcon }) {
+export function LogoutButton({ icon: Icon, collapsed = false }: { icon: LucideIcon; collapsed?: boolean }) {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -26,6 +26,9 @@ export function LogoutButton({ icon: Icon }: { icon: LucideIcon }) {
     <button
       type="button"
       className="dashboard-nav-link"
+      data-label="Logout"
+      title={collapsed ? "Logout" : undefined}
+      aria-label={collapsed ? "Logout" : undefined}
       onClick={handleLogout}
       disabled={isSubmitting}
     >

@@ -3,9 +3,12 @@
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useSyncExternalStore } from "react";
 import {
   BarChart3,
   CalendarDays,
+  ChevronLeft,
+  ChevronRight,
   CircleDollarSign,
   FolderKanban,
   Home,
@@ -44,6 +47,26 @@ const footerItems: Array<{
   { href: "/settings", label: "Configuration", icon: Settings, roles: ["owner", "admin"] },
 ];
 
+const sidebarStorageKey = "crm-sidebar-collapsed";
+const sidebarChangeEvent = "crm-sidebar-change";
+
+function subscribeToSidebar(callback: () => void) {
+  window.addEventListener("storage", callback);
+  window.addEventListener(sidebarChangeEvent, callback);
+  return () => {
+    window.removeEventListener("storage", callback);
+    window.removeEventListener(sidebarChangeEvent, callback);
+  };
+}
+
+function getSidebarSnapshot() {
+  return window.localStorage.getItem(sidebarStorageKey) === "true";
+}
+
+function getServerSidebarSnapshot() {
+  return false;
+}
+
 function isActive(pathname: string, href: string): boolean {
   if (href === "/") {
     return pathname === "/";
@@ -66,10 +89,20 @@ export function Sidebar({
   roleCode: AppRole;
 }) {
   const pathname = usePathname();
+  const isCollapsed = useSyncExternalStore(
+    subscribeToSidebar,
+    getSidebarSnapshot,
+    getServerSidebarSnapshot,
+  );
   const visibleItems = items.filter((item) => item.roles.includes(roleCode));
 
+  function toggleSidebar() {
+    window.localStorage.setItem(sidebarStorageKey, String(!isCollapsed));
+    window.dispatchEvent(new Event(sidebarChangeEvent));
+  }
+
   return (
-    <aside className="dashboard-sidebar">
+    <aside className={`dashboard-sidebar ${isCollapsed ? "is-collapsed" : ""}`}>
       <div className="dashboard-brand">
         <Image
           src="/eps-logo.png"
@@ -79,14 +112,24 @@ export function Sidebar({
           className="dashboard-brand-logo"
           priority
         />
-        <div>
+        <div className="dashboard-brand-copy">
           <p className="dashboard-brand-subtitle">
             {displayName ? `${displayName} · ${roleLabel ?? "Staff"}` : "Business Dashboard"}
           </p>
         </div>
+        <button
+          type="button"
+          className="dashboard-sidebar-toggle"
+          aria-label={isCollapsed ? "Expand navigation" : "Collapse navigation"}
+          aria-expanded={!isCollapsed}
+          title={isCollapsed ? "Expand navigation" : "Collapse navigation"}
+          onClick={toggleSidebar}
+        >
+          {isCollapsed ? <ChevronRight aria-hidden="true" size={20} /> : <ChevronLeft aria-hidden="true" size={20} />}
+        </button>
       </div>
 
-      <nav className="dashboard-nav">
+      <nav className="dashboard-nav" aria-label="Main navigation">
         {visibleItems.map((item) => {
           const active = isActive(pathname, item.href);
           const Icon = item.icon;
@@ -96,6 +139,8 @@ export function Sidebar({
               key={item.href}
               href={item.href}
               className={`dashboard-nav-link ${active ? "is-active" : ""}`}
+              data-label={item.label}
+              title={isCollapsed ? item.label : undefined}
             >
               <Icon className="dashboard-nav-icon" aria-hidden="true" size={18} strokeWidth={2} />
               <span>{item.label}</span>
@@ -116,13 +161,15 @@ export function Sidebar({
                 key={item.href}
                 href={item.href}
                 className={`dashboard-nav-link ${active ? "is-active" : ""}`}
+                data-label={item.label}
+                title={isCollapsed ? item.label : undefined}
               >
                 <Icon className="dashboard-nav-icon" aria-hidden="true" size={18} strokeWidth={2} />
                 <span>{item.label}</span>
               </Link>
             );
           })}
-        <LogoutButton icon={LogOut} />
+        <LogoutButton icon={LogOut} collapsed={isCollapsed} />
       </div>
     </aside>
   );
