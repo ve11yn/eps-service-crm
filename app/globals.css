@@ -458,7 +458,9 @@ b {
 }
 
 .auth-layout-register {
-  width: min(1100px, 100%);
+  grid-template-columns: minmax(0, 1fr) minmax(440px, 500px);
+  gap: clamp(48px, 7vw, 96px);
+  width: min(1160px, 100%);
 }
 
 .auth-intro {
