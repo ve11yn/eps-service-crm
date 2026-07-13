@@ -889,6 +889,10 @@ textarea {
   overflow: visible;
 }
 
+.dashboard-main > .page-stack.lead-page > :last-child {
+  margin-bottom: var(--content-edge-inset);
+}
+
 .lead-page :is(.lead-workflow-list, .review-draft-list),
 .quote-page :is(.quote-workflow-list, .quote-scope-list) {
   max-height: none;
