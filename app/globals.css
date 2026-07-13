@@ -4673,6 +4673,63 @@ button.back-link {
   white-space: nowrap;
 }
 
+.pricing-catalogue-table tr.is-editing > td {
+  background: var(--accent-soft);
+}
+
+.pricing-catalogue-edit-row > td {
+  padding: 0;
+  border-top: 0;
+  background: var(--surface-muted);
+  white-space: normal;
+}
+
+.pricing-item-editor {
+  display: grid;
+  gap: var(--space-5);
+  padding: var(--space-5);
+  border-top: 1px solid var(--accent);
+  border-bottom: 1px solid var(--line-strong);
+  text-align: left;
+}
+
+.pricing-item-editor-header,
+.pricing-item-editor-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+}
+
+.pricing-item-editor-header h3 {
+  margin: 0;
+  font-size: var(--text-lg);
+}
+
+.pricing-item-editor-header .eyebrow {
+  margin-bottom: var(--space-1);
+}
+
+.pricing-item-editor-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-4);
+}
+
+.pricing-item-editor-grid .input,
+.pricing-item-editor-grid .input-select {
+  min-width: 0;
+}
+
+.pricing-item-editor-wide {
+  grid-column: 1 / -1;
+}
+
+.pricing-item-editor-footer {
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--line);
+}
+
 .settings-row {
   display: flex;
   align-items: center;
