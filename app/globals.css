@@ -1082,6 +1082,14 @@ textarea {
   min-width: 0;
 }
 
+.report-breakdown-column {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--component-gap);
+  align-content: start;
+  min-width: 0;
+}
+
 .report-data-list {
   display: flex;
   flex-direction: column;

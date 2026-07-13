@@ -146,67 +146,71 @@ export default async function ReportsPage({ searchParams }: ReportsPageProps) {
       </section>
 
       <section className="report-breakdown-grid">
-        <article className="panel report-breakdown-card">
-          <div className="panel-header"><h2>Lead Sources</h2></div>
-          <div className="report-data-list">
-            {report.leadSourceBreakdown.map((row) => (
-              <BreakdownRow
-                key={row.code}
-                label={row.label}
-                values={[`${row.count} leads`, percent(row.share)]}
-              />
-            ))}
-            {!report.leadSourceBreakdown.length ? <p className="report-empty">No leads in this selection.</p> : null}
-          </div>
-        </article>
+        <div className="report-breakdown-column">
+          <article className="panel report-breakdown-card">
+            <div className="panel-header"><h2>Lead Sources</h2></div>
+            <div className="report-data-list">
+              {report.leadSourceBreakdown.map((row) => (
+                <BreakdownRow
+                  key={row.code}
+                  label={row.label}
+                  values={[`${row.count} leads`, percent(row.share)]}
+                />
+              ))}
+              {!report.leadSourceBreakdown.length ? <p className="report-empty">No leads in this selection.</p> : null}
+            </div>
+          </article>
 
-        <article className="panel report-breakdown-card">
-          <div className="panel-header"><h2>Payment Ageing</h2></div>
-          <div className="report-data-list">
-            {report.paymentAgeing.map((row) => (
-              <BreakdownRow
-                key={row.label}
-                label={row.label}
-                values={[`${row.count} invoices`, formatMoney(row.balance)]}
-              />
-            ))}
-          </div>
-        </article>
+          <article className="panel report-breakdown-card">
+            <div className="panel-header"><h2>Worker Utilisation</h2></div>
+            <div className="report-data-list">
+              {report.workerUtilisation.map((row) => (
+                <BreakdownRow
+                  key={row.profileId}
+                  label={row.displayName}
+                  values={[
+                    `${row.completed}/${row.assigned} completed`,
+                    percent(row.utilisationRate),
+                    `${row.open} open`,
+                  ]}
+                />
+              ))}
+              {!report.workerUtilisation.length ? <p className="report-empty">No worker activity in this selection.</p> : null}
+            </div>
+          </article>
+        </div>
 
-        <article className="panel report-breakdown-card">
-          <div className="panel-header"><h2>Worker Utilisation</h2></div>
-          <div className="report-data-list">
-            {report.workerUtilisation.map((row) => (
-              <BreakdownRow
-                key={row.profileId}
-                label={row.displayName}
-                values={[
-                  `${row.completed}/${row.assigned} completed`,
-                  percent(row.utilisationRate),
-                  `${row.open} open`,
-                ]}
-              />
-            ))}
-            {!report.workerUtilisation.length ? <p className="report-empty">No worker activity in this selection.</p> : null}
-          </div>
-        </article>
+        <div className="report-breakdown-column">
+          <article className="panel report-breakdown-card">
+            <div className="panel-header"><h2>Payment Ageing</h2></div>
+            <div className="report-data-list">
+              {report.paymentAgeing.map((row) => (
+                <BreakdownRow
+                  key={row.label}
+                  label={row.label}
+                  values={[`${row.count} invoices`, formatMoney(row.balance)]}
+                />
+              ))}
+            </div>
+          </article>
 
-        <article className="panel report-breakdown-card">
-          <div className="panel-header">
-            <h2>Rework Causes</h2>
-            <span className="helper-text">{percent(report.rework.rate)} rate</span>
-          </div>
-          <div className="report-data-list">
-            {report.rework.causes.map((row) => (
-              <BreakdownRow
-                key={row.label}
-                label={row.label}
-                values={[`${row.count} occurrence${row.count === 1 ? "" : "s"}`]}
-              />
-            ))}
-            {!report.rework.causes.length ? <p className="report-empty">No rework recorded.</p> : null}
-          </div>
-        </article>
+          <article className="panel report-breakdown-card">
+            <div className="panel-header">
+              <h2>Rework Causes</h2>
+              <span className="helper-text">{percent(report.rework.rate)} rate</span>
+            </div>
+            <div className="report-data-list">
+              {report.rework.causes.map((row) => (
+                <BreakdownRow
+                  key={row.label}
+                  label={row.label}
+                  values={[`${row.count} occurrence${row.count === 1 ? "" : "s"}`]}
+                />
+              ))}
+              {!report.rework.causes.length ? <p className="report-empty">No rework recorded.</p> : null}
+            </div>
+          </article>
+        </div>
       </section>
 
       <section className="panel report-service-panel">
