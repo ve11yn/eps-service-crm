@@ -22,14 +22,13 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
             <h1>Keep every job moving.</h1>
             <p>Enquiries, quotations, schedules, field updates and payments stay connected in one place.</p>
           </div>
-          <p className="auth-intro-note">Secure access for Gage&apos;s operations team.</p>
+          <p className="auth-intro-note">Private workspace for EPS Services.</p>
         </section>
 
         <section className="auth-card">
           <header className="auth-card-header">
-            <p className="auth-kicker">Welcome back</p>
             <h2>Sign in to your account</h2>
-            <p>Use the username and password assigned to your staff account.</p>
+            <p>Enter your login details to continue.</p>
           </header>
           <LoginForm nextPath={nextPath} />
           <p className="auth-switch-link">

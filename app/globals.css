@@ -872,17 +872,17 @@ textarea {
 
 /* Record list and detail pages can contain multiple full-height sections. Keep
    one predictable page scrollbar instead of trapping scroll inside a card. */
-.dashboard-main > .page-stack:is(.lead-page, .quote-page) {
+.dashboard-main > .page-stack:is(.lead-page, .quote-page, .report-page) {
   overflow-x: hidden;
   overflow-y: auto;
   overscroll-behavior: contain;
 }
 
-.dashboard-main > .page-stack:is(.lead-page, .quote-page) > * {
+.dashboard-main > .page-stack:is(.lead-page, .quote-page, .report-page) > * {
   flex: 0 0 auto;
 }
 
-.dashboard-main > .page-stack:is(.lead-page, .quote-page) > :last-child {
+.dashboard-main > .page-stack:is(.lead-page, .quote-page, .report-page) > :last-child {
   min-height: auto;
   overflow: visible;
 }
@@ -1165,6 +1165,31 @@ textarea {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: var(--component-gap);
+  align-items: start;
+  min-width: 0;
+}
+
+.report-breakdown-row {
+  min-width: 0;
+  padding-right: 0;
+  padding-left: 0;
+}
+
+.report-breakdown-row > * {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.report-breakdown-row-2 {
+  grid-template-columns: minmax(0, 1fr) auto;
+}
+
+.report-breakdown-row-3 {
+  grid-template-columns: minmax(0, 1fr) minmax(88px, auto) minmax(72px, auto);
+}
+
+.report-breakdown-row-4 {
+  grid-template-columns: minmax(0, 1fr) repeat(3, minmax(68px, auto));
 }
 
 .report-panel {
@@ -5060,6 +5085,10 @@ button.back-link {
     grid-template-columns: 1fr;
   }
 
+  .report-page .report-two-column {
+    grid-template-columns: 1fr;
+  }
+
   .report-scroll-panel,
   .report-work-section .report-scroll-panel {
     max-height: 320px;
@@ -5269,6 +5298,14 @@ button.back-link {
   .report-stack,
   .report-followup-grid {
     grid-template-columns: 1fr;
+  }
+
+  .report-breakdown-row,
+  .report-breakdown-row-2,
+  .report-breakdown-row-3,
+  .report-breakdown-row-4 {
+    grid-template-columns: 1fr;
+    gap: var(--space-1);
   }
 
   .configuration-menu-layout {
