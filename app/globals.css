@@ -1063,6 +1063,14 @@ textarea {
   min-width: 0;
 }
 
+.report-breakdown-card {
+  padding-bottom: var(--space-3);
+}
+
+.report-breakdown-card .panel-header {
+  margin-bottom: 0;
+}
+
 .report-filter-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -1110,6 +1118,14 @@ textarea {
 .report-data-row > strong {
   min-width: 0;
   overflow-wrap: anywhere;
+}
+
+.report-data-row:last-child {
+  padding-bottom: 0;
+}
+
+.report-data-list > .report-empty {
+  padding-top: var(--space-3);
 }
 
 .report-data-values {
