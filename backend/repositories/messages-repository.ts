@@ -13,10 +13,12 @@ type MessageListRow = Pick<
   | "id"
   | "thread_id"
   | "direction_code"
+  | "message_type_code"
   | "sender_name"
   | "sender_phone"
   | "content"
   | "media_caption"
+  | "provider_payload"
   | "sent_at"
   | "created_at"
 >;
@@ -46,7 +48,7 @@ const listMessagesByThreadIdCached = cachedQuery(
 
     const { data, error } = await supabase
       .from("messages")
-      .select("id, thread_id, direction_code, sender_name, sender_phone, content, media_caption, sent_at, created_at")
+      .select("id, thread_id, direction_code, message_type_code, sender_name, sender_phone, content, media_caption, provider_payload, sent_at, created_at")
       .eq("thread_id", threadId)
       .order("sent_at", { ascending: true });
 
@@ -64,7 +66,7 @@ const listRecentMessagesByThreadIdCached = cachedQuery(
     const safeLimit = Math.min(Math.max(limit, 20), 500);
     const { data, error } = await supabase
       .from("messages")
-      .select("id, thread_id, direction_code, sender_name, sender_phone, content, media_caption, sent_at, created_at")
+      .select("id, thread_id, direction_code, message_type_code, sender_name, sender_phone, content, media_caption, provider_payload, sent_at, created_at")
       .eq("thread_id", threadId)
       .order("sent_at", { ascending: false })
       .limit(safeLimit + 1);

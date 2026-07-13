@@ -19,6 +19,7 @@ const getDashboardOverviewCached = cachedQuery(
       scheduledTodayCountResult,
       reviewDraftsResult,
       activeProjectsResult,
+      recentProjectsResult,
     ] = await Promise.all([
       supabase
         .from("review_drafts")
@@ -49,6 +50,11 @@ const getDashboardOverviewCached = cachedQuery(
         .in("status_code", ["scheduled", "in_progress", "qa_review", "invoiced"])
         .order("scheduled_start_at", { ascending: true })
         .limit(6),
+      supabase
+        .from("projects")
+        .select("id, project_code, title, status_code, scheduled_start_at, completed_at, updated_at, contacts:primary_contact_id(full_name), invoices(total_amount, balance_due_amount)")
+        .order("updated_at", { ascending: false })
+        .limit(6),
     ]);
 
     if (reviewDraftCountResult.error) throw reviewDraftCountResult.error;
@@ -57,6 +63,7 @@ const getDashboardOverviewCached = cachedQuery(
     if (scheduledTodayCountResult.error) throw scheduledTodayCountResult.error;
     if (reviewDraftsResult.error) throw reviewDraftsResult.error;
     if (activeProjectsResult.error) throw activeProjectsResult.error;
+    if (recentProjectsResult.error) throw recentProjectsResult.error;
 
     const reviewTasks = (reviewDraftsResult.data ?? []).map((draft) => {
       const extraction =
@@ -129,6 +136,7 @@ const getDashboardOverviewCached = cachedQuery(
         scheduledToday: scheduledTodayCountResult.count ?? 0,
       },
       needsAction,
+      recentProjects: recentProjectsResult.data ?? [],
     };
   },
   10,

@@ -2,7 +2,7 @@ import "server-only";
 
 import { CACHE_TAGS } from "@/lib/cache/cache-tags";
 import { cachedQuery } from "@/lib/cache/query-cache";
-import { getLatestActiveReviewDraftByThreadId, listRecentMessagesByThreadId } from "@/backend/repositories";
+import { listRecentMessagesByThreadId } from "@/backend/repositories";
 import { createAdminSupabaseClient } from "@/lib/supabase/admin";
 import type { Json } from "@/types/database";
 
@@ -45,6 +45,8 @@ function buildSuggestedReply(extractionPayload: Json): string {
   return `Hi ${customerName}, thanks for reaching out. We can help with ${issue}. ${questionText}`;
 }
 
+const activeReviewStatuses = new Set(["new", "ai_processed", "needs_review"]);
+
 const getInboxOverviewCached = cachedQuery(
   ["inbox", "overview"],
   async (selectedThreadId: string | undefined, page: number = 1, pageSize: number = 50) => {
@@ -83,17 +85,32 @@ const getInboxOverviewCached = cachedQuery(
             .from("review_drafts")
             .select("id, thread_id, status, updated_at")
             .in("thread_id", threadIds)
-            .in("status", ["new", "ai_processed", "needs_review"])
             .order("updated_at", { ascending: false })
         : { data: [], error: null };
 
     if (threadReviewDraftsError) throw threadReviewDraftsError;
 
-    const reviewDraftsByThreadId = new Map(
-      (threadReviewDrafts ?? [])
-        .filter((draft) => draft.thread_id)
-        .map((draft) => [draft.thread_id, draft]),
-    );
+    const reviewDraftsByThreadId = new Map<string, NonNullable<typeof threadReviewDrafts>[number]>();
+    for (const draft of threadReviewDrafts ?? []) {
+      if (draft.thread_id && !reviewDraftsByThreadId.has(draft.thread_id)) {
+        reviewDraftsByThreadId.set(draft.thread_id, draft);
+      }
+    }
+    const { data: linkedProjects, error: linkedProjectsError } =
+      threadIds.length > 0
+        ? await supabase
+            .from("projects")
+            .select("id, whatsapp_thread_id, project_code, title, status_code, completion_summary")
+            .in("whatsapp_thread_id", threadIds)
+            .order("created_at", { ascending: false })
+        : { data: [], error: null };
+    if (linkedProjectsError) throw linkedProjectsError;
+    const projectsByThreadId = new Map<string, NonNullable<typeof linkedProjects>[number]>();
+    for (const project of linkedProjects ?? []) {
+      if (project.whatsapp_thread_id && !projectsByThreadId.has(project.whatsapp_thread_id)) {
+        projectsByThreadId.set(project.whatsapp_thread_id, project);
+      }
+    }
     const activeThread =
       threadList.find((thread) => thread.id === selectedThreadId) ?? threadList[0] ?? null;
 
@@ -101,6 +118,7 @@ const getInboxOverviewCached = cachedQuery(
       return {
         threads: [],
         reviewDraftsByThreadId: {},
+        projectsByThreadId: {},
         activeThread: null,
         messages: [],
         hasOlderMessages: false,
@@ -110,19 +128,48 @@ const getInboxOverviewCached = cachedQuery(
       };
     }
 
-    const [messageResult, reviewDraft] = await Promise.all([
+    const [messageResult, latestReviewDraftResult] = await Promise.all([
       listRecentMessagesByThreadId(activeThread.id, 200),
-      getLatestActiveReviewDraftByThreadId(activeThread.id),
+      supabase
+        .from("review_drafts")
+        .select("*")
+        .eq("thread_id", activeThread.id)
+        .order("updated_at", { ascending: false })
+        .limit(1)
+        .maybeSingle(),
     ]);
+    if (latestReviewDraftResult.error) throw latestReviewDraftResult.error;
+    const reviewDraft = latestReviewDraftResult.data;
+    const messageIds = messageResult.messages.map((message) => message.id);
+    const { data: mediaAssets, error: mediaAssetsError } = messageIds.length
+      ? await supabase
+          .from("media_assets")
+          .select("id, message_id, storage_bucket, storage_path, mime_type, media_type, caption")
+          .in("message_id", messageIds)
+      : { data: [], error: null };
+    if (mediaAssetsError) throw mediaAssetsError;
+    const mediaByMessageId: Record<string, Array<Record<string, unknown>>> = {};
+    for (const asset of mediaAssets ?? []) {
+      if (!asset.message_id) continue;
+      const { data: signed } = await supabase.storage
+        .from(asset.storage_bucket)
+        .createSignedUrl(asset.storage_path, 60 * 60);
+      const collection = mediaByMessageId[asset.message_id] ?? [];
+      collection.push({ ...asset, signed_url: signed?.signedUrl ?? null });
+      mediaByMessageId[asset.message_id] = collection;
+    }
 
     return {
       threads: threadList,
       reviewDraftsByThreadId: Object.fromEntries(reviewDraftsByThreadId),
+      projectsByThreadId: Object.fromEntries(projectsByThreadId),
       activeThread,
+      activeProject: projectsByThreadId.get(activeThread.id) ?? null,
       messages: messageResult.messages,
+      mediaByMessageId,
       hasOlderMessages: messageResult.hasOlderMessages,
       reviewDraft,
-      suggestedReply: reviewDraft
+      suggestedReply: reviewDraft && activeReviewStatuses.has(reviewDraft.status)
         ? buildSuggestedReply(reviewDraft.extraction_payload)
         : "",
       pagination: { page: safePage, pageSize: safePageSize, total: count ?? 0, totalPages: Math.max(1, Math.ceil((count ?? 0) / safePageSize)) },

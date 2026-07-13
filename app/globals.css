@@ -1353,6 +1353,43 @@ textarea {
   overflow-wrap: anywhere;
 }
 
+.quote-scope-row {
+  grid-template-columns: minmax(280px, 1fr) 88px 110px 110px 132px;
+  min-width: 760px;
+  gap: var(--space-3);
+}
+
+.quote-scope-row > * {
+  min-width: 0;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.quote-scope-row .review-draft-meta-group,
+.quote-scope-row .review-draft-title,
+.quote-scope-row .review-draft-meta {
+  white-space: normal;
+}
+
+.quote-scope-number {
+  text-align: right;
+  white-space: nowrap;
+}
+
+.review-draft-list-head.quote-scope-row > :nth-child(2),
+.review-draft-list-head.quote-scope-row > :nth-child(3),
+.review-draft-list-head.quote-scope-row > :nth-child(4) {
+  text-align: right;
+}
+
+.quote-scope-decision {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-1);
+}
+
 .customer-record-list {
   font-size: var(--text-sm);
   max-height: min(560px, calc(100vh - 220px));
@@ -2261,6 +2298,17 @@ textarea {
   margin-left: auto;
   background: var(--accent-soft);
   border-color: color-mix(in srgb, var(--accent) 15%, var(--line));
+}
+
+.message-media {
+  display: block;
+  width: min(100%, 300px);
+  max-height: 260px;
+  margin-top: var(--space-3);
+  border: 1px solid var(--line);
+  border-radius: var(--component-radius);
+  background: var(--surface-muted);
+  object-fit: contain;
 }
 
 .message-meta {

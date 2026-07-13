@@ -33,7 +33,9 @@ export default async function QuoteDetailPage({ params }: QuoteDetailPageProps) 
 
   const lead = firstRelation(quote.leads);
   const project = firstRelation(quote.projects);
-  const quoteItems = Array.isArray(quote.quote_items) ? quote.quote_items : [];
+  const quoteItems = Array.isArray(quote.quote_items)
+    ? [...quote.quote_items].sort((a, b) => a.line_no - b.line_no)
+    : [];
 
   return (
     <div className="page-stack quote-page">
@@ -145,24 +147,24 @@ export default async function QuoteDetailPage({ params }: QuoteDetailPageProps) 
             description="A quote needs at least one item before it can become a project."
           />
         ) : (
-          <div className="review-draft-list">
-            <div className="review-draft-list-head" aria-hidden="true">
+          <div className="review-draft-list quote-scope-list">
+            <div className="review-draft-list-head quote-scope-row" aria-hidden="true">
               <span>Item</span>
               <span>Qty</span>
-              <span>Unit</span>
+              <span>Rate</span>
               <span>Total</span>
               <span>Decision</span>
             </div>
             {quoteItems.map((item) => (
-              <div key={item.id} className="review-draft-row">
+              <div key={item.id} className="review-draft-row quote-scope-row">
                 <div className="review-draft-meta-group">
-                  <strong className="review-draft-title">{item.title}</strong>
+                  <strong className="review-draft-title">{item.line_no}. {item.title}</strong>
                   <span className="review-draft-meta">{item.description ?? item.notes ?? "No description"}</span>
                 </div>
-                <span>{item.quantity}</span>
-                <span>{formatMoney(item.unit_price)}</span>
-                <span>{formatMoney(item.total_price)}</span>
-                <div>
+                <span className="quote-scope-number">{item.quantity} {item.unit_label ?? "item"}</span>
+                <span className="quote-scope-number">{formatMoney(item.unit_price)}</span>
+                <strong className="quote-scope-number">{formatMoney(item.total_price)}</strong>
+                <div className="quote-scope-decision">
                   <StatusBadge status={item.decision_status} />
                   {item.decision_notes ? <span className="review-draft-meta">{item.decision_notes}</span> : null}
                 </div>
