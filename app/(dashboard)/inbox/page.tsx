@@ -1,4 +1,3 @@
-/* eslint-disable @next/next/no-img-element */
 import Link from "next/link";
 import { getInboxOverview } from "@/backend/services/inbox/get-inbox-overview";
 import { EmptyState } from "@/frontend/components/dashboard/empty-state";
@@ -7,6 +6,7 @@ import { ProcessThreadDraftButton } from "@/frontend/components/dashboard/proces
 import { StatusBadge } from "@/frontend/components/dashboard/status-badge";
 import { formatChatListTime, formatDateTime, getInitials } from "@/frontend/lib/format";
 import { requireAppSession } from "@/lib/auth/session";
+import { InboxMedia } from "@/frontend/components/dashboard/inbox-media";
 
 type InboxPageProps = {
   searchParams: Promise<{
@@ -234,15 +234,15 @@ export default async function InboxPage({ searchParams }: InboxPageProps) {
                         {message.sender_name ?? (message.direction_code === "outbound" ? "Gage Admin" : "Customer")} · {formatDateTime(message.sent_at)}
                       </p>
                       <p>{message.content ?? message.media_caption ?? "Attachment"}</p>
-                      {(mediaByMessageId[message.id] ?? []).map((asset) =>
-                        asset.media_type === "video" ? (
-                          <video key={asset.id} className="message-media" controls preload="metadata" src={asset.signed_url ?? undefined}>
-                            <track kind="captions" />
-                          </video>
-                        ) : (
-                          <img key={asset.id} className="message-media" src={asset.signed_url ?? undefined} alt={asset.caption ?? "WhatsApp attachment"} />
-                        ),
-                      )}
+                      {(mediaByMessageId[message.id] ?? []).map((asset) => (
+                        <InboxMedia
+                          key={asset.id}
+                          url={asset.signed_url}
+                          mediaType={asset.media_type}
+                          mimeType={asset.mime_type}
+                          caption={asset.caption}
+                        />
+                      ))}
                     </article>
                   ))}
                 </div>

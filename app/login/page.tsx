@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { LoginForm } from "@/frontend/components/auth/login-form";
 
 type LoginPageProps = {
@@ -13,19 +14,29 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
 
   return (
     <main className="auth-shell">
-      <section className="auth-card">
-        <div className="page-stack">
+      <div className="auth-layout">
+        <section className="auth-intro" aria-label="System introduction">
+          <Image className="auth-logo" src="/eps-logo.png" alt="Gage Handyman and Cleaning Service" width={72} height={72} priority />
           <div>
-            <h1>Login</h1>
+            <p className="auth-kicker">Operations workspace</p>
+            <h1>Keep every job moving.</h1>
+            <p>Enquiries, quotations, schedules, field updates and payments stay connected in one place.</p>
           </div>
+          <p className="auth-intro-note">Secure access for Gage&apos;s operations team.</p>
+        </section>
 
+        <section className="auth-card">
+          <header className="auth-card-header">
+            <p className="auth-kicker">Welcome back</p>
+            <h2>Sign in to your account</h2>
+            <p>Use the username and password assigned to your staff account.</p>
+          </header>
           <LoginForm nextPath={nextPath} />
-
-          <p className="helper-text">
-            Need an account? <Link href="/register">Register here</Link>.
+          <p className="auth-switch-link">
+            New team member? <Link href="/register">Create an account</Link>
           </p>
-        </div>
-      </section>
+        </section>
+      </div>
     </main>
   );
 }

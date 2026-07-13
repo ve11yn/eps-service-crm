@@ -1,11 +1,12 @@
 import Link from "next/link";
-import { listProjects } from "@/backend/repositories";
+import { listProjectsWithCoverImages } from "@/backend/services/projects/get-project-list";
 import { EmptyState } from "@/frontend/components/dashboard/empty-state";
 import { ProjectFilters } from "@/frontend/components/dashboard/project-filters";
 import { StatusBadge } from "@/frontend/components/dashboard/status-badge";
 import { formatDate } from "@/frontend/lib/format";
 import { projectPipelineStages } from "@/frontend/lib/crm-workflow";
 import { requireAppSession } from "@/lib/auth/session";
+import { ProjectCardMedia } from "@/frontend/components/dashboard/project-card-media";
 
 type ProjectsPageProps = {
   searchParams: Promise<{
@@ -17,7 +18,7 @@ type ProjectsPageProps = {
 export default async function ProjectsPage({ searchParams }: ProjectsPageProps) {
   await requireAppSession(["owner", "admin", "coordinator"]);
   const params = await searchParams;
-  const projects = await listProjects();
+  const projects = await listProjectsWithCoverImages();
   const query = params.q?.trim().toLowerCase() ?? "";
   const status = params.status?.trim().toLowerCase() ?? "";
 
@@ -81,7 +82,7 @@ export default async function ProjectsPage({ searchParams }: ProjectsPageProps) 
               href={`/projects/${project.id}`}
               className="project-card panel"
             >
-              <div className="project-card-media" />
+              <ProjectCardMedia src={project.coverImageUrl} alt={project.coverImageAlt} />
               <div className="project-card-body">
                 <div className="project-card-title-row">
                   <h2>{project.title}</h2>

@@ -47,6 +47,16 @@ function buildSuggestedReply(extractionPayload: Json): string {
 
 const activeReviewStatuses = new Set(["new", "ai_processed", "needs_review"]);
 
+type InboxMediaAsset = {
+  id: string;
+  message_id: string | null;
+  storage_bucket: string;
+  storage_path: string;
+  mime_type: string | null;
+  media_type: string | null;
+  caption: string | null;
+};
+
 const getInboxOverviewCached = cachedQuery(
   ["inbox", "overview"],
   async (selectedThreadId: string | undefined, page: number = 1, pageSize: number = 50) => {
@@ -120,7 +130,9 @@ const getInboxOverviewCached = cachedQuery(
         reviewDraftsByThreadId: {},
         projectsByThreadId: {},
         activeThread: null,
+        activeProject: null,
         messages: [],
+        mediaByMessageId: {} as Record<string, InboxMediaAsset[]>,
         hasOlderMessages: false,
         reviewDraft: null,
         suggestedReply: "",
@@ -148,14 +160,11 @@ const getInboxOverviewCached = cachedQuery(
           .in("message_id", messageIds)
       : { data: [], error: null };
     if (mediaAssetsError) throw mediaAssetsError;
-    const mediaByMessageId: Record<string, Array<Record<string, unknown>>> = {};
+    const mediaByMessageId: Record<string, InboxMediaAsset[]> = {};
     for (const asset of mediaAssets ?? []) {
       if (!asset.message_id) continue;
-      const { data: signed } = await supabase.storage
-        .from(asset.storage_bucket)
-        .createSignedUrl(asset.storage_path, 60 * 60);
       const collection = mediaByMessageId[asset.message_id] ?? [];
-      collection.push({ ...asset, signed_url: signed?.signedUrl ?? null });
+      collection.push(asset);
       mediaByMessageId[asset.message_id] = collection;
     }
 
@@ -180,5 +189,47 @@ const getInboxOverviewCached = cachedQuery(
 );
 
 export async function getInboxOverview(selectedThreadId?: string, page = 1) {
-  return getInboxOverviewCached(selectedThreadId, page, 50);
+  const overview = await getInboxOverviewCached(selectedThreadId, page, 50);
+  const mediaGroups = new Map<string, InboxMediaAsset[]>();
+
+  for (const assets of Object.values(overview.mediaByMessageId)) {
+    for (const asset of assets) {
+      const group = mediaGroups.get(asset.storage_bucket) ?? [];
+      group.push(asset);
+      mediaGroups.set(asset.storage_bucket, group);
+    }
+  }
+
+  const signedUrls = new Map<string, string>();
+  const supabase = createAdminSupabaseClient();
+  await Promise.all(
+    Array.from(mediaGroups.entries()).map(async ([bucket, assets]) => {
+      const { data, error } = await supabase.storage
+        .from(bucket)
+        .createSignedUrls(assets.map((asset) => asset.storage_path), 60 * 60);
+
+      if (error) {
+        console.error("[inbox.media_sign]", { bucket, error: error.message });
+        return;
+      }
+
+      for (const [index, result] of (data ?? []).entries()) {
+        const asset = assets[index];
+        if (asset && result.signedUrl) signedUrls.set(asset.id, result.signedUrl);
+      }
+    }),
+  );
+
+  return {
+    ...overview,
+    mediaByMessageId: Object.fromEntries(
+      Object.entries(overview.mediaByMessageId).map(([messageId, assets]) => [
+        messageId,
+        assets.map((asset) => ({
+          ...asset,
+          signed_url: signedUrls.get(asset.id) ?? null,
+        })),
+      ]),
+    ),
+  };
 }

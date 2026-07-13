@@ -79,12 +79,13 @@ export function LoginForm({
   }
 
   return (
-    <form className="page-stack" onSubmit={handleSubmit}>
+    <form className="auth-form" onSubmit={handleSubmit}>
       <label className="field-block">
         <span className="field-label">Username</span>
         <input
           className="input"
           autoComplete="username"
+          placeholder="Enter your username"
           value={username}
           onChange={(event) => setUsername(event.target.value)}
           required
@@ -97,6 +98,7 @@ export function LoginForm({
           className="input"
           type="password"
           autoComplete="current-password"
+          placeholder="Enter your password"
           value={password}
           onChange={(event) => setPassword(event.target.value)}
           required
@@ -104,10 +106,10 @@ export function LoginForm({
       </label>
 
       <button type="submit" className="button button-primary" disabled={isSubmitting}>
-        {isSubmitting ? "Signing in..." : "Login"}
+        {isSubmitting ? "Signing in..." : "Sign in"}
       </button>
 
-      {status ? <p className="helper-text">{status}</p> : null}
+      {status ? <p className="auth-form-message" role="alert">{status}</p> : null}
     </form>
   );
 }

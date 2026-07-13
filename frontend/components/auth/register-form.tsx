@@ -81,15 +81,16 @@ export function RegisterForm() {
   }
 
   if (isLoadingRoles) {
-    return <p className="helper-text">Loading role options...</p>;
+    return <p className="auth-form-message">Loading account options...</p>;
   }
 
   return (
-    <form className="page-stack" onSubmit={handleSubmit}>
+    <form className="auth-form" onSubmit={handleSubmit}>
       <label className="field-block">
         <span className="field-label">Full Name</span>
         <input
           className="input"
+          placeholder="Your full name"
           value={displayName}
           onChange={(event) => setDisplayName(event.target.value)}
           required
@@ -102,6 +103,7 @@ export function RegisterForm() {
           className="input"
           type="email"
           autoComplete="email"
+          placeholder="name@company.com"
           value={email}
           onChange={(event) => setEmail(event.target.value)}
           required
@@ -113,6 +115,7 @@ export function RegisterForm() {
         <input
           className="input"
           autoComplete="username"
+          placeholder="Choose a username"
           value={username}
           onChange={(event) => setUsername(event.target.value)}
           required
@@ -142,6 +145,7 @@ export function RegisterForm() {
           className="input"
           type="password"
           autoComplete="new-password"
+          placeholder="At least 8 characters"
           value={password}
           onChange={(event) => setPassword(event.target.value)}
           required
@@ -150,10 +154,10 @@ export function RegisterForm() {
       </label>
 
       <button type="submit" className="button button-primary" disabled={isSubmitting}>
-        {isSubmitting ? "Creating account..." : "Register Account"}
+        {isSubmitting ? "Creating account..." : "Create account"}
       </button>
 
-      {status ? <p className="helper-text">{status}</p> : null}
+      {status ? <p className="auth-form-message" role="alert">{status}</p> : null}
     </form>
   );
 }
