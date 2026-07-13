@@ -11,7 +11,7 @@ export default async function LeadsPage() {
   const leads = await listLeads();
 
   return (
-    <div className="page-stack">
+    <div className="page-stack lead-page">
       <section className="page-header">
         <div>
           <h1>Leads</h1>

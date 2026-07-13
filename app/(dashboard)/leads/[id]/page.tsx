@@ -38,7 +38,7 @@ export default async function LeadDetailPage({ params }: LeadDetailPageProps) {
     : lead.whatsapp_threads;
 
   return (
-    <div className="page-stack">
+    <div className="page-stack lead-page">
       <section className="page-header">
         <div className="page-header-title-row">
           <BackButton fallbackHref="/leads" label="Back to Leads" className="back-icon-button" iconOnly />

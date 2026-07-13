@@ -870,23 +870,25 @@ textarea {
   overflow: visible;
 }
 
-/* Quote list and detail pages contain several full-height sections. Keep one
-   predictable page scrollbar instead of trapping scroll inside the last card. */
-.dashboard-main > .page-stack.quote-page {
+/* Record list and detail pages can contain multiple full-height sections. Keep
+   one predictable page scrollbar instead of trapping scroll inside a card. */
+.dashboard-main > .page-stack:is(.lead-page, .quote-page) {
   overflow-x: hidden;
   overflow-y: auto;
+  overscroll-behavior: contain;
 }
 
-.dashboard-main > .page-stack.quote-page > * {
+.dashboard-main > .page-stack:is(.lead-page, .quote-page) > * {
   flex: 0 0 auto;
 }
 
-.dashboard-main > .page-stack.quote-page > :last-child {
+.dashboard-main > .page-stack:is(.lead-page, .quote-page) > :last-child {
   min-height: auto;
   overflow: visible;
 }
 
-.quote-page .quote-workflow-list {
+.lead-page :is(.lead-workflow-list, .review-draft-list),
+.quote-page :is(.quote-workflow-list, .quote-scope-list) {
   max-height: none;
   overflow-x: auto;
   overflow-y: visible;
@@ -1451,11 +1453,11 @@ textarea {
   transition: 150ms ease;
 }
 
-.review-draft-row:hover {
+.review-draft-row:is(a, button):hover {
   background: var(--surface-hover);
 }
 
-.review-draft-row:focus-visible {
+.review-draft-row:is(a, button):focus-visible {
   outline: 2px solid var(--focus-ring);
   outline-offset: -2px;
 }
@@ -1486,7 +1488,7 @@ textarea {
   font-weight: var(--font-semibold);
 }
 
-.review-draft-row:hover .review-draft-title {
+.review-draft-row:is(a, button):hover .review-draft-title {
   color: var(--accent);
 }
 
@@ -1495,7 +1497,8 @@ textarea {
   overflow-wrap: anywhere;
 }
 
-.quote-scope-row {
+.review-draft-list-head.quote-scope-row,
+.review-draft-list > .review-draft-row.quote-scope-row {
   grid-template-columns: minmax(280px, 1fr) 88px 110px 110px 132px;
   min-width: 760px;
   gap: var(--space-3);
@@ -5325,7 +5328,7 @@ button.back-link {
   }
 
   .quote-workflow-list .workflow-list-row {
-    padding: var(--space-4) 0;
+    padding: var(--space-4) var(--panel-padding);
   }
 
   .quote-workflow-list .workflow-list-row > :nth-child(2),
@@ -5383,6 +5386,43 @@ button.back-link {
     min-width: 0;
     gap: var(--space-2);
     padding: var(--space-3) 0;
+  }
+
+  .review-draft-list > .review-draft-row.quote-scope-row {
+    grid-template-columns: 1fr;
+    min-width: 0;
+    gap: var(--space-3);
+    padding: var(--space-4) var(--panel-padding);
+  }
+
+  .quote-scope-number[data-label] {
+    display: grid;
+    grid-template-columns: 84px minmax(0, 1fr);
+    gap: var(--space-3);
+    text-align: left;
+    white-space: normal;
+  }
+
+  .quote-scope-number[data-label]::before,
+  .quote-scope-decision::before {
+    color: var(--text-muted);
+    font-size: var(--text-xs);
+    font-weight: var(--font-medium);
+  }
+
+  .quote-scope-number[data-label]::before {
+    content: attr(data-label);
+  }
+
+  .quote-scope-decision {
+    display: grid;
+    grid-template-columns: 84px minmax(0, 1fr);
+    gap: var(--space-1) var(--space-3);
+  }
+
+  .quote-scope-decision::before {
+    content: "Decision";
+    grid-row: 1 / span 2;
   }
 
   .customer-record-row {

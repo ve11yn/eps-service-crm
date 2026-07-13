@@ -161,9 +161,9 @@ export default async function QuoteDetailPage({ params }: QuoteDetailPageProps) 
                   <strong className="review-draft-title">{item.line_no}. {item.title}</strong>
                   <span className="review-draft-meta">{item.description ?? item.notes ?? "No description"}</span>
                 </div>
-                <span className="quote-scope-number">{item.quantity} {item.unit_label ?? "item"}</span>
-                <span className="quote-scope-number">{formatMoney(item.unit_price)}</span>
-                <strong className="quote-scope-number">{formatMoney(item.total_price)}</strong>
+                <span className="quote-scope-number" data-label="Quantity">{item.quantity} {item.unit_label ?? "item"}</span>
+                <span className="quote-scope-number" data-label="Rate">{formatMoney(item.unit_price)}</span>
+                <strong className="quote-scope-number" data-label="Total">{formatMoney(item.total_price)}</strong>
                 <div className="quote-scope-decision">
                   <StatusBadge status={item.decision_status} />
                   {item.decision_notes ? <span className="review-draft-meta">{item.decision_notes}</span> : null}
