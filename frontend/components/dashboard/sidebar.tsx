@@ -25,15 +25,16 @@ import type { AppRole } from "@/lib/auth/roles";
 const items: Array<{
   href: string;
   label: string;
+  coordinatorLabel?: string;
   icon: LucideIcon;
   roles: AppRole[];
 }> = [
-  { href: "/", label: "Dashboard", icon: Home, roles: ["owner", "admin", "coordinator"] },
+  { href: "/", label: "Dashboard", coordinatorLabel: "Operations Desk", icon: Home, roles: ["owner", "admin", "coordinator"] },
   { href: "/inbox", label: "Inbox", icon: Inbox, roles: ["owner", "admin"] },
   { href: "/leads", label: "Leads", icon: ListChecks, roles: ["owner", "admin"] },
   { href: "/quotes", label: "Quotes", icon: ReceiptText, roles: ["owner", "admin"] },
-  { href: "/projects", label: "Jobs / Projects", icon: FolderKanban, roles: ["owner", "admin", "coordinator"] },
-  { href: "/schedule", label: "Calendar", icon: CalendarDays, roles: ["owner", "admin", "coordinator"] },
+  { href: "/projects", label: "Jobs / Projects", coordinatorLabel: "Jobs", icon: FolderKanban, roles: ["owner", "admin", "coordinator"] },
+  { href: "/schedule", label: "Calendar", coordinatorLabel: "Team Schedule", icon: CalendarDays, roles: ["owner", "admin", "coordinator"] },
   { href: "/finance", label: "Finance", icon: CircleDollarSign, roles: ["owner", "admin"] },
   { href: "/reports", label: "Reports", icon: BarChart3, roles: ["owner"] },
 ];
@@ -43,6 +44,7 @@ const footerItems: Array<{
   label: string;
   icon: LucideIcon;
   roles: AppRole[];
+  coordinatorLabel?: string;
 }> = [
   { href: "/settings", label: "Configuration", icon: Settings, roles: ["owner", "admin"] },
 ];
@@ -133,17 +135,18 @@ export function Sidebar({
         {visibleItems.map((item) => {
           const active = isActive(pathname, item.href);
           const Icon = item.icon;
+          const label = roleCode === "coordinator" ? item.coordinatorLabel ?? item.label : item.label;
 
           return (
             <Link
               key={item.href}
               href={item.href}
               className={`dashboard-nav-link ${active ? "is-active" : ""}`}
-              data-label={item.label}
-              title={isCollapsed ? item.label : undefined}
+              data-label={label}
+              title={isCollapsed ? label : undefined}
             >
               <Icon className="dashboard-nav-icon" aria-hidden="true" size={18} strokeWidth={2} />
-              <span>{item.label}</span>
+              <span>{label}</span>
             </Link>
           );
         })}
