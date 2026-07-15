@@ -88,7 +88,7 @@ export default async function WorkerPage() {
                     </div>
                     <div className="worker-job-list">
                       {todayItems.map((item, index) => (
-                        <WorkerFieldCard key={item.id} item={item} sequence={index + 1} />
+                        <WorkerFieldCard key={item.id} item={item} sequence={index + 1} defaultExpanded={index === 0} />
                       ))}
                     </div>
                   </section>
@@ -102,7 +102,12 @@ export default async function WorkerPage() {
                     </div>
                     <div className="worker-job-list">
                       {otherItems.map((item, index) => (
-                        <WorkerFieldCard key={item.id} item={item} sequence={index + 1} />
+                        <WorkerFieldCard
+                          key={item.id}
+                          item={item}
+                          sequence={index + 1}
+                          defaultExpanded={todayItems.length === 0 && index === 0}
+                        />
                       ))}
                     </div>
                   </section>
