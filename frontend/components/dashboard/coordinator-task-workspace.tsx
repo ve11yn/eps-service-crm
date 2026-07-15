@@ -29,8 +29,7 @@ export function CoordinatorTaskWorkspace({
 }) {
   const selectedDateKey = getCalendarDayKey(selectedDate);
   const todayKey = getCalendarDayKey(today);
-  const getScheduledAt = (item: CoordinatorWorkspaceItem) =>
-    item.scheduledStartAt ?? item.project?.scheduledStartAt ?? null;
+  const getScheduledAt = (item: CoordinatorWorkspaceItem) => item.scheduledStartAt;
   const getScheduledDayKey = (item: CoordinatorWorkspaceItem) => {
     const scheduledAt = getScheduledAt(item);
     return scheduledAt ? getCalendarDayKey(scheduledAt) : "";

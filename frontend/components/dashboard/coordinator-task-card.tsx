@@ -22,7 +22,7 @@ export function CoordinatorTaskCard({
   const [isExpanded, setIsExpanded] = useState(defaultExpanded);
   const normalizedPriority = item.priorityCode.toLowerCase().replaceAll("_", " ");
   const priorityKey = (["low", "normal", "high", "urgent"] as const).find((value) => normalizedPriority.includes(value)) ?? "normal";
-  const scheduledAt = item.scheduledStartAt ?? item.project?.scheduledStartAt ?? null;
+  const scheduledAt = item.scheduledStartAt;
   const detailsId = `coordinator-task-details-${item.id}`;
 
   return (
@@ -85,6 +85,7 @@ export function CoordinatorTaskCard({
             initialBeforeAfterRequired={item.beforeAfterRequired}
             initialScheduledStartAt={item.scheduledStartAt}
             initialScheduledDueAt={item.scheduledDueAt}
+            followSavedDate
           />
         </section>
 

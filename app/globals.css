@@ -7924,3 +7924,57 @@ button.back-link {
     padding-left: 19px;
   }
 }
+
+/* Keep inbox scrolling inside the conversation columns on desktop. */
+.dashboard-main > .page-stack.inbox-page {
+  overflow: hidden;
+}
+
+.dashboard-main > .inbox-page > .inbox-layout {
+  min-height: 0;
+  overflow: hidden;
+}
+
+.inbox-page .inbox-list,
+.inbox-page .inbox-detail,
+.inbox-page .inbox-conversation-panel {
+  min-height: 0;
+}
+
+.inbox-page .inbox-list .thread-list,
+.inbox-page .inbox-conversation-panel .message-list {
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+  -webkit-overflow-scrolling: touch;
+}
+
+@media (max-width: 1100px) {
+  .dashboard-main > .page-stack.inbox-page {
+    height: 100vh;
+    height: 100dvh;
+    overflow-x: hidden;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+
+  .dashboard-main > .inbox-page > .inbox-layout {
+    flex: 0 0 auto;
+    height: auto;
+    overflow: visible;
+  }
+
+  .inbox-page .inbox-list .thread-list {
+    flex: none;
+    max-height: min(52vh, 560px);
+    max-height: min(52dvh, 560px);
+  }
+
+  .inbox-page .inbox-conversation-panel .message-list {
+    flex: none;
+    max-height: min(58vh, 620px);
+    max-height: min(58dvh, 620px);
+  }
+}

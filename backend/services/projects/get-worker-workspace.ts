@@ -66,8 +66,7 @@ export async function getWorkerWorkspace(profileId: string, selectedDateKey?: st
     rows
       .filter((item) => {
         if (!selectedDateKey) return true;
-        const project = Array.isArray(item.projects) ? item.projects[0] : item.projects;
-        const scheduledAt = item.scheduled_start_at ?? project?.scheduled_start_at ?? null;
+        const scheduledAt = item.scheduled_start_at;
         return !scheduledAt || getCalendarDayKey(scheduledAt) === selectedDateKey;
       })
       .map((item) => item.id),

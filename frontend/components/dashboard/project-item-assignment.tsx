@@ -3,6 +3,18 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 
+function toDateTimeInputValue(value: string | null) {
+  if (!value) return "";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "";
+  const localTime = new Date(date.getTime() - date.getTimezoneOffset() * 60_000);
+  return localTime.toISOString().slice(0, 16);
+}
+
+function toStoredDateTime(value: string) {
+  return value ? new Date(value).toISOString() : null;
+}
+
 export function ProjectItemAssignment({
   itemId,
   workers,
@@ -10,6 +22,7 @@ export function ProjectItemAssignment({
   initialBeforeAfterRequired,
   initialScheduledStartAt,
   initialScheduledDueAt,
+  followSavedDate = false,
 }: {
   itemId: string;
   workers: Array<{ id: string; displayName: string }>;
@@ -17,12 +30,13 @@ export function ProjectItemAssignment({
   initialBeforeAfterRequired: boolean;
   initialScheduledStartAt: string | null;
   initialScheduledDueAt: string | null;
+  followSavedDate?: boolean;
 }) {
   const router = useRouter();
   const [assignedProfileId, setAssignedProfileId] = useState(initialAssignedProfileId ?? "");
   const [beforeAfterRequired, setBeforeAfterRequired] = useState(initialBeforeAfterRequired);
-  const [scheduledStartAt, setScheduledStartAt] = useState(initialScheduledStartAt?.slice(0, 16) ?? "");
-  const [scheduledDueAt, setScheduledDueAt] = useState(initialScheduledDueAt?.slice(0, 16) ?? "");
+  const [scheduledStartAt, setScheduledStartAt] = useState(toDateTimeInputValue(initialScheduledStartAt));
+  const [scheduledDueAt, setScheduledDueAt] = useState(toDateTimeInputValue(initialScheduledDueAt));
   const [message, setMessage] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
 
@@ -36,13 +50,17 @@ export function ProjectItemAssignment({
         body: JSON.stringify({
           assignedProfileId: assignedProfileId || null,
           beforeAfterRequired,
-          scheduledStartAt: scheduledStartAt || null,
-          scheduledDueAt: scheduledDueAt || null,
+          scheduledStartAt: toStoredDateTime(scheduledStartAt),
+          scheduledDueAt: toStoredDateTime(scheduledDueAt),
         }),
       });
       const payload = (await response.json()) as { success?: boolean; error?: string };
       if (!response.ok || !payload.success) throw new Error(payload.error ?? "Assignment failed.");
       setMessage("Assignment saved.");
+      if (followSavedDate && scheduledStartAt) {
+        router.replace(`/?date=${scheduledStartAt.slice(0, 10)}`);
+        return;
+      }
       router.refresh();
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "Assignment failed.");

@@ -126,7 +126,7 @@ export function WorkerFieldCard({
   const nextStep = item.statusCode === "completed"
     ? null
     : progressSteps[Math.min(currentProgressIndex + 1, progressSteps.length - 1)];
-  const scheduledAt = item.scheduledStartAt ?? item.project?.scheduledStartAt;
+  const scheduledAt = item.scheduledStartAt;
   const address = item.project?.address;
   const progressPlaceholders: Record<ProgressUpdate, string> = {
     on_the_way: "Add your ETA or travel update",

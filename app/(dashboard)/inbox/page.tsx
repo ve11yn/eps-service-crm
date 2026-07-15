@@ -67,7 +67,7 @@ export default async function InboxPage({ searchParams }: InboxPageProps) {
   );
 
   return (
-    <div className="page-stack">
+    <div className="page-stack inbox-page">
       <section className="page-header">
         <div>
           <h1>Inbox</h1>
