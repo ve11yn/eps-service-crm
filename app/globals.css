@@ -7427,3 +7427,229 @@ button.back-link {
   }
 
 }
+
+/* Date navigation for field workers and direct date access for coordinators. */
+.worker-date-navigator {
+  display: grid;
+  gap: var(--space-3);
+  padding: var(--space-4) var(--panel-padding);
+}
+
+.worker-date-picker-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+}
+
+.worker-date-picker-title {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-width: 0;
+}
+
+.worker-date-picker-title > span:last-child {
+  display: grid;
+  gap: 2px;
+}
+
+.worker-date-picker-title small {
+  color: var(--text-muted);
+  font-size: var(--text-xs);
+}
+
+.worker-date-picker-title strong {
+  font-size: var(--text-sm);
+  font-weight: var(--font-semibold);
+}
+
+.worker-date-picker-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  flex: 0 0 auto;
+  border-radius: var(--radius-md);
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+.worker-date-controls {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.worker-date-arrow {
+  width: var(--control-height);
+  min-width: var(--control-height);
+  padding: 0;
+}
+
+.worker-date-input {
+  width: 164px;
+}
+
+.worker-today-button.is-active {
+  border-color: color-mix(in srgb, var(--accent) 24%, var(--line));
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+.worker-work-date-strip {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 0;
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--line);
+  overflow-x: auto;
+  scrollbar-width: thin;
+}
+
+.worker-work-date-label,
+.worker-work-date-empty {
+  flex: 0 0 auto;
+  color: var(--text-muted);
+  font-size: var(--text-xs);
+}
+
+.worker-work-date-label {
+  margin-right: var(--space-1);
+  font-weight: var(--font-medium);
+}
+
+.worker-work-date-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 34px;
+  padding: 0 7px 0 11px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--foreground);
+  font: inherit;
+  font-size: var(--text-xs);
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.worker-work-date-chip strong {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 21px;
+  height: 21px;
+  padding: 0 5px;
+  border-radius: 999px;
+  background: var(--surface-muted);
+  color: var(--text-muted);
+  font-size: .68rem;
+}
+
+.worker-work-date-chip:hover,
+.worker-work-date-chip.is-active {
+  border-color: color-mix(in srgb, var(--accent) 28%, var(--line));
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+.worker-work-date-chip.is-active strong {
+  background: var(--accent);
+  color: #fff;
+}
+
+.worker-date-empty {
+  display: grid;
+  justify-items: center;
+  gap: var(--space-4);
+  min-height: 220px;
+  align-content: center;
+  padding: var(--space-5) var(--panel-padding);
+  text-align: center;
+}
+
+.worker-date-empty > .worker-empty-icon {
+  margin-bottom: 0;
+}
+
+.worker-date-empty > .empty-state {
+  width: 100%;
+  max-width: 520px;
+  padding: 0;
+  text-align: center;
+}
+
+.worker-date-empty .empty-state-title,
+.worker-date-empty .empty-state-description {
+  text-align: center;
+}
+
+.worker-date-empty .empty-state-description {
+  max-width: 440px;
+  margin-right: auto;
+  margin-left: auto;
+}
+
+.calendar-jump-date {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: var(--control-height);
+  padding-left: var(--space-3);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--component-radius);
+  background: var(--surface-strong);
+}
+
+.calendar-jump-date > span {
+  color: var(--text-muted);
+  font-size: var(--text-xs);
+  font-weight: var(--font-medium);
+  white-space: nowrap;
+}
+
+.calendar-jump-date .input {
+  width: 144px;
+  min-height: calc(var(--control-height) - 2px);
+  border: 0;
+  background: transparent;
+}
+
+@media (max-width: 760px) {
+  .worker-date-picker-row {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .worker-date-controls {
+    display: grid;
+    grid-template-columns: var(--control-height) minmax(0, 1fr) var(--control-height) auto;
+  }
+
+  .worker-date-input {
+    width: 100%;
+  }
+
+  .calendar-toolbar-actions,
+  .calendar-jump-date {
+    width: 100%;
+  }
+
+  .calendar-jump-date {
+    justify-content: space-between;
+  }
+}
+
+@media (max-width: 420px) {
+  .worker-date-controls {
+    grid-template-columns: var(--control-height) minmax(0, 1fr) var(--control-height);
+  }
+
+  .worker-today-button {
+    grid-column: 1 / -1;
+  }
+}

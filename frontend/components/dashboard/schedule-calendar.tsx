@@ -81,6 +81,7 @@ export function ScheduleCalendar({
   const [isMonthPickerOpen, setIsMonthPickerOpen] = useState(false);
   const [pickerYear, setPickerYear] = useState(initialMonth.getFullYear());
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+  const [dateInputValue, setDateInputValue] = useState(getCalendarDayKey(initialMonth));
   const [editingEvent, setEditingEvent] = useState<ScheduleEvent | null>(null);
   const [isCreating, setIsCreating] = useState(false);
   const pickerRef = useRef<HTMLDivElement>(null);
@@ -152,6 +153,11 @@ export function ScheduleCalendar({
 
   function getEventsForDate(date: Date) {
     return eventsByDay.get(getCalendarDayKey(date)) ?? [];
+  }
+
+  function openDate(date: Date) {
+    setSelectedDate(date);
+    setDateInputValue(getCalendarDayKey(date));
   }
 
   const selectedDateEvents = selectedDate ? getEventsForDate(selectedDate) : [];
@@ -235,11 +241,26 @@ export function ScheduleCalendar({
         </div>
 
         <div className="calendar-toolbar-actions">
+          <label className="calendar-jump-date">
+            <span>Jump to date</span>
+            <input
+              className="input"
+              type="date"
+              value={dateInputValue}
+              onChange={(event) => {
+                const date = getCalendarDate(event.target.value);
+                if (!date) return;
+                setVisibleMonth(date);
+                setPickerYear(date.getFullYear());
+                openDate(date);
+              }}
+            />
+          </label>
           <button
             type="button"
             className="button button-primary"
             onClick={() => {
-              setSelectedDate(new Date());
+              openDate(new Date());
               setEditingEvent(null);
               setIsCreating(true);
             }}
@@ -302,7 +323,7 @@ export function ScheduleCalendar({
               <button
                 type="button"
                 className="calendar-cell-button"
-                onClick={() => setSelectedDate(date)}
+                onClick={() => openDate(date)}
               >
                 <div className="calendar-cell-head">
                   <span className="calendar-date">{date.getDate()}</span>

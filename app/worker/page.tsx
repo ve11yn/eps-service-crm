@@ -3,28 +3,45 @@ import { getWorkerWorkspace } from "@/backend/services/projects/get-worker-works
 import { EmptyState } from "@/frontend/components/dashboard/empty-state";
 import { Sidebar } from "@/frontend/components/dashboard/sidebar";
 import { StatCard } from "@/frontend/components/dashboard/stat-card";
+import { WorkerDateNavigator } from "@/frontend/components/worker/worker-date-navigator";
 import { WorkerFieldCard } from "@/frontend/components/worker/worker-field-card";
-import { formatLongDate, getCalendarDayKey } from "@/frontend/lib/format";
+import { formatLongDate, getCalendarDate, getCalendarDayKey } from "@/frontend/lib/format";
 import { requireAppSession } from "@/lib/auth/session";
 
-export default async function WorkerPage() {
+export default async function WorkerPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ date?: string | string[] }>;
+}) {
   const session = await requireAppSession([
     "owner",
     "admin",
     "coordinator",
     "field_worker",
   ]);
+  const params = await searchParams;
   const items = await getWorkerWorkspace(session.profile.id);
   const today = new Date();
   const todayKey = getCalendarDayKey(today);
+  const requestedDate = Array.isArray(params.date) ? params.date[0] : params.date;
+  const requestedCalendarDate = requestedDate ? getCalendarDate(requestedDate) : null;
+  const selectedDate = requestedCalendarDate && getCalendarDayKey(requestedCalendarDate) === requestedDate
+    ? requestedCalendarDate
+    : getCalendarDate(today) ?? today;
+  const selectedDateKey = getCalendarDayKey(selectedDate);
   const getScheduledAt = (item: (typeof items)[number]) =>
     item.scheduledStartAt ?? item.project?.scheduledStartAt ?? null;
-  const todayItems = items.filter(
-    (item) => getCalendarDayKey(getScheduledAt(item)) === todayKey,
-  );
-  const otherItems = items.filter(
-    (item) => getCalendarDayKey(getScheduledAt(item)) !== todayKey,
-  );
+  const selectedItems = items
+    .filter((item) => getCalendarDayKey(getScheduledAt(item)) === selectedDateKey)
+    .sort((left, right) => new Date(getScheduledAt(left) ?? 0).getTime() - new Date(getScheduledAt(right) ?? 0).getTime());
+  const unscheduledItems = items.filter((item) => !getScheduledAt(item));
+  const workDateCounts = new Map<string, number>();
+  items.forEach((item) => {
+    const dateKey = getCalendarDayKey(getScheduledAt(item));
+    if (dateKey) workDateCounts.set(dateKey, (workDateCounts.get(dateKey) ?? 0) + 1);
+  });
+  const workDates = Array.from(workDateCounts, ([date, count]) => ({ date, count }))
+    .sort((left, right) => left.date.localeCompare(right.date));
   const evidenceOutstanding = items.filter((item) => {
     if (!item.beforeAfterRequired) return false;
     const types = new Set(item.evidence.map((asset) => asset.evidenceType));
@@ -52,6 +69,8 @@ export default async function WorkerPage() {
           </section>
 
           <div className="worker-dashboard-scroll">
+            <WorkerDateNavigator selectedDate={selectedDateKey} today={todayKey} workDates={workDates} />
+
             <section className="stats-grid worker-dashboard-stats" aria-label="Work summary">
               <StatCard
                 label="Assigned Items"
@@ -59,9 +78,9 @@ export default async function WorkerPage() {
                 hint="Open work currently assigned to you"
               />
               <StatCard
-                label="Scheduled Today"
-                value={todayItems.length}
-                hint="Items on today’s route"
+                label={selectedDateKey === todayKey ? "Scheduled Today" : "Selected Date"}
+                value={selectedItems.length}
+                hint={selectedDateKey === todayKey ? "Items on today’s route" : formatLongDate(selectedDate)}
               />
               <StatCard
                 label="Evidence Due"
@@ -80,33 +99,47 @@ export default async function WorkerPage() {
               </section>
             ) : (
               <div className="worker-work-sections">
-                {todayItems.length > 0 ? (
+                {selectedItems.length > 0 ? (
                   <section className="worker-work-section">
                     <div className="worker-section-heading">
-                      <h2>Today’s tasks</h2>
-                      <span>{todayItems.length} {todayItems.length === 1 ? "job" : "jobs"}</span>
+                      <div>
+                        <p className="eyebrow">{formatLongDate(selectedDate)}</p>
+                        <h2>{selectedDateKey === todayKey ? "Today’s tasks" : "Scheduled tasks"}</h2>
+                      </div>
+                      <span>{selectedItems.length} {selectedItems.length === 1 ? "job" : "jobs"}</span>
                     </div>
                     <div className="worker-job-list">
-                      {todayItems.map((item, index) => (
+                      {selectedItems.map((item, index) => (
                         <WorkerFieldCard key={item.id} item={item} sequence={index + 1} defaultExpanded={index === 0} />
                       ))}
                     </div>
                   </section>
-                ) : null}
+                ) : (
+                  <section className="panel worker-date-empty">
+                    <span className="worker-empty-icon"><CheckCircle2 size={24} /></span>
+                    <EmptyState
+                      title="No work scheduled for this date"
+                      description="Choose another work date above to see your assigned tasks."
+                    />
+                  </section>
+                )}
 
-                {otherItems.length > 0 ? (
+                {unscheduledItems.length > 0 ? (
                   <section className="worker-work-section">
                     <div className="worker-section-heading">
-                      <h2>{todayItems.length ? "Upcoming tasks" : "Assigned tasks"}</h2>
-                      <span>{otherItems.length} {otherItems.length === 1 ? "job" : "jobs"}</span>
+                      <div>
+                        <p className="eyebrow">No date assigned</p>
+                        <h2>Awaiting schedule</h2>
+                      </div>
+                      <span>{unscheduledItems.length} {unscheduledItems.length === 1 ? "job" : "jobs"}</span>
                     </div>
                     <div className="worker-job-list">
-                      {otherItems.map((item, index) => (
+                      {unscheduledItems.map((item, index) => (
                         <WorkerFieldCard
                           key={item.id}
                           item={item}
                           sequence={index + 1}
-                          defaultExpanded={todayItems.length === 0 && index === 0}
+                          defaultExpanded={selectedItems.length === 0 && index === 0}
                         />
                       ))}
                     </div>
