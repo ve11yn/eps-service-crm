@@ -31,10 +31,24 @@ export default async function WorkerPage({
   const selectedDateKey = getCalendarDayKey(selectedDate);
   const getScheduledAt = (item: (typeof items)[number]) =>
     item.scheduledStartAt ?? item.project?.scheduledStartAt ?? null;
+  const getPriorityRank = (priority: string) => {
+    const normalized = priority.toLowerCase().replaceAll("_", " ");
+    if (normalized.includes("urgent")) return 4;
+    if (normalized.includes("high")) return 3;
+    if (normalized.includes("low")) return 1;
+    return 2;
+  };
+  const compareTasks = (left: (typeof items)[number], right: (typeof items)[number]) => {
+    const priorityDifference = getPriorityRank(right.priorityCode) - getPriorityRank(left.priorityCode);
+    if (priorityDifference !== 0) return priorityDifference;
+    return new Date(getScheduledAt(left) ?? 0).getTime() - new Date(getScheduledAt(right) ?? 0).getTime();
+  };
   const selectedItems = items
     .filter((item) => getCalendarDayKey(getScheduledAt(item)) === selectedDateKey)
-    .sort((left, right) => new Date(getScheduledAt(left) ?? 0).getTime() - new Date(getScheduledAt(right) ?? 0).getTime());
-  const unscheduledItems = items.filter((item) => !getScheduledAt(item));
+    .sort(compareTasks);
+  const unscheduledItems = items
+    .filter((item) => !getScheduledAt(item))
+    .sort(compareTasks);
   const workDateCounts = new Map<string, number>();
   items.forEach((item) => {
     const dateKey = getCalendarDayKey(getScheduledAt(item));
