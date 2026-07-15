@@ -140,7 +140,6 @@ export function WorkerFieldCard({
       ? "Upload an after photo before completing this task."
       : null;
   const progressBlocked = Boolean(evidenceBlockMessage);
-  const taskDescription = item.description ?? item.actionSummary ?? "No additional instructions provided.";
   const projectLabel = item.project?.projectCode ?? "Assigned task";
   const normalizedPriority = item.priorityCode.toLowerCase().replaceAll("_", " ");
   const priorityKey = (["low", "normal", "high", "urgent"] as const).find((value) => normalizedPriority.includes(value)) ?? "normal";
@@ -154,7 +153,7 @@ export function WorkerFieldCard({
           type="button"
           className="worker-job-header-toggle"
           aria-expanded={isExpanded}
-          aria-controls={detailsId}
+          aria-controls={isExpanded ? detailsId : undefined}
           onClick={() => setIsExpanded((current) => !current)}
         >
           <div className="worker-job-title-wrap">
@@ -162,7 +161,6 @@ export function WorkerFieldCard({
             <div>
               <p className="worker-project-code" title={item.project?.title ?? undefined}>{projectLabel}</p>
               <h3>{item.title}</h3>
-              <p className="worker-task-description">{taskDescription}</p>
               <div className="worker-task-meta" aria-label="Task details">
                 <span>{item.areaName ?? "General area"}</span>
                 <span className="worker-task-meta-divider" aria-hidden="true">•</span>
@@ -188,7 +186,8 @@ export function WorkerFieldCard({
         ) : null}
       </div>
 
-      <div id={detailsId} className="worker-job-details" hidden={!isExpanded}>
+      {isExpanded ? (
+      <div id={detailsId} className="worker-job-details">
       <div className="worker-progress" aria-label="Job progress">
         {progressSteps.map((step, index) => {
           const isDone = index <= currentProgressIndex;
@@ -287,7 +286,7 @@ export function WorkerFieldCard({
                     <a key={asset.id} href={asset.signedUrl ?? "#"} target="_blank" rel="noreferrer">
                       {asset.signedUrl ? (
                         // eslint-disable-next-line @next/next/no-img-element
-                        <img src={asset.signedUrl} alt={asset.caption ?? asset.evidenceType ?? "Evidence"} />
+                        <img src={asset.signedUrl} alt={asset.caption ?? asset.evidenceType ?? "Evidence"} loading="lazy" decoding="async" />
                       ) : <span className="worker-photo-placeholder"><Camera size={20} /></span>}
                       <span>{asset.evidenceType?.replaceAll("_", " ") ?? "photo"}</span>
                     </a>
@@ -330,7 +329,9 @@ export function WorkerFieldCard({
           </details>
         ) : null}
       </div>
+
       </div>
+      ) : null}
 
       {message ? <div className="worker-feedback" role="status">{message}</div> : null}
     </article>

@@ -61,18 +61,18 @@ export function ProjectItemAssignment({
         </select>
       </label>
       <label className="field-block">
-        <span className="field-label">Worker start</span>
+        <span className="field-label">Start date and time</span>
         <input className="input" type="datetime-local" value={scheduledStartAt} onChange={(event) => setScheduledStartAt(event.target.value)} />
       </label>
       <label className="field-block">
-        <span className="field-label">Worker due</span>
+        <span className="field-label">Due date and time</span>
         <input className="input" type="datetime-local" value={scheduledDueAt} onChange={(event) => setScheduledDueAt(event.target.value)} />
       </label>
-      <label className="toggle-row">
+      <label className="toggle-row assignment-photo-toggle">
         <input type="checkbox" checked={beforeAfterRequired} onChange={(event) => setBeforeAfterRequired(event.target.checked)} />
         <span>Require before and after photos</span>
       </label>
-      <button type="button" className="button button-secondary" disabled={saving} onClick={save}>{saving ? "Saving..." : "Save assignment"}</button>
+      <button type="button" className="button button-primary" disabled={saving} onClick={save}>{saving ? "Saving..." : "Save assignment"}</button>
       {message ? <span className="helper-text">{message}</span> : null}
     </div>
   );

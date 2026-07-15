@@ -5,24 +5,38 @@ import { EmptyState } from "@/frontend/components/dashboard/empty-state";
 import { ActionQueueItem } from "@/frontend/components/dashboard/action-queue-item";
 import { requireAppSession } from "@/lib/auth/session";
 import { StatusBadge } from "@/frontend/components/dashboard/status-badge";
-import { formatDateTime, formatMoney } from "@/frontend/lib/format";
+import { formatDateTime, formatMoney, getCalendarDate, getCalendarDayKey } from "@/frontend/lib/format";
 import { getScheduleOverview } from "@/backend/services/schedule/get-schedule-overview";
-import { CoordinatorDashboard } from "@/frontend/components/dashboard/coordinator-dashboard";
+import { getCoordinatorWorkspace } from "@/backend/services/projects/get-coordinator-workspace";
+import { CoordinatorTaskWorkspace } from "@/frontend/components/dashboard/coordinator-task-workspace";
 
-export default async function HomePage() {
+export default async function HomePage({
+  searchParams,
+}: {
+  searchParams: Promise<{ date?: string | string[] }>;
+}) {
   const session = await requireAppSession(["owner", "admin", "coordinator"]);
 
   if (session.profile.roleCode === "coordinator") {
-    const [dashboard, schedule] = await Promise.all([
-      getDashboardOverview(),
+    const params = await searchParams;
+    const [items, schedule] = await Promise.all([
+      getCoordinatorWorkspace(),
       getScheduleOverview(),
     ]);
+    const today = new Date();
+    const requestedDate = Array.isArray(params.date) ? params.date[0] : params.date;
+    const requestedCalendarDate = requestedDate ? getCalendarDate(requestedDate) : null;
+    const selectedDate = requestedCalendarDate && getCalendarDayKey(requestedCalendarDate) === requestedDate
+      ? requestedCalendarDate
+      : getCalendarDate(today) ?? today;
 
     return (
-      <CoordinatorDashboard
+      <CoordinatorTaskWorkspace
         displayName={session.profile.displayName}
-        dashboard={dashboard}
-        schedule={schedule}
+        items={items}
+        workers={schedule.workers.map((worker) => ({ id: worker.id, displayName: worker.display_name }))}
+        selectedDate={selectedDate}
+        today={today}
       />
     );
   }

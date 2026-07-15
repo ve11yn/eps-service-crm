@@ -36,16 +36,18 @@ export function WorkerDateNavigator({
   selectedDate,
   today,
   workDates,
+  basePath = "/worker",
 }: {
   selectedDate: string;
   today: string;
   workDates: WorkDate[];
+  basePath?: string;
 }) {
   const router = useRouter();
 
   function selectDate(date: string) {
     if (!date) return;
-    router.push(date === today ? "/worker" : `/worker?date=${date}`);
+    router.push(date === today ? basePath : `${basePath}?date=${date}`);
   }
 
   return (

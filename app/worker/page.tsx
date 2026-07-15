@@ -1,4 +1,5 @@
 import { CheckCircle2 } from "lucide-react";
+import { redirect } from "next/navigation";
 import { getWorkerWorkspace } from "@/backend/services/projects/get-worker-workspace";
 import { EmptyState } from "@/frontend/components/dashboard/empty-state";
 import { Sidebar } from "@/frontend/components/dashboard/sidebar";
@@ -13,14 +14,11 @@ export default async function WorkerPage({
 }: {
   searchParams: Promise<{ date?: string | string[] }>;
 }) {
-  const session = await requireAppSession([
-    "owner",
-    "admin",
-    "coordinator",
-    "field_worker",
+  const [session, params] = await Promise.all([
+    requireAppSession(["owner", "admin", "coordinator", "field_worker"]),
+    searchParams,
   ]);
-  const params = await searchParams;
-  const items = await getWorkerWorkspace(session.profile.id);
+  if (session.profile.roleCode !== "field_worker") redirect("/");
   const today = new Date();
   const todayKey = getCalendarDayKey(today);
   const requestedDate = Array.isArray(params.date) ? params.date[0] : params.date;
@@ -29,6 +27,7 @@ export default async function WorkerPage({
     ? requestedCalendarDate
     : getCalendarDate(today) ?? today;
   const selectedDateKey = getCalendarDayKey(selectedDate);
+  const items = await getWorkerWorkspace(session.profile.id, selectedDateKey);
   const getScheduledAt = (item: (typeof items)[number]) =>
     item.scheduledStartAt ?? item.project?.scheduledStartAt ?? null;
   const getPriorityRank = (priority: string) => {

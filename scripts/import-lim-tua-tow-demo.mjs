@@ -61,6 +61,12 @@ function singaporeTodayAt(hour, minute = 0) {
   return new Date(`${value.year}-${value.month}-${value.day}T${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")}:00+08:00`).toISOString();
 }
 
+function singaporeDayAt(dayOffset, hour, minute = 0) {
+  const date = new Date(singaporeTodayAt(hour, minute));
+  date.setUTCDate(date.getUTCDate() + dayOffset);
+  return date.toISOString();
+}
+
 const env = envFrom(await readFile(path.join(root, ".env.local"), "utf8"));
 if (!env.NEXT_PUBLIC_SUPABASE_URL || !env.SUPABASE_SERVICE_ROLE_KEY) {
   throw new Error("NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY are required.");
@@ -115,7 +121,9 @@ if (VERIFY) {
     project.completed_at === null &&
     project.coordinator_profile_id === coordinator.id &&
     items.length > 0 &&
-    items.every((item) => item.status_code === "pending" && item.assigned_profile_id === worker.id) &&
+    items.every((item) => item.status_code === "pending" && item.before_after_required) &&
+    items.filter((item) => item.assigned_profile_id === worker.id).length === 3 &&
+    items.filter((item) => item.assigned_profile_id === null).length === 3 &&
     appointments.some((appointment) => appointment.status_code === "scheduled" && appointment.assigned_profile_id === worker.id) &&
     team.some((member) => member.profile_id === coordinator.id) &&
     team.some((member) => member.profile_id === worker.id) &&
@@ -123,7 +131,7 @@ if (VERIFY) {
     (quoteCount ?? 0) === 0 &&
     (draftCount ?? 0) === 0;
   if (!valid) throw new Error("The demo project exists but is not correctly prepared for both role workspaces.");
-  console.log(`Verified: one scheduled project, ${items.length} pending assigned items, ${appointments.length} scheduled appointment, ${team.length} team members.`);
+  console.log(`Verified: one scheduled project, ${items.length} pending tasks (3 assigned, 3 unassigned), ${appointments.length} scheduled appointment, ${team.length} team members.`);
   console.log(`Verified Inbox: one linked deduplicated conversation with ${messageCount} source messages.`);
   console.log("Verified demo blanks: no linked lead, quote, or approved review draft.");
   process.exit(0);
@@ -310,6 +318,13 @@ await ok(db.from("project_team_members").insert([
   { project_id: project.id, profile_id: worker.id, team_role: "field_worker", is_lead: false },
 ]), "Create demo project team");
 
+await ok(db.from("priority_levels").upsert({
+  code: "low",
+  label: "Low",
+  description: "Can be completed after normal and high priority work",
+  sort_order: 0,
+}, { onConflict: "code" }), "Ensure low priority lookup");
+
 const scope = [
   {
     title: "Remove living-room window films",
@@ -317,6 +332,10 @@ const scope = [
     area: "Living Room",
     amount: 240,
     priority: "normal",
+    assigned: true,
+    dayOffset: 0,
+    startHour: 13,
+    dueHour: 15,
   },
   {
     title: "Repair drooping cove ceiling",
@@ -324,6 +343,10 @@ const scope = [
     area: "Main Door",
     amount: 280,
     priority: "high",
+    assigned: false,
+    dayOffset: 0,
+    startHour: 9,
+    dueHour: 12,
   },
   {
     title: "Remove built-in desks and shelves",
@@ -331,20 +354,32 @@ const scope = [
     area: "Upper Floor Bedrooms",
     amount: 600,
     priority: "normal",
+    assigned: true,
+    dayOffset: 1,
+    startHour: 9,
+    dueHour: 12,
   },
   {
     title: "Remove master-bedroom awning and grille",
     description: "Dismantle and dispose of the exterior window awning and grille obstructing the view.",
     area: "Master Bedroom",
     amount: 1180,
-    priority: "normal",
+    priority: "high",
+    assigned: false,
+    dayOffset: 1,
+    startHour: 13,
+    dueHour: 17,
   },
   {
     title: "Install additional bedroom power points",
     description: "Install dual 3-pin power points with casing in the agreed upstairs bedrooms.",
     area: "Upstairs Bedrooms",
     amount: 450,
-    priority: "normal",
+    priority: "low",
+    assigned: true,
+    dayOffset: 2,
+    startHour: 10,
+    dueHour: 13,
   },
   {
     title: "Prepare instant water-heater connection",
@@ -352,6 +387,10 @@ const scope = [
     area: "Under Basin",
     amount: 230,
     priority: "normal",
+    assigned: false,
+    dayOffset: 2,
+    startHour: 14,
+    dueHour: 17,
   },
 ];
 
@@ -359,7 +398,7 @@ await ok(db.from("project_items").insert(scope.map((item, index) => ({
   project_id: project.id,
   status_code: "pending",
   priority_code: item.priority,
-  assigned_profile_id: worker.id,
+  assigned_profile_id: item.assigned ? worker.id : null,
   sort_order: index + 1,
   title: item.title,
   description: item.description,
@@ -367,8 +406,8 @@ await ok(db.from("project_items").insert(scope.map((item, index) => ({
   action_summary: "Review the area, take before evidence, complete the work, then add after evidence.",
   internal_note: `${marker} Leave incomplete until the demo recording is finished.`,
   quoted_amount: item.amount,
-  scheduled_start_at: scheduledStart,
-  scheduled_due_at: scheduledEnd,
+  scheduled_start_at: singaporeDayAt(item.dayOffset, item.startHour),
+  scheduled_due_at: singaporeDayAt(item.dayOffset, item.dueHour),
   before_after_required: true,
   checklist_requirements: "Before photo; confirm scope; after photo; report any variation before proceeding.",
   item_group: "handyman",
@@ -437,7 +476,7 @@ if (!existingDocument) {
 }
 
 console.log(`Created/reset project ${project.project_code} (${project.id}).`);
-console.log("Status: scheduled; every work item: pending; before/after evidence: required.");
+console.log("Status: scheduled; six pending tasks across three dates; three assigned and three awaiting a worker.");
 console.log(`Inbox: linked one deduplicated conversation; inserted ${missingMessages.length} previously missing source messages.`);
 console.log("Lead, quote, invoice, payment, and review draft remain blank for the demo workflow.");
 console.log("The project is visible in Inbox, Projects, Calendar, Coordinator Operations Desk, and the assigned Field Workspace.");
