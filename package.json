@@ -11,6 +11,7 @@
     "test:integration": "node --test tests/integration/*.test.mjs",
     "test:e2e": "node --test tests/e2e/*.test.mjs",
     "data:import-tai-keng": "node scripts/import-tai-keng-dataset.mjs",
+    "data:import-lim-tua-tow-demo": "node scripts/import-lim-tua-tow-demo.mjs",
     "validate": "npm run lint && npm test && npm run test:integration && npm run build"
   },
   "dependencies": {

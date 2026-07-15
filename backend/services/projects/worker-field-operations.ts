@@ -28,6 +28,13 @@ const updateLabels: Record<Exclude<WorkerUpdateType, "issue">, string> = {
   completed: "Work item completed",
 };
 
+const progressSequence: Array<Exclude<WorkerUpdateType, "issue">> = [
+  "on_the_way",
+  "arrived",
+  "in_progress",
+  "completed",
+];
+
 async function getWorkerItem(input: {
   itemId: string;
   profileId: string;
@@ -68,22 +75,61 @@ async function getWorkerItem(input: {
   return { ...data, project };
 }
 
-async function validateCompletionEvidence(item: {
+async function validateRequiredEvidence(item: {
   id: string;
   before_after_required: boolean;
-}) {
+}, requiredTypes: Array<"before" | "after">) {
   if (!item.before_after_required) return;
   const supabase = createAdminSupabaseClient();
   const { data, error } = await supabase
     .from("media_assets")
     .select("evidence_type")
     .eq("project_item_id", item.id)
-    .in("evidence_type", ["before", "after"]);
+    .in("evidence_type", requiredTypes);
 
   if (error) throw error;
   const evidenceTypes = new Set((data ?? []).map((asset) => asset.evidence_type));
-  if (!evidenceTypes.has("before") || !evidenceTypes.has("after")) {
-    throw new Error("Upload both before and after photos before completing this item.");
+  const missing = requiredTypes.filter((type) => !evidenceTypes.has(type));
+  if (missing.length > 0) {
+    throw new Error(`Upload the required ${missing.join(" and ")} photo${missing.length === 1 ? "" : "s"} before continuing.`);
+  }
+}
+
+async function validateProgressSequence(item: {
+  id: string;
+  status_code: string;
+  before_after_required: boolean;
+}, updateType: Exclude<WorkerUpdateType, "issue">) {
+  if (item.status_code === "completed") {
+    throw new Error("This work item is already complete.");
+  }
+
+  const supabase = createAdminSupabaseClient();
+  const { data, error } = await supabase
+    .from("project_field_updates")
+    .select("update_type")
+    .eq("project_item_id", item.id)
+    .in("update_type", progressSequence)
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  if (error) throw error;
+
+  let currentIndex = data ? progressSequence.indexOf(data.update_type as Exclude<WorkerUpdateType, "issue">) : -1;
+  if (item.status_code === "in_progress") currentIndex = Math.max(currentIndex, 2);
+  const expected = progressSequence[currentIndex + 1];
+
+  if (!expected) throw new Error("No further progress update is available for this item.");
+  if (updateType !== expected) {
+    const label = updateLabels[expected].replace(/^Worker /, "");
+    throw new Error(`Progress updates must be recorded in order. Next required update: ${label}.`);
+  }
+
+  if (updateType === "in_progress") {
+    await validateRequiredEvidence(item, ["before"]);
+  }
+  if (updateType === "completed") {
+    await validateRequiredEvidence(item, ["before", "after"]);
   }
 }
 
@@ -134,8 +180,11 @@ export async function recordWorkerFieldUpdate(input: {
     throw new Error("Describe the issue so admin can act on it.");
   }
 
-  if (input.updateType === "completed") {
-    await validateCompletionEvidence(item);
+  if (input.updateType !== "issue") {
+    if (!notes || notes.length < 3) {
+      throw new Error("Add a short site update before changing progress.");
+    }
+    await validateProgressSequence(item, input.updateType);
   }
 
   const supabase = createAdminSupabaseClient();

@@ -12,6 +12,7 @@ import {
   History,
   MapPin,
   Navigation,
+  UploadCloud,
 } from "lucide-react";
 import type { WorkerWorkspaceItem } from "@/backend/services/projects/get-worker-workspace";
 import { StatusBadge } from "@/frontend/components/dashboard/status-badge";
@@ -35,6 +36,7 @@ export function WorkerFieldCard({ item, sequence }: { item: WorkerWorkspaceItem;
   const [evidenceType, setEvidenceType] = useState("before");
   const [caption, setCaption] = useState("");
   const [file, setFile] = useState<File | null>(null);
+  const [progressNote, setProgressNote] = useState("");
 
   async function sendUpdate(updateType: ProgressUpdate) {
     setIsPending(true);
@@ -43,10 +45,11 @@ export function WorkerFieldCard({ item, sequence }: { item: WorkerWorkspaceItem;
       const response = await fetch(`/api/worker/items/${item.id}/updates`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ updateType }),
+        body: JSON.stringify({ updateType, notes: progressNote.trim() }),
       });
       const payload = (await response.json()) as { success?: boolean; error?: string };
       if (!response.ok || !payload.success) throw new Error(payload.error ?? "Update failed.");
+      setProgressNote("");
       setMessage(`${progressSteps.find((step) => step.key === updateType)?.label} recorded.`);
       router.refresh();
     } catch (error) {
@@ -105,7 +108,6 @@ export function WorkerFieldCard({ item, sequence }: { item: WorkerWorkspaceItem;
 
   const hasBefore = item.evidence.some((asset) => asset.evidenceType === "before");
   const hasAfter = item.evidence.some((asset) => asset.evidenceType === "after");
-  const evidenceComplete = !item.beforeAfterRequired || (hasBefore && hasAfter);
   const latestProgress = item.recentUpdates.find((update) =>
     progressSteps.some((step) => step.key === update.updateType),
   )?.updateType;
@@ -117,6 +119,18 @@ export function WorkerFieldCard({ item, sequence }: { item: WorkerWorkspaceItem;
     : progressSteps[Math.min(currentProgressIndex + 1, progressSteps.length - 1)];
   const scheduledAt = item.scheduledStartAt ?? item.project?.scheduledStartAt;
   const address = item.project?.address;
+  const progressPlaceholders: Record<ProgressUpdate, string> = {
+    on_the_way: "Add your ETA or travel update",
+    arrived: "Confirm access and what you found on arrival",
+    in_progress: "State what work you are starting",
+    completed: "Summarise what was completed",
+  };
+  const evidenceBlockMessage = nextStep?.key === "in_progress" && item.beforeAfterRequired && !hasBefore
+    ? "Upload a before photo before starting work."
+    : nextStep?.key === "completed" && item.beforeAfterRequired && !hasAfter
+      ? "Upload an after photo before completing this task."
+      : null;
+  const progressBlocked = Boolean(evidenceBlockMessage);
 
   return (
     <article className={`worker-job-card priority-${item.priorityCode}`}>
@@ -124,7 +138,7 @@ export function WorkerFieldCard({ item, sequence }: { item: WorkerWorkspaceItem;
         <div className="worker-job-title-wrap">
           <div className="worker-job-order">{sequence ?? "•"}</div>
           <div>
-            <p className="worker-project-code">{item.project?.projectCode ?? "Assigned job"}</p>
+            <p className="worker-project-code">{item.project?.title ?? "Assigned task"}</p>
             <h3>{item.title}</h3>
             <p>{item.description ?? item.actionSummary ?? item.areaName ?? "Assigned work item"}</p>
           </div>
@@ -163,39 +177,64 @@ export function WorkerFieldCard({ item, sequence }: { item: WorkerWorkspaceItem;
         </div>
       ) : null}
 
-      <div className="worker-primary-action">
-        {nextStep ? (
-          <button
-            type="button"
-            className="worker-next-button"
-            disabled={isPending || (nextStep.key === "completed" && !evidenceComplete)}
-            onClick={() => sendUpdate(nextStep.key)}
-          >
-            <span>{isPending ? "Saving update…" : nextStep.label}</span>
-            <ArrowRight size={18} aria-hidden="true" />
-          </button>
-        ) : (
-          <div className="worker-complete-message"><Check size={18} /><span><strong>Work complete</strong><small>Sent to the coordinator for review.</small></span></div>
-        )}
-        {nextStep?.key === "completed" && !evidenceComplete ? (
-          <p>Upload the required before and after photos to complete this job.</p>
-        ) : null}
-      </div>
-
-      <div className="worker-tools">
-        <details className="worker-tool" open={item.beforeAfterRequired && !evidenceComplete}>
-          <summary><span><Camera size={18} /> Add site photos <small>{item.evidence.length} uploaded</small></span><ChevronDown size={18} /></summary>
-          <div className="worker-tool-body">
-            <div className="worker-upload-grid">
-              <label><span>Photo type</span><select className="input input-select" value={evidenceType} onChange={(event) => setEvidenceType(event.target.value)}>
-                <option value="before">Before</option><option value="during">During</option><option value="after">After</option>
-                <option value="defect">Defect</option><option value="materials">Materials</option><option value="access">Access</option>
-                <option value="marked_up">Marked-up clarification</option>
-              </select></label>
-              <label><span>Choose photo</span><input className="input worker-file-input" type="file" accept="image/*" capture="environment" onChange={(event) => setFile(event.target.files?.[0] ?? null)} /></label>
-              <label className="worker-caption-field"><span>Note (optional)</span><input className="input" value={caption} onChange={(event) => setCaption(event.target.value)} placeholder="What should the coordinator notice?" /></label>
-              <button type="button" className="button button-primary" disabled={isPending || !file} onClick={uploadEvidence}>Upload photo</button>
+      <div className="worker-task-action-grid">
+        <div className="worker-primary-action">
+          {nextStep ? (
+            <div className="worker-progress-update">
+              <header className="worker-progress-update-header">
+                <p>Next required update</p>
+                <h4>{nextStep.label}</h4>
+                <span>Add a short site update. The submission time is recorded automatically.</span>
+              </header>
+              <label className="worker-form-field">
+                <span className="worker-field-label-row"><span>Site update</span><small>Required</small></span>
+                <textarea
+                  className="input"
+                  rows={2}
+                  maxLength={500}
+                  value={progressNote}
+                  onChange={(event) => setProgressNote(event.target.value)}
+                  placeholder={progressPlaceholders[nextStep.key]}
+                />
+              </label>
+              {evidenceBlockMessage ? <p className="worker-action-requirement"><Camera size={15} />{evidenceBlockMessage}</p> : null}
+              <button
+                type="button"
+                className="button button-primary worker-next-button"
+                disabled={isPending || progressNote.trim().length < 3 || progressBlocked}
+                onClick={() => sendUpdate(nextStep.key)}
+              >
+                <span>{isPending ? "Saving update…" : `Confirm ${nextStep.label.toLowerCase()}`}</span>
+                <ArrowRight size={18} aria-hidden="true" />
+              </button>
             </div>
+          ) : (
+            <div className="worker-complete-message"><Check size={18} /><span><strong>Work complete</strong><small>Sent to the coordinator for review.</small></span></div>
+          )}
+        </div>
+
+        <section className="worker-photo-card" aria-labelledby={`photo-heading-${item.id}`}>
+          <header className="worker-photo-card-header">
+            <div><span className="worker-photo-heading-icon"><UploadCloud size={20} aria-hidden="true" /></span><span><strong id={`photo-heading-${item.id}`}>Add site photos</strong><small>Document the site clearly for office review.</small></span></div>
+            <span className="worker-photo-count">{item.evidence.length} uploaded</span>
+          </header>
+          <div className="worker-photo-card-body">
+            <label className="worker-form-field"><span>Photo type</span><select className="input input-select" value={evidenceType} onChange={(event) => setEvidenceType(event.target.value)}>
+              <option value="before">Before work</option><option value="during">During work</option><option value="after">After work</option>
+              <option value="defect">Defect</option><option value="materials">Materials</option><option value="access">Access</option>
+              <option value="marked_up">Marked-up clarification</option>
+            </select></label>
+
+            <input id={`worker-photo-${item.id}`} className="sr-only" type="file" accept="image/*" capture="environment" onChange={(event) => setFile(event.target.files?.[0] ?? null)} />
+            <label className={`worker-file-picker ${file ? "has-file" : ""}`} htmlFor={`worker-photo-${item.id}`}>
+              <span className="worker-file-picker-icon"><UploadCloud size={21} aria-hidden="true" /></span>
+              <span className="worker-file-picker-copy"><strong>{file ? file.name : "Choose a site photo"}</strong><small>{file ? "Tap to select a different photo" : "Use the camera or browse your device"}</small></span>
+              <span className="worker-file-picker-action">{file ? "Change" : "Choose"}</span>
+            </label>
+
+            <label className="worker-form-field"><span>Photo note <small>Optional</small></span><input className="input" value={caption} onChange={(event) => setCaption(event.target.value)} placeholder="Describe what this photo shows" /></label>
+            <button type="button" className="button button-primary worker-photo-upload-button" disabled={isPending || !file} onClick={uploadEvidence}>Upload photo</button>
+
             {item.evidence.length > 0 ? (
               <div className="worker-evidence-grid">
                 {item.evidence.map((asset) => (
@@ -210,17 +249,26 @@ export function WorkerFieldCard({ item, sequence }: { item: WorkerWorkspaceItem;
               </div>
             ) : null}
           </div>
-        </details>
+        </section>
+      </div>
+
+      <div className="worker-tools">
 
         <details className="worker-tool worker-issue-tool">
           <summary><span><AlertTriangle size={18} /> Need help? <small>Alert the coordinator</small></span><ChevronDown size={18} /></summary>
-          <div className="worker-tool-body worker-issue-grid">
-            <label><span>What happened?</span><select className="input input-select" value={issueType} onChange={(event) => setIssueType(event.target.value)}>
-              <option value="customer_not_home">Customer not home</option><option value="need_parts">Parts required</option>
-              <option value="safety_concern">Safety concern</option><option value="scope_question">Scope question</option><option value="other">Other</option>
-            </select></label>
-            <label><span>What do you need?</span><textarea className="input" rows={3} value={issueNotes} onChange={(event) => setIssueNotes(event.target.value)} placeholder="Tell the coordinator what happened and what decision you need" /></label>
-            <button type="button" className="button worker-alert-button" disabled={isPending || !issueNotes.trim()} onClick={reportIssue}>Send alert</button>
+          <div className="worker-tool-body">
+            <div className="worker-tool-intro is-warning">
+              <span className="worker-tool-intro-icon"><AlertTriangle size={19} /></span>
+              <div><strong>Request a decision from the coordinator</strong><p>Explain the blocker clearly. This creates an attention item for the office team.</p></div>
+            </div>
+            <div className="worker-tool-form">
+              <label className="worker-form-field"><span>Issue type</span><select className="input input-select" value={issueType} onChange={(event) => setIssueType(event.target.value)}>
+                <option value="customer_not_home">Customer not home</option><option value="need_parts">Parts required</option>
+                <option value="safety_concern">Safety concern</option><option value="scope_question">Scope question</option><option value="other">Other</option>
+              </select></label>
+              <label className="worker-form-field"><span>What happened and what do you need?</span><textarea className="input" rows={4} maxLength={1000} value={issueNotes} onChange={(event) => setIssueNotes(event.target.value)} placeholder="Example: The existing fitting is damaged. I need approval to replace it before continuing." /></label>
+              <div className="worker-tool-actions"><span>The coordinator will see this as needing attention.</span><button type="button" className="button worker-alert-button" disabled={isPending || issueNotes.trim().length < 5} onClick={reportIssue}>Send alert</button></div>
+            </div>
           </div>
         </details>
 

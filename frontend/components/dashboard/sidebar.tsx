@@ -10,6 +10,7 @@ import {
   ChevronLeft,
   ChevronRight,
   CircleDollarSign,
+  ClipboardList,
   FolderKanban,
   Home,
   Inbox,
@@ -29,6 +30,7 @@ const items: Array<{
   icon: LucideIcon;
   roles: AppRole[];
 }> = [
+  { href: "/worker", label: "Scheduled Tasks", icon: ClipboardList, roles: ["field_worker"] },
   { href: "/", label: "Dashboard", coordinatorLabel: "Operations Desk", icon: Home, roles: ["owner", "admin", "coordinator"] },
   { href: "/inbox", label: "Inbox", icon: Inbox, roles: ["owner", "admin"] },
   { href: "/leads", label: "Leads", icon: ListChecks, roles: ["owner", "admin"] },

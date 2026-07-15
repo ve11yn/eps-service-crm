@@ -6,9 +6,27 @@ import { ActionQueueItem } from "@/frontend/components/dashboard/action-queue-it
 import { requireAppSession } from "@/lib/auth/session";
 import { StatusBadge } from "@/frontend/components/dashboard/status-badge";
 import { formatDateTime, formatMoney } from "@/frontend/lib/format";
+import { getScheduleOverview } from "@/backend/services/schedule/get-schedule-overview";
+import { CoordinatorDashboard } from "@/frontend/components/dashboard/coordinator-dashboard";
 
 export default async function HomePage() {
-  await requireAppSession(["owner", "admin", "coordinator"]);
+  const session = await requireAppSession(["owner", "admin", "coordinator"]);
+
+  if (session.profile.roleCode === "coordinator") {
+    const [dashboard, schedule] = await Promise.all([
+      getDashboardOverview(),
+      getScheduleOverview(),
+    ]);
+
+    return (
+      <CoordinatorDashboard
+        displayName={session.profile.displayName}
+        dashboard={dashboard}
+        schedule={schedule}
+      />
+    );
+  }
+
   const dashboard = await getDashboardOverview();
 
   return (
